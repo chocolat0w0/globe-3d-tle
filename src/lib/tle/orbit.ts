@@ -21,6 +21,9 @@ const KM_TO_M = 1000;
  * @param stepSec サンプリング間隔（秒）
  * @returns OrbitData（計算に失敗した点はスキップ）
  */
+/** 1回の計算で生成できるサンプル数の上限（stepSec が極小の場合の保護） */
+const MAX_SAMPLE_COUNT = 100_000;
+
 export function computeOrbit(
   tle1: string,
   tle2: string,
@@ -28,9 +31,19 @@ export function computeOrbit(
   durationMs: number,
   stepSec: number
 ): OrbitData {
+  if (!isFinite(stepSec) || stepSec <= 0) {
+    throw new RangeError(`stepSec must be a finite positive number, got: ${stepSec}`);
+  }
+
   const satrec = twoline2satrec(tle1, tle2);
   const stepMs = stepSec * 1000;
   const count = Math.floor(durationMs / stepMs) + 1;
+
+  if (count > MAX_SAMPLE_COUNT) {
+    throw new RangeError(
+      `stepSec=${stepSec} produces ${count} samples, exceeding the limit of ${MAX_SAMPLE_COUNT}`
+    );
+  }
 
   const timesMs: number[] = [];
   const ecefPoints: number[] = [];

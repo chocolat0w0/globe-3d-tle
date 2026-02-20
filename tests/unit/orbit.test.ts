@@ -254,6 +254,53 @@ describe("computeOrbit", () => {
     });
   });
 
+  describe("stepSec validation", () => {
+    it("throws RangeError when stepSec is 0 (would cause infinite loop)", () => {
+      expect(() =>
+        computeOrbit(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 86_400_000, 0)
+      ).toThrow(RangeError);
+    });
+
+    it("throws RangeError when stepSec is negative", () => {
+      expect(() =>
+        computeOrbit(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 86_400_000, -1)
+      ).toThrow(RangeError);
+    });
+
+    it("throws RangeError when stepSec is NaN", () => {
+      expect(() =>
+        computeOrbit(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 86_400_000, NaN)
+      ).toThrow(RangeError);
+    });
+
+    it("throws RangeError when stepSec is Infinity", () => {
+      expect(() =>
+        computeOrbit(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 86_400_000, Infinity)
+      ).toThrow(RangeError);
+    });
+
+    it("throws RangeError when stepSec is -Infinity", () => {
+      expect(() =>
+        computeOrbit(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 86_400_000, -Infinity)
+      ).toThrow(RangeError);
+    });
+
+    it("throws RangeError when stepSec produces more than 100_000 samples", () => {
+      // stepSec=0.864 → count = floor(86400000 / 864) + 1 = 100001 > 100000
+      expect(() =>
+        computeOrbit(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 86_400_000, 0.864)
+      ).toThrow(RangeError);
+    });
+
+    it("does not throw when stepSec produces exactly 100_000 samples", () => {
+      // stepSec=0.8640... → count = 100001 はNG, stepSec=86400/99999 → count=100000 はOK
+      const stepSec = 86_400_000 / (99_999 * 1000); // count = floor(99999) + 1 = 100000
+      expect(() =>
+        computeOrbit(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 86_400_000, stepSec)
+      ).not.toThrow();
+    });
+  });
+
   describe("stepSec boundary values", () => {
     it("stepSec=1 with durationMs=60000 (1 minute) produces 61 samples", () => {
       const result = computeOrbit(
