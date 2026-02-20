@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **CesiumJS**: 3D地球儀エンジン
 - **Resium**: React統合（任意、Cesiumの参照/初期化は1箇所に集約）
 - **satellite.js**: TLE計算（SGP4）
+- **geo4326**: フットプリント・スワス計算（satellite.jsベース）
 - **Web Worker**: 重計算のオフロード
 
 ## 時間モデル（重要）
