@@ -4,7 +4,8 @@ import rawTle from "../data/sample-tle.json";
 
 type TleEntry = { id: string; name: string; tle: { line1: string; line2: string }; color: string };
 
-const INITIAL: Satellite[] = (rawTle as TleEntry[]).map((s) => ({
+const tleEntries = rawTle satisfies TleEntry[];
+const INITIAL: Satellite[] = tleEntries.map((s) => ({
   id: s.id,
   name: s.name,
   tle: s.tle,
