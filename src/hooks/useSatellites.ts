@@ -30,7 +30,12 @@ export function useSatellites(): UseSatellitesResult {
 
   const toggleVisible = useCallback((id: string) => {
     setSatellites((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, visible: !s.visible } : s))
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        const newVisible = !s.visible;
+        // 非表示にする場合は追尾選択も解除して UI/Cesium 状態の整合性を保つ
+        return { ...s, visible: newVisible, selected: newVisible ? s.selected : false };
+      })
     );
   }, []);
 

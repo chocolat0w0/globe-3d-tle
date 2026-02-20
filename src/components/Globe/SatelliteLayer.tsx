@@ -91,6 +91,12 @@ export function SatelliteLayer({
     } else if (!selected && viewer.trackedEntity === entityRef.current) {
       viewer.trackedEntity = undefined;
     }
+    return () => {
+      // アンマウント時（visible=false で Entity が消える際）にも追尾を解除
+      if (viewer.trackedEntity === entityRef.current) {
+        viewer.trackedEntity = undefined;
+      }
+    };
   }, [viewer, selected]);
 
   const cesiumColor = useMemo(() => Color.fromCssColorString(color), [color]);

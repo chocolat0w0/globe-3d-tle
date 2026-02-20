@@ -130,9 +130,10 @@ describe("useSatellites", () => {
       expect(pleiades.visible).toBe(false);
     });
 
-    it("toggleVisible does not change any satellite's selected state", () => {
+    it("toggling a non-selected satellite does not change any selected state", () => {
       const { result } = renderHook(() => useSatellites());
 
+      // No satellite is selected — hiding one should leave all selected=false
       act(() => {
         result.current.toggleVisible("iss");
       });
@@ -242,7 +243,7 @@ describe("useSatellites", () => {
   });
 
   describe("toggleVisible and selectSatellite interaction", () => {
-    it("visible and selected states are independent: toggling visibility does not deselect", () => {
+    it("hiding a selected satellite also clears its selected state (prevents stale trackedEntity)", () => {
       const { result } = renderHook(() => useSatellites());
 
       // Select iss, then hide it
@@ -250,16 +251,39 @@ describe("useSatellites", () => {
       act(() => { result.current.toggleVisible("iss"); });
 
       const iss = result.current.satellites.find((s) => s.id === "iss")!;
-      expect(iss.selected).toBe(true);
       expect(iss.visible).toBe(false);
+      expect(iss.selected).toBe(false);
+    });
+
+    it("hiding a non-selected satellite does not affect any selected state", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      // Select noaa19, then hide iss (different satellite)
+      act(() => { result.current.selectSatellite("noaa19"); });
+      act(() => { result.current.toggleVisible("iss"); });
+
+      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
+      expect(noaa19.selected).toBe(true);
+    });
+
+    it("re-showing a previously hidden+selected satellite does not restore selected state", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      // Select iss → hide iss → show iss again
+      act(() => { result.current.selectSatellite("iss"); });
+      act(() => { result.current.toggleVisible("iss"); }); // hide (selected becomes false)
+      act(() => { result.current.toggleVisible("iss"); }); // show again
+
+      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      expect(iss.visible).toBe(true);
+      expect(iss.selected).toBe(false); // requires explicit re-selection
     });
 
     it("selecting a hidden satellite makes it selected without changing its visibility", () => {
       const { result } = renderHook(() => useSatellites());
 
-      // Hide noaa19 first
+      // Hide noaa19 first, then select it
       act(() => { result.current.toggleVisible("noaa19"); });
-      // Now select it
       act(() => { result.current.selectSatellite("noaa19"); });
 
       const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
