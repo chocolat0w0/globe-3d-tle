@@ -128,8 +128,8 @@ export function SatelliteLayer({
           pixelOffset: new Cartesian2(12, 0),
           distanceDisplayCondition: new DistanceDisplayCondition(0, 20000000),
         }}
-        ref={(entity) => {
-          entityRef.current = entity ?? null;
+        ref={(ref) => {
+          entityRef.current = ref?.cesiumElement ?? null;
         }}
       />
     </>
