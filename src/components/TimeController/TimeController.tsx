@@ -1,0 +1,124 @@
+import { useEffect, useRef, useState } from "react";
+import { useCesium } from "resium";
+import { JulianDate, ClockRange } from "cesium";
+import { TimeSlider } from "./TimeSlider";
+import { PlaybackControls } from "./PlaybackControls";
+
+const DAY_MS = 86400000;
+const WINDOW_DAYS = 14;
+
+function getDayStartMs(ms: number): number {
+  return ms - (ms % DAY_MS);
+}
+
+interface TimeControllerProps {
+  onDayChange: (dayStartMs: number) => void;
+}
+
+export function TimeController({ onDayChange }: TimeControllerProps) {
+  const { viewer } = useCesium();
+  const [currentMs, setCurrentMs] = useState(() => Date.now());
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [multiplier, setMultiplierState] = useState(60);
+
+  // 最新の onDayChange 参照を保持
+  const onDayChangeRef = useRef(onDayChange);
+  onDayChangeRef.current = onDayChange;
+
+  // 前回の dayStartMs を追跡して変化を検知する
+  const prevDayStartMs = useRef<number | null>(null);
+
+  // Cesium Clock 初期化（viewer が準備できたとき1回だけ実行）
+  useEffect(() => {
+    if (!viewer) return;
+
+    const nowMs = Date.now();
+    const minMs = nowMs - WINDOW_DAYS * DAY_MS;
+    const maxMs = nowMs + WINDOW_DAYS * DAY_MS;
+
+    viewer.clock.startTime = JulianDate.fromDate(new Date(minMs));
+    viewer.clock.stopTime = JulianDate.fromDate(new Date(maxMs));
+    viewer.clock.currentTime = JulianDate.fromDate(new Date(nowMs));
+    viewer.clock.clockRange = ClockRange.LOOP_STOP;
+    viewer.clock.multiplier = 60;
+    viewer.clock.shouldAnimate = true;
+
+    const dayStartMs = getDayStartMs(nowMs);
+    prevDayStartMs.current = dayStartMs;
+    onDayChangeRef.current(dayStartMs);
+  }, [viewer]);
+
+  // postRender で現在時刻を React state に同期し、日跨ぎを検知する
+  useEffect(() => {
+    if (!viewer) return;
+
+    const removeListener = viewer.scene.postRender.addEventListener(() => {
+      const ms = JulianDate.toDate(viewer.clock.currentTime).getTime();
+
+      // 500ms 未満の変化はスキップしてレンダリングを抑制
+      setCurrentMs((prev) => (Math.abs(prev - ms) >= 500 ? ms : prev));
+
+      // 日跨ぎ検知
+      const dayStartMs = getDayStartMs(ms);
+      if (dayStartMs !== prevDayStartMs.current) {
+        prevDayStartMs.current = dayStartMs;
+        onDayChangeRef.current(dayStartMs);
+      }
+    });
+
+    return () => {
+      removeListener();
+    };
+  }, [viewer]);
+
+  const nowMs = Date.now();
+  const minMs = nowMs - WINDOW_DAYS * DAY_MS;
+  const maxMs = nowMs + WINDOW_DAYS * DAY_MS;
+
+  function handleSeek(ms: number) {
+    if (!viewer) return;
+    viewer.clock.currentTime = JulianDate.fromDate(new Date(ms));
+    setCurrentMs(ms);
+  }
+
+  function handlePlayPause() {
+    if (!viewer) return;
+    const next = !isPlaying;
+    viewer.clock.shouldAnimate = next;
+    setIsPlaying(next);
+  }
+
+  function handleSetMultiplier(speed: number) {
+    if (!viewer) return;
+    viewer.clock.multiplier = speed;
+    setMultiplierState(speed);
+  }
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: 28,   // Cesium クレジットバー（~18px）の上に配置
+        left: 0,
+        right: 0,
+        padding: "8px 16px 12px",
+        background: "rgba(0, 0, 0, 0.72)",
+        zIndex: 100,
+        pointerEvents: "auto",
+      }}
+    >
+      <PlaybackControls
+        isPlaying={isPlaying}
+        multiplier={multiplier}
+        onPlayPause={handlePlayPause}
+        onSetMultiplier={handleSetMultiplier}
+      />
+      <TimeSlider
+        currentMs={currentMs}
+        minMs={minMs}
+        maxMs={maxMs}
+        onSeek={handleSeek}
+      />
+    </div>
+  );
+}

@@ -6,7 +6,6 @@ import {
   Cartesian3,
   Cartesian2,
   Color,
-  ClockRange,
   DistanceDisplayCondition,
   type Entity as CesiumEntity,
 } from "cesium";
@@ -20,8 +19,8 @@ interface Props {
   color: string;
   visible?: boolean;
   selected?: boolean;
-  /** true の場合、この衛星のデータで Cesium Clock を初期設定する */
-  initializeClock?: boolean;
+  /** 表示する日の開始時刻（UTC epoch ms）。未指定時は当日0時を使用。 */
+  dayStartMs?: number;
 }
 
 export function SatelliteLayer({
@@ -31,7 +30,7 @@ export function SatelliteLayer({
   color,
   visible = true,
   selected = false,
-  initializeClock = false,
+  dayStartMs,
 }: Props) {
   const { viewer } = useCesium();
   const entityRef = useRef<CesiumEntity | null>(null);
@@ -40,6 +39,7 @@ export function SatelliteLayer({
     satelliteId: id,
     tle1: tle.line1,
     tle2: tle.line2,
+    dayStartMs,
   });
 
   const sampledPosition = useMemo(() => {
@@ -63,25 +63,6 @@ export function SatelliteLayer({
     }
     return positions;
   }, [orbitData]);
-
-  // Cesium Clock を1日窓に合わせて設定
-  // initializeClock=true の衛星が起動時に設定、selected になった衛星が追尾時に設定
-  useEffect(() => {
-    if (!viewer || !orbitData) return;
-    if (!initializeClock && !selected) return;
-    const { timesMs } = orbitData;
-    if (timesMs.length === 0) return;
-
-    const start = JulianDate.fromDate(new Date(timesMs[0]));
-    const stop = JulianDate.fromDate(new Date(timesMs[timesMs.length - 1]));
-
-    viewer.clock.startTime = start.clone();
-    viewer.clock.stopTime = stop.clone();
-    viewer.clock.currentTime = JulianDate.fromDate(new Date());
-    viewer.clock.clockRange = ClockRange.LOOP_STOP;
-    viewer.clock.multiplier = 60;
-    viewer.clock.shouldAnimate = true;
-  }, [viewer, orbitData, initializeClock, selected]);
 
   // カメラ追尾: selected=true のときこの衛星を trackedEntity に設定
   useEffect(() => {
