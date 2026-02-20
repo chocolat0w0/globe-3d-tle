@@ -9,7 +9,7 @@ import {
   ClockRange,
   DistanceDisplayCondition,
 } from "cesium";
-import { computeOrbit } from "../../lib/tle/orbit";
+import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
 
 interface Props {
@@ -19,22 +19,19 @@ interface Props {
   color: string;
 }
 
-/** 1日窓の開始時刻（UTC 00:00）を返す */
-function getDayStartMs(now: number): number {
-  return now - (now % 86400000);
-}
-
 export function SatelliteLayer({ id, name, tle, color }: Props) {
   const { viewer } = useCesium();
 
-  // 1日分の軌道データを計算（step=30秒）
-  const orbitData = useMemo(() => {
-    const dayStart = getDayStartMs(Date.now());
-    return computeOrbit(tle.line1, tle.line2, dayStart, 86400000, 30);
-  }, [tle]);
+  // Worker で非同期に軌道データを取得
+  const { orbitData, loading, error } = useOrbitData({
+    satelliteId: id,
+    tle1: tle.line1,
+    tle2: tle.line2,
+  });
 
   // SampledPositionProperty に各時刻の位置を登録
   const sampledPosition = useMemo(() => {
+    if (!orbitData) return null;
     const sp = new SampledPositionProperty();
     const { timesMs, ecef } = orbitData;
     for (let i = 0; i < timesMs.length; i++) {
@@ -47,6 +44,7 @@ export function SatelliteLayer({ id, name, tle, color }: Props) {
 
   // 軌道ライン用の座標配列
   const orbitPositions = useMemo(() => {
+    if (!orbitData) return [];
     const { ecef } = orbitData;
     const positions: Cartesian3[] = [];
     for (let i = 0; i < ecef.length; i += 3) {
@@ -57,7 +55,7 @@ export function SatelliteLayer({ id, name, tle, color }: Props) {
 
   // Cesium Clock を 1日窓に合わせて設定
   useEffect(() => {
-    if (!viewer) return;
+    if (!viewer || !orbitData) return;
     const { timesMs } = orbitData;
     if (timesMs.length === 0) return;
 
@@ -68,11 +66,13 @@ export function SatelliteLayer({ id, name, tle, color }: Props) {
     viewer.clock.stopTime = stop.clone();
     viewer.clock.currentTime = JulianDate.fromDate(new Date());
     viewer.clock.clockRange = ClockRange.LOOP_STOP;
-    viewer.clock.multiplier = 60; // 60倍速再生
+    viewer.clock.multiplier = 60;
     viewer.clock.shouldAnimate = true;
   }, [viewer, orbitData]);
 
   const cesiumColor = useMemo(() => Color.fromCssColorString(color), [color]);
+
+  if (loading || error || !orbitData || !sampledPosition) return null;
 
   return (
     <>
