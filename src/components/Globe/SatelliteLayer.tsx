@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { Entity, useCesium } from "resium";
 import {
   SampledPositionProperty,
@@ -8,6 +8,7 @@ import {
   Color,
   ClockRange,
   DistanceDisplayCondition,
+  type Entity as CesiumEntity,
 } from "cesium";
 import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
@@ -17,19 +18,30 @@ interface Props {
   name: string;
   tle: TLEData;
   color: string;
+  visible?: boolean;
+  selected?: boolean;
+  /** true の場合、この衛星のデータで Cesium Clock を初期設定する */
+  initializeClock?: boolean;
 }
 
-export function SatelliteLayer({ id, name, tle, color }: Props) {
+export function SatelliteLayer({
+  id,
+  name,
+  tle,
+  color,
+  visible = true,
+  selected = false,
+  initializeClock = false,
+}: Props) {
   const { viewer } = useCesium();
+  const entityRef = useRef<CesiumEntity | null>(null);
 
-  // Worker で非同期に軌道データを取得
   const { orbitData, loading, error } = useOrbitData({
     satelliteId: id,
     tle1: tle.line1,
     tle2: tle.line2,
   });
 
-  // SampledPositionProperty に各時刻の位置を登録
   const sampledPosition = useMemo(() => {
     if (!orbitData) return null;
     const sp = new SampledPositionProperty();
@@ -42,7 +54,6 @@ export function SatelliteLayer({ id, name, tle, color }: Props) {
     return sp;
   }, [orbitData]);
 
-  // 軌道ライン用の座標配列
   const orbitPositions = useMemo(() => {
     if (!orbitData) return [];
     const { ecef } = orbitData;
@@ -53,9 +64,11 @@ export function SatelliteLayer({ id, name, tle, color }: Props) {
     return positions;
   }, [orbitData]);
 
-  // Cesium Clock を 1日窓に合わせて設定
+  // Cesium Clock を1日窓に合わせて設定
+  // initializeClock=true の衛星が起動時に設定、selected になった衛星が追尾時に設定
   useEffect(() => {
     if (!viewer || !orbitData) return;
+    if (!initializeClock && !selected) return;
     const { timesMs } = orbitData;
     if (timesMs.length === 0) return;
 
@@ -68,35 +81,43 @@ export function SatelliteLayer({ id, name, tle, color }: Props) {
     viewer.clock.clockRange = ClockRange.LOOP_STOP;
     viewer.clock.multiplier = 60;
     viewer.clock.shouldAnimate = true;
-  }, [viewer, orbitData]);
+  }, [viewer, orbitData, initializeClock, selected]);
+
+  // カメラ追尾: selected=true のときこの衛星を trackedEntity に設定
+  useEffect(() => {
+    if (!viewer) return;
+    if (selected && entityRef.current) {
+      viewer.trackedEntity = entityRef.current;
+    } else if (!selected && viewer.trackedEntity === entityRef.current) {
+      viewer.trackedEntity = undefined;
+    }
+  }, [viewer, selected]);
 
   const cesiumColor = useMemo(() => Color.fromCssColorString(color), [color]);
 
-  if (loading || error || !orbitData || !sampledPosition) return null;
+  if (loading || error || !orbitData || !sampledPosition || !visible) return null;
 
   return (
     <>
       {/* 軌道ライン */}
       <Entity
-        key={`orbit-${id}`}
         polyline={{
           positions: orbitPositions,
           width: 2,
-          material: cesiumColor,
+          material: cesiumColor.withAlpha(0.7),
           clampToGround: false,
         }}
       />
 
       {/* 衛星動点 */}
       <Entity
-        key={`sat-${id}`}
         name={name}
         position={sampledPosition}
         point={{
-          pixelSize: 8,
+          pixelSize: selected ? 12 : 8,
           color: cesiumColor,
-          outlineColor: Color.WHITE,
-          outlineWidth: 1,
+          outlineColor: selected ? Color.WHITE : Color.WHITE.withAlpha(0.6),
+          outlineWidth: selected ? 2 : 1,
         }}
         label={{
           text: name,
@@ -106,6 +127,9 @@ export function SatelliteLayer({ id, name, tle, color }: Props) {
           outlineWidth: 2,
           pixelOffset: new Cartesian2(12, 0),
           distanceDisplayCondition: new DistanceDisplayCondition(0, 20000000),
+        }}
+        ref={(entity) => {
+          entityRef.current = entity ?? null;
         }}
       />
     </>
