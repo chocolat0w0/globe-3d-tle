@@ -1,5 +1,5 @@
 import { useCesium } from "resium";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 
 interface CameraPos {
@@ -11,17 +11,22 @@ interface CameraPos {
 export function InfoPanel() {
   const { viewer } = useCesium();
   const [pos, setPos] = useState<CameraPos>({ lat: 0, lon: 0, alt: 0 });
+  const prevRef = useRef("");
 
   useEffect(() => {
     if (!viewer) return;
 
     const removeListener = viewer.scene.postRender.addEventListener(() => {
       const carto = viewer.camera.positionCartographic;
-      setPos({
-        lat: Cesium.Math.toDegrees(carto.latitude),
-        lon: Cesium.Math.toDegrees(carto.longitude),
-        alt: carto.height / 1000,
-      });
+      const lat = Cesium.Math.toDegrees(carto.latitude).toFixed(4);
+      const lon = Cesium.Math.toDegrees(carto.longitude).toFixed(4);
+      const alt = (carto.height / 1000).toFixed(1);
+      const key = `${lat},${lon},${alt}`;
+
+      if (key !== prevRef.current) {
+        prevRef.current = key;
+        setPos({ lat: Number(lat), lon: Number(lon), alt: Number(alt) });
+      }
     });
 
     return () => {
@@ -47,9 +52,9 @@ export function InfoPanel() {
         userSelect: "none",
       }}
     >
-      <div>緯度: {pos.lat.toFixed(4)}°</div>
-      <div>経度: {pos.lon.toFixed(4)}°</div>
-      <div>高度: {pos.alt.toFixed(1)} km</div>
+      <div>緯度: {pos.lat}°</div>
+      <div>経度: {pos.lon}°</div>
+      <div>高度: {pos.alt} km</div>
     </div>
   );
 }
