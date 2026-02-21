@@ -4,9 +4,10 @@ interface Props {
   satellites: Satellite[];
   onToggleVisible: (id: string) => void;
   onSelect: (id: string) => void;
+  onToggleFootprint: (id: string) => void;
 }
 
-export function SatelliteList({ satellites, onToggleVisible, onSelect }: Props) {
+export function SatelliteList({ satellites, onToggleVisible, onSelect, onToggleFootprint }: Props) {
   return (
     <div
       style={{
@@ -64,6 +65,28 @@ export function SatelliteList({ satellites, onToggleVisible, onSelect }: Props) 
           {/* 衛星名 */}
           <span style={{ flex: 1, fontSize: 11 }}>{sat.name}</span>
 
+          {/* フットプリント ON/OFF ボタン */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFootprint(sat.id);
+            }}
+            title={sat.showFootprint ? "フットプリントを非表示" : "フットプリントを表示"}
+            style={{
+              background: sat.showFootprint ? sat.color : "rgba(255,255,255,0.15)",
+              border: "none",
+              borderRadius: 3,
+              color: sat.showFootprint ? "#000" : "rgba(255,255,255,0.6)",
+              cursor: "pointer",
+              fontSize: 9,
+              padding: "1px 4px",
+              lineHeight: 1.4,
+              flexShrink: 0,
+            }}
+          >
+            FP
+          </button>
+
           {/* ON/OFF チェックボックス */}
           <input
             type="checkbox"
@@ -82,7 +105,7 @@ export function SatelliteList({ satellites, onToggleVisible, onSelect }: Props) 
           borderTop: "1px solid rgba(255,255,255,0.1)",
         }}
       >
-        クリックで追尾 / チェックで表示切替
+        クリックで追尾 / FPでフットプリント / チェックで表示切替
       </div>
     </div>
   );

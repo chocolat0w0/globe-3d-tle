@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOrbitWorker } from "./useWorker";
-import type { OrbitData } from "../types/orbit";
+import type { FootprintData } from "../types/orbit";
 import type {
   ComputeDayRequest,
   MainMessage,
 } from "../types/worker-messages";
+import type { FootprintParams } from "../lib/tle/footprint";
 import { LRUCache } from "../lib/cache/lru-cache";
 
 const DAY_MS = 86400000;
 
-/** UTC 00:00 に丸めた日開始時刻を返す */
 function getDayStartMs(now: number): number {
   return now - (now % DAY_MS);
 }
@@ -20,51 +20,52 @@ function generateRequestId(): string {
 
 /**
  * モジュールレベルのLRUキャッシュ（10機 × 7日 = 70エントリを保持）
- * モジュールの寿命全体で共有され、衛星・日付を跨いで再利用される。
  */
-const orbitCache = new LRUCache<OrbitData>(70);
+const footprintCache = new LRUCache<FootprintData>(70);
 
-interface UseOrbitDataOptions {
+interface UseFootprintDataOptions {
   satelliteId: string;
   tle1: string;
   tle2: string;
+  footprintParams: FootprintParams;
   stepSec?: number;
   /** 外部から注入する日開始時刻（ms UTC）。未指定の場合は当日0時を使用。 */
   dayStartMs?: number;
 }
 
-interface UseOrbitDataResult {
-  orbitData: OrbitData | null;
+interface UseFootprintDataResult {
+  footprintData: FootprintData | null;
   loading: boolean;
   error: string | null;
 }
 
 /**
- * Web Worker を使って1日分の軌道データを非同期に取得するフック。
+ * Web Worker を使って1日分のフットプリントデータを非同期に取得するフック。
  *
  * - LRUキャッシュを優先参照し、ヒット時は Worker を呼ばない
  * - dayStartMs 変化時に前後1日を先読みリクエストする
  * - 古いレスポンスは requestId で排除（競合防止）
  */
-export function useOrbitData({
+export function useFootprintData({
   satelliteId,
   tle1,
   tle2,
+  footprintParams,
   stepSec = 30,
   dayStartMs: externalDayStartMs,
-}: UseOrbitDataOptions): UseOrbitDataResult {
-  const [orbitData, setOrbitData] = useState<OrbitData | null>(null);
+}: UseFootprintDataOptions): UseFootprintDataResult {
+  const [footprintData, setFootprintData] = useState<FootprintData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /** 現在進行中のメインリクエスト ID */
   const pendingRequestId = useRef<string | null>(null);
-  /** 先読みリクエスト ID の集合 */
   const prefetchIds = useRef(new Set<string>());
+
+  // footprintParams の変化を検知するため JSON 文字列でキー化
+  const paramsKey = JSON.stringify(footprintParams);
 
   const handleMessage = useCallback((msg: MainMessage) => {
     if (msg.type === "error") {
-      // 先読みエラーは無視、メインリクエストのエラーのみ通知
       if (msg.requestId === pendingRequestId.current) {
         setError(msg.message);
         setLoading(false);
@@ -76,13 +77,16 @@ export function useOrbitData({
     // --- 先読みレスポンス: キャッシュに保存するだけ ---
     if (prefetchIds.current.has(msg.requestId)) {
       prefetchIds.current.delete(msg.requestId);
-      if (msg.orbit) {
-        const data: OrbitData = {
-          timesMs: new Float64Array(msg.orbit.timesMs),
-          ecef: new Float32Array(msg.orbit.ecef),
+      if (msg.footprint) {
+        const data: FootprintData = {
+          timesMs: new Float64Array(msg.footprint.timesMs),
+          rings: new Float32Array(msg.footprint.flat.rings),
+          offsets: new Int32Array(msg.footprint.flat.offsets),
+          counts: new Int32Array(msg.footprint.flat.counts),
+          timeSizes: new Int32Array(msg.footprint.timeSizes),
         };
-        const key = `${msg.satelliteId}:${msg.dayStartMs}:${msg.stepSec}`;
-        orbitCache.set(key, data);
+        const key = `${msg.satelliteId}:${msg.dayStartMs}:${msg.stepSec}:${paramsKey}`;
+        footprintCache.set(key, data);
       }
       return;
     }
@@ -90,41 +94,41 @@ export function useOrbitData({
     // --- メインレスポンス ---
     if (msg.requestId !== pendingRequestId.current) return;
 
-    if (msg.orbit) {
-      const data: OrbitData = {
-        timesMs: new Float64Array(msg.orbit.timesMs),
-        ecef: new Float32Array(msg.orbit.ecef),
+    if (msg.footprint) {
+      const data: FootprintData = {
+        timesMs: new Float64Array(msg.footprint.timesMs),
+        rings: new Float32Array(msg.footprint.flat.rings),
+        offsets: new Int32Array(msg.footprint.flat.offsets),
+        counts: new Int32Array(msg.footprint.flat.counts),
+        timeSizes: new Int32Array(msg.footprint.timeSizes),
       };
-      const key = `${msg.satelliteId}:${msg.dayStartMs}:${msg.stepSec}`;
-      orbitCache.set(key, data);
-      setOrbitData(data);
+      const key = `${msg.satelliteId}:${msg.dayStartMs}:${msg.stepSec}:${paramsKey}`;
+      footprintCache.set(key, data);
+      setFootprintData(data);
       setError(null);
     }
     setLoading(false);
-  }, []);
+  }, [paramsKey]);
 
   const { postMessage } = useOrbitWorker(handleMessage);
 
-  // postMessage の最新参照を ref に保持（先読みエフェクトから参照するため）
   const postMessageRef = useRef(postMessage);
   postMessageRef.current = postMessage;
 
-  // メインリクエスト: dayStartMs / TLE / stepSec が変化したとき
+  // メインリクエスト
   useEffect(() => {
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
-    const cacheKey = `${satelliteId}:${dayStartMs}:${stepSec}`;
+    const cacheKey = `${satelliteId}:${dayStartMs}:${stepSec}:${paramsKey}`;
 
-    // キャッシュヒット → Worker 不要
-    const cached = orbitCache.get(cacheKey);
+    const cached = footprintCache.get(cacheKey);
     if (cached) {
-      setOrbitData(cached);
+      setFootprintData(cached);
       setLoading(false);
       setError(null);
       pendingRequestId.current = null;
       return;
     }
 
-    // キャッシュミス → Worker にリクエスト
     const requestId = generateRequestId();
     pendingRequestId.current = requestId;
     setLoading(true);
@@ -139,20 +143,21 @@ export function useOrbitData({
       dayStartMs,
       durationMs: DAY_MS,
       stepSec,
-      outputs: { orbit: true, footprint: false, swath: false },
+      outputs: { orbit: false, footprint: true, swath: false },
+      footprintParams,
     };
 
     postMessageRef.current(request);
-  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs]);
+  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, paramsKey, footprintParams]);
 
-  // 先読み: dayStartMs 変化時に D-1 / D+1 をバックグラウンドで取得
+  // 先読み: D-1 / D+1 をバックグラウンドで取得
   useEffect(() => {
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
 
     for (const offset of [-DAY_MS, DAY_MS]) {
       const targetDay = dayStartMs + offset;
-      const cacheKey = `${satelliteId}:${targetDay}:${stepSec}`;
-      if (orbitCache.has(cacheKey)) continue;
+      const cacheKey = `${satelliteId}:${targetDay}:${stepSec}:${paramsKey}`;
+      if (footprintCache.has(cacheKey)) continue;
 
       const requestId = generateRequestId();
       prefetchIds.current.add(requestId);
@@ -166,12 +171,13 @@ export function useOrbitData({
         dayStartMs: targetDay,
         durationMs: DAY_MS,
         stepSec,
-        outputs: { orbit: true, footprint: false, swath: false },
+        outputs: { orbit: false, footprint: true, swath: false },
+        footprintParams,
       };
 
       postMessageRef.current(request);
     }
-  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs]);
+  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, paramsKey, footprintParams]);
 
-  return { orbitData, loading, error };
+  return { footprintData, loading, error };
 }

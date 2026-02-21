@@ -242,6 +242,113 @@ describe("useSatellites", () => {
     });
   });
 
+  describe("showFootprint initial state", () => {
+    it("initialises every satellite with showFootprint=false", () => {
+      const { result } = renderHook(() => useSatellites());
+      const noneShowingFootprint = result.current.satellites.every(
+        (s) => s.showFootprint === false
+      );
+      expect(noneShowingFootprint).toBe(true);
+    });
+  });
+
+  describe("toggleFootprint", () => {
+    it("sets showFootprint=true for iss when toggleFootprint('iss') is called once", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleFootprint("iss");
+      });
+
+      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      expect(iss.showFootprint).toBe(true);
+    });
+
+    it("does not change showFootprint for other satellites when toggling iss", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleFootprint("iss");
+      });
+
+      const others = result.current.satellites.filter((s) => s.id !== "iss");
+      const noneChanged = others.every((s) => s.showFootprint === false);
+      expect(noneChanged).toBe(true);
+    });
+
+    it("sets showFootprint=false when toggleFootprint is called twice with the same ID (toggle off)", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleFootprint("noaa19");
+      });
+      act(() => {
+        result.current.toggleFootprint("noaa19");
+      });
+
+      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
+      expect(noaa19.showFootprint).toBe(false);
+    });
+
+    it("does not change visible state of any satellite when toggleFootprint is called", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleFootprint("terra");
+      });
+
+      const allVisible = result.current.satellites.every((s) => s.visible === true);
+      expect(allVisible).toBe(true);
+    });
+
+    it("does not change selected state of any satellite when toggleFootprint is called", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleFootprint("aqua");
+      });
+
+      const noneSelected = result.current.satellites.every((s) => s.selected === false);
+      expect(noneSelected).toBe(true);
+    });
+
+    it("correctly toggles showFootprint for the last satellite in the list (pleiades1a)", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleFootprint("pleiades1a");
+      });
+
+      const pleiades = result.current.satellites.find((s) => s.id === "pleiades1a")!;
+      expect(pleiades.showFootprint).toBe(true);
+
+      // All other satellites remain false
+      const others = result.current.satellites.filter((s) => s.id !== "pleiades1a");
+      expect(others.every((s) => s.showFootprint === false)).toBe(true);
+    });
+
+    it("allows multiple satellites to have showFootprint=true simultaneously (non-exclusive)", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      // Toggle on two different satellites
+      act(() => {
+        result.current.toggleFootprint("sentinel2a");
+      });
+      act(() => {
+        result.current.toggleFootprint("sentinel2b");
+      });
+
+      const sentinel2a = result.current.satellites.find((s) => s.id === "sentinel2a")!;
+      const sentinel2b = result.current.satellites.find((s) => s.id === "sentinel2b")!;
+      expect(sentinel2a.showFootprint).toBe(true);
+      expect(sentinel2b.showFootprint).toBe(true);
+
+      // Confirm exactly 2 satellites have showFootprint=true (not just one)
+      const showingCount = result.current.satellites.filter((s) => s.showFootprint).length;
+      expect(showingCount).toBe(2);
+    });
+  });
+
   describe("toggleVisible and selectSatellite interaction", () => {
     it("hiding a selected satellite also clears its selected state (prevents stale trackedEntity)", () => {
       const { result } = renderHook(() => useSatellites());

@@ -11,8 +11,9 @@
 ## Confirmed Test File Locations
 - `tests/unit/orbit.test.ts` — computeOrbit unit tests
 - `tests/unit/orbit-worker.test.ts` — Worker Transferable round-trip tests
-- `src/hooks/__tests__/useSatellites.test.ts` — useSatellites hook (Phase 5, 20 tests)
+- `src/hooks/__tests__/useSatellites.test.ts` — useSatellites hook (Phase 5 + showFootprint update, 28 tests)
 - `src/components/SatelliteList/__tests__/SatelliteList.test.tsx` — SatelliteList component (Phase 5, 19 tests)
+- `src/lib/tle/__tests__/footprint.test.ts` — computeFootprints unit tests (35 tests)
 
 ## Key Module Paths (from test files)
 - `../../src/lib/tle/orbit` — computeOrbit function
@@ -62,7 +63,9 @@ TLE_EPOCH_MS = 1704110400000  // 2024-01-01T12:00:00.000Z
 - `renderHook(() => useSatellites())` from `@testing-library/react`
 - Wrap all state-mutating calls in `act()`
 - ALL_IDS constant mirrors JSON order for order-sensitive assertions
-- State independence: toggleVisible does NOT affect selected; selectSatellite does NOT affect visible
+- State independence: toggleVisible does NOT affect selected; selectSatellite does NOT affect visible; toggleFootprint does NOT affect visible or selected
+- showFootprint initial state: false for all satellites (set in INITIAL array)
+- toggleFootprint is non-exclusive: multiple satellites can have showFootprint=true simultaneously (unlike selectSatellite which is exclusive)
 
 ### SatelliteList component — key patterns
 - Use `makeSatellite(overrides)` factory + `makeTenSatellites()` fixture (not real JSON)
@@ -77,6 +80,29 @@ TLE_EPOCH_MS = 1704110400000  // 2024-01-01T12:00:00.000Z
 - Phase 4 tests: `tests/unit/` (outside src/)
 - Phase 5 tests: `src/hooks/__tests__/` and `src/components/SatelliteList/__tests__/` (co-located)
 - Both conventions coexist; vitest finds both via default include patterns
+
+## computeFootprints / geo4326 behavior (verified)
+- `geo4326.satellite.footprint()` throws for invalid/garbage TLE — caught by the try/catch in footprint.ts
+- Empty string TLE ("","") causes all steps to throw → result arrays are all length 0
+- ISS TLE with fov=[1,1], offnadir=0: all 121 steps for 1-hour window succeed (no skipped timestamps)
+- `cutRingAtAntimeridian()` returns `{within: Points[], outside: Points[]}` — both can be empty when no crossing
+- When both within and outside are empty, footprint.ts falls back to the original ring (1 polygon per step)
+- FlatRings invariant: rings is interleaved [lon, lat, lon, lat, ...]; lon at even indices, lat at odd
+
+## FlatRings Structural Invariants (computeFootprints)
+- `timesMs.length === timeSizes.length`
+- `offsets.length === counts.length`
+- `sum(timeSizes) === offsets.length` (total polygon count)
+- `rings.length === sum(counts) * 2` (two floats per coordinate pair)
+- `offsets[i] === sum(counts[0..i-1])` — contiguous, no gaps; offsets[0] always 0
+- `offsets[last] + counts[last] === rings.length / 2`
+
+## ISS TLE for footprint tests (slightly different from orbit tests — use this variant)
+```
+TLE1 = "1 25544U 98067A   24001.50000000  .00020137  00000-0  36371-3 0  9993"
+TLE2 = "2 25544  51.6400 337.6580 0001584  86.9974 273.1408 15.50008824429730"
+TLE_EPOCH_MS = 1704110400000
+```
 
 ## Detailed Notes
 - See `patterns.md` for additional notes on testing patterns

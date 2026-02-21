@@ -1,17 +1,10 @@
+import { formatUTC } from "./time-format";
+
 interface TimeSliderProps {
   currentMs: number;
   minMs: number;
   maxMs: number;
   onSeek: (ms: number) => void;
-}
-
-function formatUTC(ms: number): string {
-  const d = new Date(ms);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ` +
-    `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`
-  );
 }
 
 export function TimeSlider({ currentMs, minMs, maxMs, onSeek }: TimeSliderProps) {
@@ -43,5 +36,3 @@ export function TimeSlider({ currentMs, minMs, maxMs, onSeek }: TimeSliderProps)
     </div>
   );
 }
-
-export { formatUTC };

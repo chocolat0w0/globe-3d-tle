@@ -2,6 +2,7 @@ import { useState } from "react";
 import { GlobeRenderer } from "./components/Globe/GlobeRenderer";
 import { BaseMapLayer } from "./components/Globe/BaseMapLayer";
 import { SatelliteLayer } from "./components/Globe/SatelliteLayer";
+import { FootprintLayer } from "./components/Globe/FootprintLayer";
 import { TimeController } from "./components/TimeController/TimeController";
 import { SatelliteList } from "./components/SatelliteList/SatelliteList";
 import { InfoPanel } from "./components/HUD/InfoPanel";
@@ -13,7 +14,7 @@ function getDayStartMs(now: number): number {
 }
 
 function App() {
-  const { satellites, toggleVisible, selectSatellite } = useSatellites();
+  const { satellites, toggleVisible, selectSatellite, toggleFootprint } = useSatellites();
   const [dayStartMs, setDayStartMs] = useState(() => getDayStartMs(Date.now()));
 
   return (
@@ -31,12 +32,24 @@ function App() {
           dayStartMs={dayStartMs}
         />
       ))}
+      {satellites.map((sat) => (
+        <FootprintLayer
+          key={`fp-${sat.id}`}
+          id={sat.id}
+          tle={sat.tle}
+          color={sat.color}
+          visible={sat.visible}
+          showFootprint={sat.showFootprint}
+          dayStartMs={dayStartMs}
+        />
+      ))}
       <TimeController onDayChange={setDayStartMs} />
       <InfoPanel />
       <SatelliteList
         satellites={satellites}
         onToggleVisible={toggleVisible}
         onSelect={selectSatellite}
+        onToggleFootprint={toggleFootprint}
       />
     </GlobeRenderer>
   );

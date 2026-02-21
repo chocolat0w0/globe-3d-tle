@@ -10,7 +10,11 @@ export interface ComputeDayRequest {
   durationMs: number;
   stepSec: number;
   outputs: { orbit: boolean; footprint: boolean; swath: boolean };
-  footprintParams?: unknown;
+  footprintParams?: {
+    fov: [number, number];
+    offnadir: number;
+    insert?: number;
+  };
   swathParams?: unknown;
 }
 
@@ -27,6 +31,7 @@ export interface ComputeDayResponse {
   footprint?: {
     timesMs: ArrayBuffer;
     flat: FlatRings;
+    timeSizes: ArrayBuffer; // Int32Array: 各タイムステップのポリゴン数
   };
   swath?: {
     flat: FlatRings;

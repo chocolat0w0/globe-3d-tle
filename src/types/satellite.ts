@@ -10,4 +10,5 @@ export interface Satellite {
   color: string;
   visible: boolean;
   selected: boolean;
+  showFootprint: boolean;
 }

@@ -34,6 +34,7 @@ function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
     color: "#FF6B6B",
     visible: true,
     selected: false,
+    showFootprint: false,
     ...overrides,
   };
 }
@@ -68,6 +69,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -84,6 +86,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -103,6 +106,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -116,6 +120,7 @@ describe("SatelliteList", () => {
           satellites={[]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
       const checkboxes = container.querySelectorAll('input[type="checkbox"]');
@@ -135,6 +140,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
@@ -148,6 +154,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
@@ -168,6 +175,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -190,6 +198,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -209,6 +218,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -227,6 +237,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={onToggleVisible}
           onSelect={onSelect}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -251,6 +262,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -268,6 +280,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -286,6 +299,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -307,6 +321,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -325,6 +340,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -343,6 +359,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -364,6 +381,101 @@ describe("SatelliteList", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // FP button: onToggleFootprint callback
+  // ---------------------------------------------------------------------------
+
+  describe("onToggleFootprint callback", () => {
+    it("renders one FP button per satellite (10 total)", () => {
+      const sats = makeTenSatellites();
+      render(
+        <SatelliteList
+          satellites={sats}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={vi.fn()}
+        />
+      );
+      const fpButtons = screen.getAllByText("FP");
+      expect(fpButtons).toHaveLength(10);
+    });
+
+    it("calls onToggleFootprint with the correct id when FP button is clicked", () => {
+      const onToggleFootprint = vi.fn();
+      const sat = makeSatellite({ id: "noaa19", name: "NOAA 19" });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={onToggleFootprint}
+        />
+      );
+      fireEvent.click(screen.getByText("FP"));
+      expect(onToggleFootprint).toHaveBeenCalledTimes(1);
+      expect(onToggleFootprint).toHaveBeenCalledWith("noaa19");
+    });
+
+    it("clicking FP button does NOT call onSelect (stopPropagation is in effect)", () => {
+      const onSelect = vi.fn();
+      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)" });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={onSelect}
+          onToggleFootprint={vi.fn()}
+        />
+      );
+      fireEvent.click(screen.getByText("FP"));
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it("calls onToggleFootprint with the id of the third satellite (terra) when its FP button is clicked", () => {
+      const onToggleFootprint = vi.fn();
+      const sats = makeTenSatellites();
+      render(
+        <SatelliteList
+          satellites={sats}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={onToggleFootprint}
+        />
+      );
+      const fpButtons = screen.getAllByText("FP");
+      fireEvent.click(fpButtons[2]); // terra は index 2
+      expect(onToggleFootprint).toHaveBeenCalledWith("terra");
+    });
+
+    it("FP button title changes when showFootprint=true", () => {
+      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showFootprint: true });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={vi.fn()}
+        />
+      );
+      const fpButton = screen.getByText("FP") as HTMLButtonElement;
+      expect(fpButton.title).toBe("フットプリントを非表示");
+    });
+
+    it("FP button title shows 'フットプリントを表示' when showFootprint=false", () => {
+      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showFootprint: false });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={vi.fn()}
+        />
+      );
+      const fpButton = screen.getByText("FP") as HTMLButtonElement;
+      expect(fpButton.title).toBe("フットプリントを表示");
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Visual feedback: visibility (opacity)
   // ---------------------------------------------------------------------------
 
@@ -375,6 +487,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -390,6 +503,7 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
@@ -408,6 +522,7 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
+        onToggleFootprint={vi.fn()}
         />
       );
 
