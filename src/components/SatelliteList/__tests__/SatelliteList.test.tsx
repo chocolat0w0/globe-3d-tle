@@ -35,6 +35,7 @@ function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
     visible: true,
     selected: false,
     showFootprint: false,
+    showSwath: false,
     ...overrides,
   };
 }
@@ -70,6 +71,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -87,6 +89,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -107,6 +110,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -121,6 +125,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
       const checkboxes = container.querySelectorAll('input[type="checkbox"]');
@@ -141,6 +146,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
@@ -155,6 +161,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
@@ -176,6 +183,7 @@ describe("SatelliteList", () => {
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -199,6 +207,7 @@ describe("SatelliteList", () => {
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -219,6 +228,7 @@ describe("SatelliteList", () => {
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -238,6 +248,7 @@ describe("SatelliteList", () => {
           onToggleVisible={onToggleVisible}
           onSelect={onSelect}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -263,6 +274,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -281,6 +293,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -300,6 +313,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -322,6 +336,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -341,6 +356,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -360,6 +376,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -393,6 +410,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
         />
       );
       const fpButtons = screen.getAllByText("FP");
@@ -408,6 +426,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
           onToggleFootprint={onToggleFootprint}
+          onToggleSwath={vi.fn()}
         />
       );
       fireEvent.click(screen.getByText("FP"));
@@ -424,6 +443,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
           onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
         />
       );
       fireEvent.click(screen.getByText("FP"));
@@ -439,6 +459,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
           onToggleFootprint={onToggleFootprint}
+          onToggleSwath={vi.fn()}
         />
       );
       const fpButtons = screen.getAllByText("FP");
@@ -454,6 +475,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
         />
       );
       const fpButton = screen.getByText("FP") as HTMLButtonElement;
@@ -468,10 +490,95 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
         />
       );
       const fpButton = screen.getByText("FP") as HTMLButtonElement;
       expect(fpButton.title).toBe("フットプリントを表示");
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // SW button: onToggleSwath callback
+  // ---------------------------------------------------------------------------
+
+  describe("onToggleSwath callback", () => {
+    it("renders one SW button per satellite (10 total)", () => {
+      const sats = makeTenSatellites();
+      render(
+        <SatelliteList
+          satellites={sats}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />
+      );
+      const swButtons = screen.getAllByText("SW");
+      expect(swButtons).toHaveLength(10);
+    });
+
+    it("calls onToggleSwath with the correct id when SW button is clicked", () => {
+      const onToggleSwath = vi.fn();
+      const sat = makeSatellite({ id: "noaa19", name: "NOAA 19" });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={onToggleSwath}
+        />
+      );
+      fireEvent.click(screen.getByText("SW"));
+      expect(onToggleSwath).toHaveBeenCalledTimes(1);
+      expect(onToggleSwath).toHaveBeenCalledWith("noaa19");
+    });
+
+    it("clicking SW button does NOT call onSelect (stopPropagation is in effect)", () => {
+      const onSelect = vi.fn();
+      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)" });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={onSelect}
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />
+      );
+      fireEvent.click(screen.getByText("SW"));
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it("SW button title changes when showSwath=true", () => {
+      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showSwath: true });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />
+      );
+      const swButton = screen.getByText("SW") as HTMLButtonElement;
+      expect(swButton.title).toBe("スワスを非表示");
+    });
+
+    it("SW button title shows 'スワスを表示' when showSwath=false", () => {
+      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showSwath: false });
+      render(
+        <SatelliteList
+          satellites={[sat]}
+          onToggleVisible={vi.fn()}
+          onSelect={vi.fn()}
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />
+      );
+      const swButton = screen.getByText("SW") as HTMLButtonElement;
+      expect(swButton.title).toBe("スワスを表示");
     });
   });
 
@@ -488,6 +595,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -504,6 +612,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
@@ -523,6 +632,7 @@ describe("SatelliteList", () => {
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
         onToggleFootprint={vi.fn()}
+        onToggleSwath={vi.fn()}
         />
       );
 
