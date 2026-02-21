@@ -1,10 +1,20 @@
 import { type ReactNode, useEffect } from "react";
 import { Viewer, useCesium } from "resium";
-import { ImageryLayer, type Viewer as CesiumViewer } from "cesium";
+import {
+  Credit,
+  CreditDisplay,
+  ImageryLayer,
+  type Viewer as CesiumViewer,
+} from "cesium";
 
 interface Props {
   children?: ReactNode;
 }
+
+CreditDisplay.cesiumCredit = new Credit(
+  '<a href="https://cesium.com/platform/cesiumjs/" target="_blank" rel="noopener noreferrer">CesiumJS</a>',
+  true,
+);
 
 declare global {
   interface Window {
