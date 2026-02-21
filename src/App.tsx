@@ -8,6 +8,7 @@ import { TimeController } from "./components/TimeController/TimeController";
 import { SatelliteList } from "./components/SatelliteList/SatelliteList";
 import { InfoPanel } from "./components/HUD/InfoPanel";
 import { useSatellites } from "./hooks/useSatellites";
+import type { OrbitRenderMode } from "./types/orbit";
 import "./App.css";
 
 function getDayStartMs(now: number): number {
@@ -17,6 +18,7 @@ function getDayStartMs(now: number): number {
 function App() {
   const { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath } = useSatellites();
   const [dayStartMs, setDayStartMs] = useState(() => getDayStartMs(Date.now()));
+  const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("geodesic");
 
   return (
     <GlobeRenderer>
@@ -31,6 +33,7 @@ function App() {
           visible={sat.visible}
           selected={sat.selected}
           dayStartMs={dayStartMs}
+          orbitRenderMode={orbitRenderMode}
         />
       ))}
       {satellites.map((sat) => (
@@ -56,7 +59,7 @@ function App() {
         />
       ))}
       <TimeController onDayChange={setDayStartMs} />
-      <InfoPanel />
+      <InfoPanel orbitRenderMode={orbitRenderMode} onOrbitRenderModeChange={setOrbitRenderMode} />
       <SatelliteList
         satellites={satellites}
         onToggleVisible={toggleVisible}

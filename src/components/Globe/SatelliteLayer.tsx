@@ -11,6 +11,8 @@ import {
 } from "cesium";
 import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
+import type { OrbitRenderMode } from "../../types/orbit";
+import { toCesiumArcType } from "./orbit-render-mode";
 
 interface Props {
   id: string;
@@ -21,6 +23,7 @@ interface Props {
   selected?: boolean;
   /** 表示する日の開始時刻（UTC epoch ms）。未指定時は当日0時を使用。 */
   dayStartMs?: number;
+  orbitRenderMode: OrbitRenderMode;
 }
 
 export function SatelliteLayer({
@@ -31,6 +34,7 @@ export function SatelliteLayer({
   visible = true,
   selected = false,
   dayStartMs,
+  orbitRenderMode,
 }: Props) {
   const { viewer } = useCesium();
   const entityRef = useRef<CesiumEntity | null>(null);
@@ -92,6 +96,7 @@ export function SatelliteLayer({
           positions: orbitPositions,
           width: 2,
           material: cesiumColor.withAlpha(0.7),
+          arcType: toCesiumArcType(orbitRenderMode),
           clampToGround: false,
         }}
       />

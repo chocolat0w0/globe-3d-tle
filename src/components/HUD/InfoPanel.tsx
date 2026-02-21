@@ -1,6 +1,7 @@
 import { useCesium } from "resium";
 import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
+import type { OrbitRenderMode } from "../../types/orbit";
 
 interface CameraPos {
   lat: number;
@@ -8,7 +9,12 @@ interface CameraPos {
   alt: number;
 }
 
-export function InfoPanel() {
+interface InfoPanelProps {
+  orbitRenderMode: OrbitRenderMode;
+  onOrbitRenderModeChange: (mode: OrbitRenderMode) => void;
+}
+
+export function InfoPanel({ orbitRenderMode, onOrbitRenderModeChange }: InfoPanelProps) {
   const { viewer } = useCesium();
   const [pos, setPos] = useState<CameraPos>({ lat: 0, lon: 0, alt: 0 });
   const prevRef = useRef("");
@@ -48,10 +54,55 @@ export function InfoPanel() {
         fontFamily: "monospace",
         lineHeight: 1.8,
         zIndex: 10,
-        pointerEvents: "none",
+        pointerEvents: "auto",
         userSelect: "none",
       }}
     >
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ marginBottom: 2 }}>軌道表示</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => onOrbitRenderModeChange("geodesic")}
+            aria-pressed={orbitRenderMode === "geodesic"}
+            style={{
+              border: "1px solid rgba(255,255,255,0.25)",
+              borderRadius: 4,
+              color: "#e8e8e8",
+              background:
+                orbitRenderMode === "geodesic"
+                  ? "rgba(100,180,255,0.35)"
+                  : "rgba(255,255,255,0.1)",
+              padding: "2px 8px",
+              cursor: "pointer",
+              fontSize: 11,
+              fontFamily: "monospace",
+            }}
+          >
+            Geodesic
+          </button>
+          <button
+            type="button"
+            onClick={() => onOrbitRenderModeChange("cartesian")}
+            aria-pressed={orbitRenderMode === "cartesian"}
+            style={{
+              border: "1px solid rgba(255,255,255,0.25)",
+              borderRadius: 4,
+              color: "#e8e8e8",
+              background:
+                orbitRenderMode === "cartesian"
+                  ? "rgba(100,180,255,0.35)"
+                  : "rgba(255,255,255,0.1)",
+              padding: "2px 8px",
+              cursor: "pointer",
+              fontSize: 11,
+              fontFamily: "monospace",
+            }}
+          >
+            Cartesian
+          </button>
+        </div>
+      </div>
       <div>緯度: {pos.lat}°</div>
       <div>経度: {pos.lon}°</div>
       <div>高度: {pos.alt} km</div>
