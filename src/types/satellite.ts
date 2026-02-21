@@ -11,4 +11,5 @@ export interface Satellite {
   visible: boolean;
   selected: boolean;
   showFootprint: boolean;
+  showSwath: boolean;
 }

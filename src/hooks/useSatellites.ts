@@ -13,6 +13,7 @@ const INITIAL: Satellite[] = tleEntries.map((s) => ({
   visible: true,
   selected: false,
   showFootprint: false,
+  showSwath: false,
 }));
 
 interface UseSatellitesResult {
@@ -20,6 +21,7 @@ interface UseSatellitesResult {
   toggleVisible: (id: string) => void;
   selectSatellite: (id: string) => void;
   toggleFootprint: (id: string) => void;
+  toggleSwath: (id: string) => void;
 }
 
 /**
@@ -57,5 +59,11 @@ export function useSatellites(): UseSatellitesResult {
     );
   }, []);
 
-  return { satellites, toggleVisible, selectSatellite, toggleFootprint };
+  const toggleSwath = useCallback((id: string) => {
+    setSatellites((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, showSwath: !s.showSwath } : s))
+    );
+  }, []);
+
+  return { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath };
 }

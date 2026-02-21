@@ -15,7 +15,10 @@ export interface ComputeDayRequest {
     offnadir: number;
     insert?: number;
   };
-  swathParams?: unknown;
+  swathParams?: {
+    roll: number;
+    split?: number;
+  };
 }
 
 export interface ComputeDayResponse {

@@ -349,6 +349,110 @@ describe("useSatellites", () => {
     });
   });
 
+  describe("showSwath initial state", () => {
+    it("initialises every satellite with showSwath=false", () => {
+      const { result } = renderHook(() => useSatellites());
+      const noneShowingSwath = result.current.satellites.every(
+        (s) => s.showSwath === false
+      );
+      expect(noneShowingSwath).toBe(true);
+    });
+  });
+
+  describe("toggleSwath", () => {
+    it("sets showSwath=true for iss when toggleSwath('iss') is called once", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleSwath("iss");
+      });
+
+      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      expect(iss.showSwath).toBe(true);
+    });
+
+    it("does not change showSwath for other satellites when toggling iss", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleSwath("iss");
+      });
+
+      const others = result.current.satellites.filter((s) => s.id !== "iss");
+      const noneChanged = others.every((s) => s.showSwath === false);
+      expect(noneChanged).toBe(true);
+    });
+
+    it("sets showSwath=false when toggleSwath is called twice with the same ID (toggle off)", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleSwath("noaa19");
+      });
+      act(() => {
+        result.current.toggleSwath("noaa19");
+      });
+
+      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
+      expect(noaa19.showSwath).toBe(false);
+    });
+
+    it("does not change visible state of any satellite when toggleSwath is called", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleSwath("terra");
+      });
+
+      const allVisible = result.current.satellites.every((s) => s.visible === true);
+      expect(allVisible).toBe(true);
+    });
+
+    it("does not change selected state of any satellite when toggleSwath is called", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleSwath("aqua");
+      });
+
+      const noneSelected = result.current.satellites.every((s) => s.selected === false);
+      expect(noneSelected).toBe(true);
+    });
+
+    it("does not change showFootprint state of any satellite when toggleSwath is called (independent flag)", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleSwath("landsat8");
+      });
+
+      const noneShowingFootprint = result.current.satellites.every(
+        (s) => s.showFootprint === false
+      );
+      expect(noneShowingFootprint).toBe(true);
+    });
+
+    it("allows multiple satellites to have showSwath=true simultaneously (non-exclusive)", () => {
+      const { result } = renderHook(() => useSatellites());
+
+      act(() => {
+        result.current.toggleSwath("sentinel2a");
+      });
+      act(() => {
+        result.current.toggleSwath("sentinel2b");
+      });
+
+      const sentinel2a = result.current.satellites.find((s) => s.id === "sentinel2a")!;
+      const sentinel2b = result.current.satellites.find((s) => s.id === "sentinel2b")!;
+      expect(sentinel2a.showSwath).toBe(true);
+      expect(sentinel2b.showSwath).toBe(true);
+
+      // Confirm exactly 2 satellites have showSwath=true (not just one)
+      const showingCount = result.current.satellites.filter((s) => s.showSwath).length;
+      expect(showingCount).toBe(2);
+    });
+  });
+
   describe("toggleVisible and selectSatellite interaction", () => {
     it("hiding a selected satellite also clears its selected state (prevents stale trackedEntity)", () => {
       const { result } = renderHook(() => useSatellites());

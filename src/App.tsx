@@ -3,6 +3,7 @@ import { GlobeRenderer } from "./components/Globe/GlobeRenderer";
 import { BaseMapLayer } from "./components/Globe/BaseMapLayer";
 import { SatelliteLayer } from "./components/Globe/SatelliteLayer";
 import { FootprintLayer } from "./components/Globe/FootprintLayer";
+import { SwathLayer } from "./components/Globe/SwathLayer";
 import { TimeController } from "./components/TimeController/TimeController";
 import { SatelliteList } from "./components/SatelliteList/SatelliteList";
 import { InfoPanel } from "./components/HUD/InfoPanel";
@@ -14,7 +15,7 @@ function getDayStartMs(now: number): number {
 }
 
 function App() {
-  const { satellites, toggleVisible, selectSatellite, toggleFootprint } = useSatellites();
+  const { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath } = useSatellites();
   const [dayStartMs, setDayStartMs] = useState(() => getDayStartMs(Date.now()));
 
   return (
@@ -43,6 +44,17 @@ function App() {
           dayStartMs={dayStartMs}
         />
       ))}
+      {satellites.map((sat) => (
+        <SwathLayer
+          key={`sw-${sat.id}`}
+          id={sat.id}
+          tle={sat.tle}
+          color={sat.color}
+          visible={sat.visible}
+          showSwath={sat.showSwath}
+          dayStartMs={dayStartMs}
+        />
+      ))}
       <TimeController onDayChange={setDayStartMs} />
       <InfoPanel />
       <SatelliteList
@@ -50,6 +62,7 @@ function App() {
         onToggleVisible={toggleVisible}
         onSelect={selectSatellite}
         onToggleFootprint={toggleFootprint}
+        onToggleSwath={toggleSwath}
       />
     </GlobeRenderer>
   );

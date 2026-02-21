@@ -5,9 +5,10 @@ interface Props {
   onToggleVisible: (id: string) => void;
   onSelect: (id: string) => void;
   onToggleFootprint: (id: string) => void;
+  onToggleSwath: (id: string) => void;
 }
 
-export function SatelliteList({ satellites, onToggleVisible, onSelect, onToggleFootprint }: Props) {
+export function SatelliteList({ satellites, onToggleVisible, onSelect, onToggleFootprint, onToggleSwath }: Props) {
   return (
     <div
       style={{
@@ -87,6 +88,28 @@ export function SatelliteList({ satellites, onToggleVisible, onSelect, onToggleF
             FP
           </button>
 
+          {/* スワス ON/OFF ボタン */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSwath(sat.id);
+            }}
+            title={sat.showSwath ? "スワスを非表示" : "スワスを表示"}
+            style={{
+              background: sat.showSwath ? sat.color : "rgba(255,255,255,0.15)",
+              border: "none",
+              borderRadius: 3,
+              color: sat.showSwath ? "#000" : "rgba(255,255,255,0.6)",
+              cursor: "pointer",
+              fontSize: 9,
+              padding: "1px 4px",
+              lineHeight: 1.4,
+              flexShrink: 0,
+            }}
+          >
+            SW
+          </button>
+
           {/* ON/OFF チェックボックス */}
           <input
             type="checkbox"
@@ -105,7 +128,7 @@ export function SatelliteList({ satellites, onToggleVisible, onSelect, onToggleF
           borderTop: "1px solid rgba(255,255,255,0.1)",
         }}
       >
-        クリックで追尾 / FPでフットプリント / チェックで表示切替
+        クリックで追尾 / FP: フットプリント / SW: スワス / チェック: 表示切替
       </div>
     </div>
   );

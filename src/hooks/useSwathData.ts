@@ -1,0 +1,175 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useOrbitWorker } from "./useWorker";
+import type { SwathData } from "../types/orbit";
+import type { ComputeDayRequest, MainMessage } from "../types/worker-messages";
+import type { SwathParams } from "../lib/tle/swath";
+import { LRUCache } from "../lib/cache/lru-cache";
+
+const DAY_MS = 86400000;
+
+function getDayStartMs(now: number): number {
+  return now - (now % DAY_MS);
+}
+
+function generateRequestId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+/**
+ * モジュールレベルのLRUキャッシュ（10機 × 7日 = 70エントリ）
+ */
+const swathCache = new LRUCache<SwathData>(70);
+
+interface UseSwathDataOptions {
+  satelliteId: string;
+  tle1: string;
+  tle2: string;
+  swathParams: SwathParams;
+  /** 外部から注入する日開始時刻（ms UTC）。未指定の場合は当日0時を使用。 */
+  dayStartMs?: number;
+}
+
+interface UseSwathDataResult {
+  swathData: SwathData | null;
+  loading: boolean;
+  error: string | null;
+}
+
+/**
+ * Web Worker を使って1日窓のスワスデータを非同期に取得するフック。
+ *
+ * - LRUキャッシュを優先参照し、ヒット時は Worker を呼ばない
+ * - dayStartMs 変化時に前後1日を先読みリクエストする
+ * - スワスは時刻によらず窓単位で静的なため timeSizes 不要
+ */
+export function useSwathData({
+  satelliteId,
+  tle1,
+  tle2,
+  swathParams,
+  dayStartMs: externalDayStartMs,
+}: UseSwathDataOptions): UseSwathDataResult {
+  const [swathData, setSwathData] = useState<SwathData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const pendingRequestId = useRef<string | null>(null);
+  const prefetchIds = useRef(new Set<string>());
+
+  const paramsKey = JSON.stringify(swathParams);
+
+  const handleMessage = useCallback((msg: MainMessage) => {
+    if (msg.type === "error") {
+      if (msg.requestId === pendingRequestId.current) {
+        setError(msg.message);
+        setLoading(false);
+      }
+      prefetchIds.current.delete(msg.requestId);
+      return;
+    }
+
+    // --- 先読みレスポンス ---
+    if (prefetchIds.current.has(msg.requestId)) {
+      prefetchIds.current.delete(msg.requestId);
+      if (msg.swath) {
+        const data: SwathData = {
+          rings: new Float32Array(msg.swath.flat.rings),
+          offsets: new Int32Array(msg.swath.flat.offsets),
+          counts: new Int32Array(msg.swath.flat.counts),
+        };
+        const key = `${msg.satelliteId}:${msg.dayStartMs}:${paramsKey}`;
+        swathCache.set(key, data);
+      }
+      return;
+    }
+
+    // --- メインレスポンス ---
+    if (msg.requestId !== pendingRequestId.current) return;
+
+    if (msg.swath) {
+      const data: SwathData = {
+        rings: new Float32Array(msg.swath.flat.rings),
+        offsets: new Int32Array(msg.swath.flat.offsets),
+        counts: new Int32Array(msg.swath.flat.counts),
+      };
+      const key = `${msg.satelliteId}:${msg.dayStartMs}:${paramsKey}`;
+      swathCache.set(key, data);
+      setSwathData(data);
+      setError(null);
+    }
+    setLoading(false);
+  }, [paramsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const { postMessage } = useOrbitWorker(handleMessage);
+
+  const postMessageRef = useRef(postMessage);
+  postMessageRef.current = postMessage;
+
+  // メインリクエスト
+  useEffect(() => {
+    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
+    const cacheKey = `${satelliteId}:${dayStartMs}:${paramsKey}`;
+
+    const cached = swathCache.get(cacheKey);
+    if (cached) {
+      setSwathData(cached);
+      setLoading(false);
+      setError(null);
+      pendingRequestId.current = null;
+      return;
+    }
+
+    const requestId = generateRequestId();
+    pendingRequestId.current = requestId;
+    setLoading(true);
+    setError(null);
+
+    const request: ComputeDayRequest = {
+      type: "compute-day",
+      requestId,
+      satelliteId,
+      tle1,
+      tle2,
+      dayStartMs,
+      durationMs: DAY_MS,
+      stepSec: 30, // swath では使用しないが型の都合で必要
+      outputs: { orbit: false, footprint: false, swath: true },
+      swathParams,
+    };
+
+    postMessageRef.current(request);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satelliteId, tle1, tle2, externalDayStartMs, paramsKey]);
+
+  // 先読み: D-1 / D+1 をバックグラウンドで取得
+  useEffect(() => {
+    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
+
+    for (const offset of [-DAY_MS, DAY_MS]) {
+      const targetDay = dayStartMs + offset;
+      const cacheKey = `${satelliteId}:${targetDay}:${paramsKey}`;
+      if (swathCache.has(cacheKey)) continue;
+
+      const requestId = generateRequestId();
+      prefetchIds.current.add(requestId);
+
+      const request: ComputeDayRequest = {
+        type: "compute-day",
+        requestId,
+        satelliteId,
+        tle1,
+        tle2,
+        dayStartMs: targetDay,
+        durationMs: DAY_MS,
+        stepSec: 30,
+        outputs: { orbit: false, footprint: false, swath: true },
+        swathParams,
+      };
+
+      postMessageRef.current(request);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satelliteId, tle1, tle2, externalDayStartMs, paramsKey]);
+
+  return { swathData, loading, error };
+}
