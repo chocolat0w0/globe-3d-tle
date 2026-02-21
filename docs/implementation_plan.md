@@ -438,35 +438,89 @@ const swath = accessArea(tle1, tle2, startDate, endDate, {
 
 ---
 
-### Phase 9: ポリゴン描画（AOI等）
+### Phase 9: AOI描画ツール
 
-**目標**: 任意ポリゴンの描画と強調表示
+**目標**: ユーザーが地球儀上で任意のAOI（関心領域）を1つ描画・編集できる機能の実装
+
+**制約**:
+
+- AOIは同時に1つのみ（新しく描画すると前のAOIはクリアされる）
+- AOIの種別: 閉じたポリゴン または ポイント
+- **描画モード中は時刻アニメーションを一時停止する**（地球の自転で地点がずれないようにするため）
 
 **タスク**:
 
 1. types/polygon.ts の定義
-   - GeoJSON Polygon/MultiPolygon型
-   - PolygonState (default/hover/selected)
-2. PolygonLayer.tsx の実装
-   - GeoJSON入力の受け入れ
-   - Cesium.Entity としてポリゴン描画
-   - hover/selected時のスタイル変更
-3. サンプルAOIデータの作成
-4. インタラクション実装
-   - マウスホバーでハイライト
-   - クリックで選択状態
+   - `AoiPoint`: `{ type: "Point"; coordinate: [lon, lat] }`
+   - `AoiPolygon`: `{ type: "Polygon"; coordinates: [lon, lat][] }` （GeoJSON準拠）
+   - `Aoi`: `AoiPoint | AoiPolygon | null`
+2. hooks/useAoi.ts の実装
+   - AOI状態管理（`Aoi | null`）
+   - 描画モード管理（`"point" | "polygon" | "none"`）
+   - `setAoi`, `clearAoi`, `setMode` 操作
+3. AOI描画UIパネルの実装
+   - 「ポイント」「ポリゴン」「GeoJSON読込」「クリア」ボタン
+   - 現在のモード/AOI種別を表示
+4. 描画モード中の時刻一時停止
+   - 描画モードに入ったとき: `viewer.clock.shouldAnimate = false`
+   - 描画モードを抜けたとき（確定・キャンセル・クリア）: 元の状態を復元
+   - `useTime` フックと連携し、一時停止前の `shouldAnimate` 状態を保存しておく
+5. Cesiumでのインタラクティブ描画実装
+   - **ポイントモード**: クリックで1点を配置
+   - **ポリゴンモード**: クリックで頂点を追加、ダブルクリックまたは「確定」ボタンで閉じる
+     - ゴムバンドライン（仮線）を `MOUSE_MOVE` イベントで更新（毎フレームではない）
+     - 頂点は3点以上で確定可能
+6. GeoJSON読み込み機能
+   - ファイル選択（`<input type="file">`）でGeoJSONを読み込む
+   - `Feature<Point>` または `Feature<Polygon>` の1件目を採用
+   - 不正なファイルはエラーメッセージを表示
+7. PolygonLayer.tsx の実装
+   - `Aoi` を受け取り Cesium.Entity として描画
+   - ポイント: BillboardまたはPointPrimitive
+   - ポリゴン: 塗りつぶし + アウトライン
 
 **成果物**:
 
-- GeoJSONポリゴンが地球儀上に表示される
-- ホバー/選択で色が変わる
+- 地球儀上でポイントをクリックして配置できる
+- 地球儀上でクリックを繰り返してポリゴンを描画し、確定できる
+- 描画モード中は時刻が一時停止し、確定/キャンセル後に元の状態に戻る
+- GeoJSONファイルを読み込んでAOIを表示できる
+- 新しく描画すると前のAOIはクリアされる（1つのみ制約）
+- 「クリア」ボタンでAOIを削除できる
 
 **技術メモ**:
 
-- dateline跨ぎの考慮（MultiPolygon分割）
-- Cesium.Entity の material/outline プロパティ活用
+```typescript
+// Cesiumでの地表クリック取得
+viewer.screenSpaceEventHandler.setInputAction((e) => {
+  const cartesian = viewer.scene.globe.pick(
+    viewer.camera.getPickRay(e.position)!, scene
+  );
+  if (cartesian) {
+    const carto = Cesium.Cartographic.fromCartesian(cartesian);
+    const lon = Cesium.Math.toDegrees(carto.longitude);
+    const lat = Cesium.Math.toDegrees(carto.latitude);
+    // ...頂点追加
+  }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-**所要目安**: 2-3日
+// ゴムバンドライン: 毎フレームではなく MOUSE_MOVE イベントで更新
+viewer.screenSpaceEventHandler.setInputAction((e) => {
+  const cartesian = viewer.scene.globe.pick(...);
+  if (cartesian) rubberbandEntity.polyline.positions = [...vertices, cartesian];
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+// 描画モード開始/終了時の時刻一時停止
+const prevShouldAnimate = viewer.clock.shouldAnimate;
+viewer.clock.shouldAnimate = false;          // 描画開始
+// ...描画処理...
+viewer.clock.shouldAnimate = prevShouldAnimate; // 描画終了（確定/キャンセル）
+```
+
+- GeoJSON読み込みは `FileReader` + `JSON.parse` でブラウザ完結
+- dateline跨ぎ入力の考慮は将来課題とする（Phase 9では非対応と明記）
+
+**所要目安**: 3-4日
 
 ---
 
@@ -567,7 +621,9 @@ const swath = accessArea(tle1, tle2, startDate, endDate, {
 - [ ] 10機表示 + 1日窓（step=30秒）で地球回転/ズームが滑らか
 - [ ] スライダーで日付切替してもUIがフリーズしない
 - [ ] 自前タイルが正しく表示される
-- [ ] AOIポリゴンの描画とホバー/選択ができる
+- [ ] 地球儀上でポイント・ポリゴンをインタラクティブに描画できる
+- [ ] GeoJSONファイルを読み込んでAOIを表示できる
+- [ ] AOIは1つのみ保持され、新規描画・クリアが正しく動作する
 - [ ] TLE軌道ラインと衛星動点が時刻に追従する
 - [ ] フットプリントが時刻追従し、dateline跨ぎで破綻しない
 - [ ] スワスが1日窓に対応して表示され、窓切替で差し替わる
@@ -584,8 +640,8 @@ const swath = accessArea(tle1, tle2, startDate, endDate, {
 | Phase 6 (タイムスライダー) | 4-5日    | 22日 |
 | Phase 7 (フットプリント)   | 3-4日    | 26日 |
 | Phase 8 (スワス)           | 3-4日    | 30日 |
-| Phase 9 (ポリゴン)         | 2-3日    | 33日 |
-| Phase 10                   | 5-7日    | 40日 |
+| Phase 9 (AOI描画ツール)    | 3-4日    | 34日 |
+| Phase 10                   | 5-7日    | 41日 |
 
 **合計**: 約6-8週間（バッファ含む）
 

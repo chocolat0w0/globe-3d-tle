@@ -111,27 +111,30 @@ export interface MultiPolygon {
 export type GeoJSONPolygon = Polygon | MultiPolygon;
 
 /**
- * ポリゴンの状態
+ * AOIポイント
  */
-export type PolygonState = 'default' | 'hover' | 'selected';
+export interface AoiPoint {
+  type: 'Point';
+  coordinate: [lon: number, lat: number]; // degrees
+}
 
 /**
- * AOIポリゴン
+ * AOIポリゴン（閉じたリング）
  */
-export interface AOIPolygon {
-  id: string;
-  name: string;
-  geometry: GeoJSONPolygon;
-  state: PolygonState;
-  style?: PolygonStyle;
+export interface AoiPolygon {
+  type: 'Polygon';
+  coordinates: [lon: number, lat: number][]; // degrees, GeoJSON準拠
 }
 
-export interface PolygonStyle {
-  fill?: string; // CSS color
-  stroke?: string; // CSS color
-  strokeWidth?: number;
-  opacity?: number;
-}
+/**
+ * AOI（関心領域）- 同時に1つのみ保持
+ */
+export type Aoi = AoiPoint | AoiPolygon;
+
+/**
+ * AOI描画モード
+ */
+export type AoiDrawingMode = 'point' | 'polygon' | 'none';
 
 /**
  * フットプリント（地表ポリゴン）
@@ -548,6 +551,33 @@ export function useWorker<Request, Response>(
 }
 ```
 
+### 4.5 hooks/useAoi.ts
+
+```typescript
+/**
+ * AOI管理フック
+ *
+ * 描画モードに入ると時刻アニメーションを一時停止し、
+ * 描画終了（確定/キャンセル）時に元の状態へ復元する。
+ */
+export function useAoi() {
+  return {
+    aoi: Aoi | null;
+    mode: AoiDrawingMode;
+
+    // アクション
+    setMode: (mode: AoiDrawingMode) => void;  // 描画モード切替（時刻停止/復元を内包）
+    setAoi: (aoi: Aoi) => void;               // 描画確定
+    clearAoi: () => void;                     // AOI削除（描画モードも none に戻す）
+
+    // GeoJSONファイル読み込み
+    loadFromGeoJSON: (
+      json: unknown
+    ) => { success: true; aoi: Aoi } | { success: false; error: string };
+  };
+}
+```
+
 ## 5. Workerの実装詳細
 
 ### 5.1 orbit-calculator.worker.ts
@@ -680,8 +710,9 @@ function sendError(
 interface GlobeRendererProps {
   satellites: Satellite[];
   currentTimeMs: number;
-  aois?: AOIPolygon[];
-  onPolygonClick?: (polygonId: string) => void;
+  aoi: Aoi | null;         // 表示するAOI（1つのみ）
+  aoiMode: AoiDrawingMode; // 描画モード（描画中はインタラクションを切替）
+  onAoiChange: (aoi: Aoi | null) => void; // 描画確定/クリア時のコールバック
   onCameraChange?: (camera: Cesium.Camera) => void;
 }
 ```

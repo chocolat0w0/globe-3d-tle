@@ -13,13 +13,15 @@ function getDayStartMs(ms: number): number {
 
 interface TimeControllerProps {
   onDayChange: (dayStartMs: number) => void;
+  aoiDrawing?: boolean;
 }
 
-export function TimeController({ onDayChange }: TimeControllerProps) {
+export function TimeController({ onDayChange, aoiDrawing = false }: TimeControllerProps) {
   const { viewer } = useCesium();
   const [currentMs, setCurrentMs] = useState(() => Date.now());
   const [isPlaying, setIsPlaying] = useState(true);
   const [multiplier, setMultiplierState] = useState(60);
+  const savedShouldAnimateRef = useRef<boolean | undefined>(undefined);
 
   // 最新の onDayChange 参照を保持
   const onDayChangeRef = useRef(onDayChange);
@@ -47,6 +49,22 @@ export function TimeController({ onDayChange }: TimeControllerProps) {
     prevDayStartMs.current = dayStartMs;
     onDayChangeRef.current(dayStartMs);
   }, [viewer]);
+
+  // AOI描画モード中は時刻アニメーションを一時停止し、終了時に元の状態へ復元する
+  useEffect(() => {
+    if (!viewer) return;
+    if (aoiDrawing) {
+      savedShouldAnimateRef.current = viewer.clock.shouldAnimate;
+      viewer.clock.shouldAnimate = false;
+      setIsPlaying(false);
+    } else {
+      if (savedShouldAnimateRef.current !== undefined) {
+        viewer.clock.shouldAnimate = savedShouldAnimateRef.current;
+        setIsPlaying(savedShouldAnimateRef.current);
+        savedShouldAnimateRef.current = undefined;
+      }
+    }
+  }, [viewer, aoiDrawing]);
 
   // postRender で現在時刻を React state に同期し、日跨ぎを検知する
   useEffect(() => {

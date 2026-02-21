@@ -1,11 +1,16 @@
-export type PolygonState = "default" | "hover" | "selected";
-
-export interface AOIPolygon {
-  id: string;
-  name: string;
-  coordinates: number[][][]; // GeoJSON Polygon coordinates
-  state: PolygonState;
+export interface AoiPoint {
+  type: "Point";
+  coordinate: [lon: number, lat: number]; // degrees
 }
+
+export interface AoiPolygon {
+  type: "Polygon";
+  coordinates: [lon: number, lat: number][]; // degrees, GeoJSON準拠
+}
+
+export type Aoi = AoiPoint | AoiPolygon;
+
+export type AoiDrawingMode = "point" | "polygon" | "none";
 
 export interface FlatRings {
   rings: ArrayBuffer; // Float32Array [lon,lat,...]

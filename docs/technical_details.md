@@ -891,7 +891,151 @@ function validateTLE(tle1: string, tle2: string): boolean {
 }
 ```
 
-## 10. まとめ
+## 10. AOI描画ツール
+
+### 10.1 インタラクティブ描画の実装
+
+AOI描画中はCesiumのデフォルトインタラクション（カメラ操作）と干渉しないよう、専用の `ScreenSpaceEventHandler` を使う。描画モード終了時に `destroy()` して後始末すること。
+
+**クリックで頂点を追加（ポリゴンモード）**:
+
+```typescript
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+handler.setInputAction((e: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+  const ray = viewer.camera.getPickRay(e.position);
+  if (!ray) return;
+  const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+  if (!cartesian) return;
+
+  const carto = Cesium.Cartographic.fromCartesian(cartesian);
+  const lon = Cesium.Math.toDegrees(carto.longitude);
+  const lat = Cesium.Math.toDegrees(carto.latitude);
+
+  vertices.push([lon, lat]);
+  updateVertexEntities(vertices); // 頂点マーカーを再描画
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+// 確定: ダブルクリック（最後の重複点を除いて閉じる）
+handler.setInputAction(() => {
+  if (vertices.length >= 3) confirmPolygon(vertices);
+}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+```
+
+### 10.2 ゴムバンドライン（MOUSE_MOVE イベント）
+
+ゴムバンドラインはアニメーションフレームと無関係に、マウス移動イベントのみで更新する。
+
+```typescript
+// 仮線 Entity（描画開始時に1度だけ生成）
+const rubberbandEntity = viewer.entities.add({
+  polyline: {
+    positions: new Cesium.CallbackProperty(() => rubberbandPositions, false),
+    width: 1,
+    material: Cesium.Color.YELLOW.withAlpha(0.6),
+  },
+});
+
+handler.setInputAction((e: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
+  if (vertices.length === 0) return;
+  const ray = viewer.camera.getPickRay(e.endPosition);
+  if (!ray) return;
+  const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+  if (!cartesian) return;
+
+  // 確定済み頂点 + カーソル位置で仮線を更新
+  rubberbandPositions = [
+    ...confirmedCartesians,
+    cartesian,
+    confirmedCartesians[0], // 閉じる仮線
+  ];
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+```
+
+### 10.3 描画モード中の時刻一時停止
+
+描画モードに入ると地球の自転（時刻進行）によってクリックした地点が視覚的にずれるため、時刻アニメーションを一時停止する。
+
+```typescript
+// 描画モード開始（useAoi 内部で管理）
+const prevShouldAnimate = viewer.clock.shouldAnimate;
+viewer.clock.shouldAnimate = false;
+
+// 描画モード終了（確定/キャンセル/クリア）
+viewer.clock.shouldAnimate = prevShouldAnimate;
+```
+
+`useTime` フックとの連携:
+
+- 描画モード開始時: `pause()` を呼び出し、呼び出し前の `isPlaying` を保存
+- 描画モード終了時: 保存した `isPlaying` が `true` なら `play()` を呼び出して復元
+
+### 10.4 GeoJSON ファイル読み込み
+
+```typescript
+function parseAoiFromGeoJSON(
+  json: unknown,
+): { success: true; aoi: Aoi } | { success: false; error: string } {
+  try {
+    const obj = json as Record<string, unknown>;
+
+    // FeatureCollection の場合は1件目のFeatureを採用
+    const feature =
+      obj.type === 'FeatureCollection'
+        ? (obj.features as unknown[])[0]
+        : obj;
+
+    const geom = (feature as Record<string, unknown>).geometry as Record<
+      string,
+      unknown
+    >;
+
+    if (geom?.type === 'Point') {
+      const [lon, lat] = geom.coordinates as [number, number];
+      return { success: true, aoi: { type: 'Point', coordinate: [lon, lat] } };
+    }
+
+    if (geom?.type === 'Polygon') {
+      const ring = (geom.coordinates as number[][][])[0];
+      return { success: true, aoi: { type: 'Polygon', coordinates: ring as [number, number][] } };
+    }
+
+    return { success: false, error: 'Point または Polygon の GeoJSON を指定してください' };
+  } catch {
+    return { success: false, error: '無効なJSONファイルです' };
+  }
+}
+```
+
+- ファイル読み込みは `FileReader` + `JSON.parse` でブラウザ完結
+- サポート形式: `Feature<Point>`, `Feature<Polygon>`, `FeatureCollection`（1件目を採用）
+- dateline跨ぎ入力は Phase 9 では非対応（将来課題）
+
+### 10.5 描画中の Entity 管理
+
+```typescript
+// 頂点マーカー管理
+const vertexEntities: Cesium.Entity[] = [];
+
+function addVertexMarker(cartesian: Cesium.Cartesian3): void {
+  vertexEntities.push(
+    viewer.entities.add({
+      position: cartesian,
+      point: { pixelSize: 8, color: Cesium.Color.YELLOW, outlineColor: Cesium.Color.WHITE, outlineWidth: 1 },
+    })
+  );
+}
+
+// 描画終了時のクリーンアップ
+function clearDrawingEntities(): void {
+  vertexEntities.forEach((e) => viewer.entities.remove(e));
+  vertexEntities.length = 0;
+  if (rubberbandEntity) viewer.entities.remove(rubberbandEntity);
+  handler.destroy();
+}
+```
+
+## 11. まとめ
 
 本ドキュメントでは以下を説明した:
 
@@ -903,5 +1047,6 @@ function validateTLE(tle1: string, tle2: string): boolean {
 6. **キャッシュ**: LRU実装と先読み戦略
 7. **パフォーマンス**: 計測方法とメモリ監視
 8. **デバッグ**: 座標検証とTLE検証
+9. **AOI描画ツール**: インタラクティブ描画、ゴムバンドライン、時刻一時停止、GeoJSON読み込み
 
 これらの技術詳細を踏まえて実装を進めることで、高品質なアプリケーションを構築できる。
