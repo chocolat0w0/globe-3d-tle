@@ -228,6 +228,56 @@ describe("LRUCache", () => {
     });
   });
 
+  describe("estimatedBytes", () => {
+    it("sizeOf 未指定時は TypedArray の byteLength を合算する", () => {
+      const cache = new LRUCache<Float32Array>(3);
+      cache.set("a", new Float32Array(4)); // 16 bytes
+      cache.set("b", new Float32Array(2)); // 8 bytes
+      expect(cache.estimatedBytes).toBe(24);
+    });
+
+    it("ArrayBuffer も合算対象になる", () => {
+      const cache = new LRUCache<ArrayBuffer>(3);
+      cache.set("buf", new ArrayBuffer(64));
+      expect(cache.estimatedBytes).toBe(64);
+    });
+
+    it("sizeOf 指定時はコールバック値を使用する", () => {
+      const cache = new LRUCache<{ bytes: number }>(3, (value) => value.bytes);
+      cache.set("x", { bytes: 10 });
+      cache.set("y", { bytes: 15 });
+      expect(cache.estimatedBytes).toBe(25);
+    });
+
+    it("既存キー上書き時は差し替え後サイズに更新される", () => {
+      const cache = new LRUCache<{ bytes: number }>(3, (value) => value.bytes);
+      cache.set("x", { bytes: 10 });
+      cache.set("x", { bytes: 4 });
+      expect(cache.estimatedBytes).toBe(4);
+    });
+
+    it("容量超過エビクト時に削除分が差し引かれる", () => {
+      const cache = new LRUCache<{ bytes: number }>(2, (value) => value.bytes);
+      cache.set("a", { bytes: 10 });
+      cache.set("b", { bytes: 20 });
+      cache.set("c", { bytes: 30 }); // "a" がエビクト
+      expect(cache.estimatedBytes).toBe(50);
+    });
+
+    it("delete と clear で合計サイズが更新される", () => {
+      const cache = new LRUCache<Float64Array>(3);
+      cache.set("a", new Float64Array(2)); // 16
+      cache.set("b", new Float64Array(1)); // 8
+      expect(cache.estimatedBytes).toBe(24);
+
+      cache.delete("a");
+      expect(cache.estimatedBytes).toBe(8);
+
+      cache.clear();
+      expect(cache.estimatedBytes).toBe(0);
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // エッジケース
   // ---------------------------------------------------------------------------
