@@ -8,6 +8,7 @@ import type {
 import { LRUCache } from "../lib/cache/lru-cache";
 
 const DAY_MS = 86400000;
+const ORBIT_CACHE_CAPACITY = 70;
 
 /** UTC 00:00 に丸めた日開始時刻を返す */
 function getDayStartMs(now: number): number {
@@ -22,7 +23,14 @@ function generateRequestId(): string {
  * モジュールレベルのLRUキャッシュ（10機 × 7日 = 70エントリを保持）
  * モジュールの寿命全体で共有され、衛星・日付を跨いで再利用される。
  */
-export const orbitCache = new LRUCache<OrbitData>(70);
+function estimateOrbitDataBytes(value: OrbitData): number {
+  return value.timesMs.byteLength + value.ecef.byteLength;
+}
+
+export const orbitCache = new LRUCache<OrbitData>(
+  ORBIT_CACHE_CAPACITY,
+  estimateOrbitDataBytes,
+);
 
 interface UseOrbitDataOptions {
   satelliteId: string;
