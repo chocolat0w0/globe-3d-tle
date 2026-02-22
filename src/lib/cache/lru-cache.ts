@@ -70,6 +70,10 @@ export class LRUCache<V> {
     return this.cache.size;
   }
 
+  get capacity(): number {
+    return this.maxSize;
+  }
+
   get estimatedBytes(): number {
     return this.totalBytes;
   }

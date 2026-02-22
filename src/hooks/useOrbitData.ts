@@ -22,7 +22,7 @@ function generateRequestId(): string {
  * モジュールレベルのLRUキャッシュ（10機 × 7日 = 70エントリを保持）
  * モジュールの寿命全体で共有され、衛星・日付を跨いで再利用される。
  */
-const orbitCache = new LRUCache<OrbitData>(70);
+export const orbitCache = new LRUCache<OrbitData>(70);
 
 interface UseOrbitDataOptions {
   satelliteId: string;

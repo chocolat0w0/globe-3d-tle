@@ -77,7 +77,7 @@ export function AoiPanel({ mode, aoi, onSetMode, onClear, onLoadGeoJSON }: Props
       style={{
         position: "absolute",
         bottom: 110,
-        right: 8,
+        left: 8,
         background: "rgba(0, 0, 0, 0.72)",
         color: "#e8e8e8",
         padding: "8px 12px",

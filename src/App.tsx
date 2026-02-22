@@ -8,6 +8,7 @@ import { AoiLayer } from "./components/Globe/AoiLayer";
 import { TimeController } from "./components/TimeController/TimeController";
 import { SatelliteList } from "./components/SatelliteList/SatelliteList";
 import { InfoPanel } from "./components/HUD/InfoPanel";
+import { PerfOverlay } from "./components/HUD/PerfOverlay";
 import { AoiPanel } from "./components/AOI/AoiPanel";
 import { useSatellites } from "./hooks/useSatellites";
 import { useAoi } from "./hooks/useAoi";
@@ -65,6 +66,7 @@ function App() {
       <AoiLayer aoi={aoi} mode={aoiMode} onAoiChange={setAoi} />
       <TimeController onDayChange={setDayStartMs} aoiDrawing={aoiMode !== "none"} />
       <InfoPanel orbitRenderMode={orbitRenderMode} onOrbitRenderModeChange={setOrbitRenderMode} />
+      <PerfOverlay />
       <AoiPanel
         mode={aoiMode}
         aoi={aoi}

@@ -75,6 +75,28 @@ describe("LRUCache", () => {
     });
   });
 
+  describe("capacity", () => {
+    it("capacity は maxSize を返す", () => {
+      const cache = new LRUCache<number>(42);
+      expect(cache.capacity).toBe(42);
+    });
+
+    it("エントリを追加しても capacity は変わらない", () => {
+      const cache = new LRUCache<number>(5);
+      cache.set("a", 1);
+      cache.set("b", 2);
+      expect(cache.capacity).toBe(5);
+    });
+
+    it("エビクションが発生しても capacity は変わらない", () => {
+      const cache = new LRUCache<number>(2);
+      cache.set("a", 1);
+      cache.set("b", 2);
+      cache.set("c", 3); // "a" がエビクト
+      expect(cache.capacity).toBe(2);
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // delete / clear
   // ---------------------------------------------------------------------------
