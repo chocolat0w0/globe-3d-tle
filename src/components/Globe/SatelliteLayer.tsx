@@ -13,6 +13,8 @@ import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
 import type { OrbitRenderMode } from "../../types/orbit";
 import { toCesiumArcType } from "./orbit-render-mode";
+import { PerfLogger } from "../../lib/perf/perf-logger";
+import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
 
 interface Props {
   id: string;
@@ -38,6 +40,14 @@ export function SatelliteLayer({
 }: Props) {
   const { viewer } = useCesium();
   const entityRef = useRef<CesiumEntity | null>(null);
+  const perfLogger = useMemo(
+    () =>
+      new PerfLogger({
+        enabled: import.meta.env.VITE_PERF_LOG === "true",
+        onEntry: (entry) => perfMetricsStore.push(entry),
+      }),
+    []
+  );
 
   const { orbitData, loading, error } = useOrbitData({
     satelliteId: id,
@@ -48,15 +58,17 @@ export function SatelliteLayer({
 
   const sampledPosition = useMemo(() => {
     if (!orbitData) return null;
-    const sp = new SampledPositionProperty();
-    const { timesMs, ecef } = orbitData;
-    for (let i = 0; i < timesMs.length; i++) {
-      const julianDate = JulianDate.fromDate(new Date(timesMs[i]));
-      const pos = new Cartesian3(ecef[i * 3], ecef[i * 3 + 1], ecef[i * 3 + 2]);
-      sp.addSample(julianDate, pos);
-    }
-    return sp;
-  }, [orbitData]);
+    return perfLogger.measure(`sampled-position-build:${id}`, () => {
+      const sp = new SampledPositionProperty();
+      const { timesMs, ecef } = orbitData;
+      for (let i = 0; i < timesMs.length; i++) {
+        const julianDate = JulianDate.fromDate(new Date(timesMs[i]));
+        const pos = new Cartesian3(ecef[i * 3], ecef[i * 3 + 1], ecef[i * 3 + 2]);
+        sp.addSample(julianDate, pos);
+      }
+      return sp;
+    });
+  }, [orbitData, perfLogger, id]);
 
   const orbitPositions = useMemo(() => {
     if (!orbitData) return [];

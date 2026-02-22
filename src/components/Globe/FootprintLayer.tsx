@@ -5,6 +5,8 @@ import { useFootprintData } from "../../hooks/useFootprintData";
 import type { FootprintParams } from "../../lib/tle/footprint";
 import type { TLEData } from "../../types/satellite";
 import type { FootprintData } from "../../types/orbit";
+import { PerfLogger } from "../../lib/perf/perf-logger";
+import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
 
 interface Props {
   id: string;
@@ -89,6 +91,14 @@ export function FootprintLayer({
 }: Props) {
   const { viewer } = useCesium();
   const [currentMs, setCurrentMs] = useState(() => Date.now());
+  const perfLogger = useMemo(
+    () =>
+      new PerfLogger({
+        enabled: import.meta.env.VITE_PERF_LOG === "true",
+        onEntry: (entry) => perfMetricsStore.push(entry),
+      }),
+    []
+  );
 
   const { footprintData } = useFootprintData({
     satelliteId: id,
@@ -117,10 +127,12 @@ export function FootprintLayer({
 
   const polygons = useMemo(() => {
     if (!footprintData || !timePolyStarts) return [];
-    const timeIdx = findClosestIndex(footprintData.timesMs, currentMs);
-    if (timeIdx < 0) return [];
-    return extractPolygons(footprintData, timePolyStarts, timeIdx);
-  }, [footprintData, timePolyStarts, currentMs]);
+    return perfLogger.measure(`footprint-update:${id}`, () => {
+      const timeIdx = findClosestIndex(footprintData.timesMs, currentMs);
+      if (timeIdx < 0) return [];
+      return extractPolygons(footprintData, timePolyStarts, timeIdx);
+    });
+  }, [footprintData, timePolyStarts, currentMs, perfLogger, id]);
 
   const cesiumColor = useMemo(() => Color.fromCssColorString(color), [color]);
 
