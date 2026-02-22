@@ -49,17 +49,18 @@ describe("useAoi", () => {
         geometry: { type: "Point", coordinates: [139.69, 35.68] },
         properties: {},
       };
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON(geojson);
       });
-      expect(ret!.success).toBe(true);
-      if (ret!.success) {
-        expect(ret.aoi).toEqual<AoiPoint>({
-          type: "Point",
-          coordinate: [139.69, 35.68],
-        });
+      expect(ret).toBeDefined();
+      if (!ret || !ret.success) {
+        throw new Error("Expected loadFromGeoJSON to succeed");
       }
+      expect(ret.aoi).toEqual<AoiPoint>({
+        type: "Point",
+        coordinate: [139.69, 35.68],
+      });
       expect(result.current.aoi).not.toBeNull();
       expect(result.current.mode).toBe("none");
     });
@@ -78,16 +79,17 @@ describe("useAoi", () => {
         geometry: { type: "Polygon", coordinates: [ring] },
         properties: {},
       };
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON(geojson);
       });
-      expect(ret!.success).toBe(true);
-      if (ret!.success) {
-        const aoi = ret.aoi as AoiPolygon;
-        expect(aoi.type).toBe("Polygon");
-        expect(aoi.coordinates).toHaveLength(5);
+      expect(ret).toBeDefined();
+      if (!ret || !ret.success) {
+        throw new Error("Expected loadFromGeoJSON to succeed");
       }
+      const aoi = ret.aoi as AoiPolygon;
+      expect(aoi.type).toBe("Polygon");
+      expect(aoi.coordinates).toHaveLength(5);
     });
 
     it("FeatureCollection の最初のフィーチャを処理できる", () => {
@@ -107,33 +109,36 @@ describe("useAoi", () => {
           },
         ],
       };
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON(geojson);
       });
-      expect(ret!.success).toBe(true);
-      if (ret!.success) {
-        expect((ret.aoi as AoiPoint).coordinate).toEqual([100, 20]);
+      expect(ret).toBeDefined();
+      if (!ret || !ret.success) {
+        throw new Error("Expected loadFromGeoJSON to succeed");
       }
+      expect((ret.aoi as AoiPoint).coordinate).toEqual([100, 20]);
     });
 
     it("Geometry を直接渡しても解析できる", () => {
       const { result } = renderHook(() => useAoi());
       const geometry = { type: "Point", coordinates: [135, 35] };
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON(geometry);
       });
-      expect(ret!.success).toBe(true);
+      expect(ret).toBeDefined();
+      expect(ret?.success).toBe(true);
     });
 
     it("不正なオブジェクトを渡すと success: false を返す", () => {
       const { result } = renderHook(() => useAoi());
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON({ type: "Unknown" });
       });
-      expect(ret!.success).toBe(false);
+      expect(ret).toBeDefined();
+      expect(ret?.success).toBe(false);
       expect(result.current.aoi).toBeNull();
     });
 
@@ -147,31 +152,36 @@ describe("useAoi", () => {
         },
         properties: {},
       };
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON(geojson);
       });
-      expect(ret!.success).toBe(false);
-      expect((ret as { success: false; error: string }).error).toContain("Point または Polygon");
+      expect(ret).toBeDefined();
+      if (!ret || ret.success) {
+        throw new Error("Expected loadFromGeoJSON to fail");
+      }
+      expect(ret.error).toContain("Point または Polygon");
     });
 
     it("null を渡すと success: false を返す", () => {
       const { result } = renderHook(() => useAoi());
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON(null);
       });
-      expect(ret!.success).toBe(false);
+      expect(ret).toBeDefined();
+      expect(ret?.success).toBe(false);
     });
 
     it("FeatureCollection にフィーチャが空の場合 success: false を返す", () => {
       const { result } = renderHook(() => useAoi());
       const geojson = { type: "FeatureCollection", features: [] };
-      let ret: ReturnType<typeof result.current.loadFromGeoJSON>;
+      let ret: ReturnType<typeof result.current.loadFromGeoJSON> | undefined;
       act(() => {
         ret = result.current.loadFromGeoJSON(geojson);
       });
-      expect(ret!.success).toBe(false);
+      expect(ret).toBeDefined();
+      expect(ret?.success).toBe(false);
     });
   });
 });
