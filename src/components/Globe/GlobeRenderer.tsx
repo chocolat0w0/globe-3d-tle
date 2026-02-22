@@ -1,14 +1,10 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { Viewer, useCesium } from "resium";
-import {
-  Credit,
-  CreditDisplay,
-  ImageryLayer,
-  type Viewer as CesiumViewer,
-} from "cesium";
+import { Credit, CreditDisplay, ImageryLayer, type Viewer as CesiumViewer } from "cesium";
 import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
 
 interface Props {
+  showNightShade: boolean;
   children?: ReactNode;
 }
 
@@ -69,7 +65,23 @@ function FpsMonitor() {
   return null;
 }
 
-export function GlobeRenderer({ children }: Props) {
+function NightShadeController({ showNightShade }: { showNightShade: boolean }) {
+  const { viewer } = useCesium();
+
+  useEffect(() => {
+    if (!viewer) return;
+
+    viewer.scene.globe.enableLighting = showNightShade;
+    if (showNightShade) {
+      viewer.scene.globe.dynamicAtmosphereLighting = true;
+      viewer.scene.globe.dynamicAtmosphereLightingFromSun = true;
+    }
+  }, [viewer, showNightShade]);
+
+  return null;
+}
+
+export function GlobeRenderer({ showNightShade, children }: Props) {
   return (
     <Viewer
       full
@@ -88,6 +100,7 @@ export function GlobeRenderer({ children }: Props) {
     >
       <ViewerExposer />
       <FpsMonitor />
+      <NightShadeController showNightShade={showNightShade} />
       {children}
     </Viewer>
   );

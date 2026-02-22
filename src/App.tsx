@@ -23,10 +23,11 @@ function App() {
   const { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath } = useSatellites();
   const [dayStartMs, setDayStartMs] = useState(() => getDayStartMs(Date.now()));
   const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("geodesic");
+  const [showNightShade, setShowNightShade] = useState(false);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
 
   return (
-    <GlobeRenderer>
+    <GlobeRenderer showNightShade={showNightShade}>
       <BaseMapLayer />
       {satellites.map((sat) => (
         <SatelliteLayer
@@ -65,7 +66,12 @@ function App() {
       ))}
       <AoiLayer aoi={aoi} mode={aoiMode} onAoiChange={setAoi} />
       <TimeController onDayChange={setDayStartMs} aoiDrawing={aoiMode !== "none"} />
-      <InfoPanel orbitRenderMode={orbitRenderMode} onOrbitRenderModeChange={setOrbitRenderMode} />
+      <InfoPanel
+        orbitRenderMode={orbitRenderMode}
+        onOrbitRenderModeChange={setOrbitRenderMode}
+        showNightShade={showNightShade}
+        onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
+      />
       <PerfOverlay />
       <AoiPanel
         mode={aoiMode}

@@ -12,9 +12,16 @@ interface CameraPos {
 interface InfoPanelProps {
   orbitRenderMode: OrbitRenderMode;
   onOrbitRenderModeChange: (mode: OrbitRenderMode) => void;
+  showNightShade: boolean;
+  onNightShadeToggle: () => void;
 }
 
-export function InfoPanel({ orbitRenderMode, onOrbitRenderModeChange }: InfoPanelProps) {
+export function InfoPanel({
+  orbitRenderMode,
+  onOrbitRenderModeChange,
+  showNightShade,
+  onNightShadeToggle,
+}: InfoPanelProps) {
   const { viewer } = useCesium();
   const [pos, setPos] = useState<CameraPos>({ lat: 0, lon: 0, alt: 0 });
   const prevRef = useRef("");
@@ -102,6 +109,26 @@ export function InfoPanel({ orbitRenderMode, onOrbitRenderModeChange }: InfoPane
             Cartesian
           </button>
         </div>
+      </div>
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ marginBottom: 2 }}>表示</div>
+        <button
+          type="button"
+          onClick={onNightShadeToggle}
+          aria-pressed={showNightShade}
+          style={{
+            border: "1px solid rgba(255,255,255,0.25)",
+            borderRadius: 4,
+            color: "#e8e8e8",
+            background: showNightShade ? "rgba(100,180,255,0.35)" : "rgba(255,255,255,0.1)",
+            padding: "2px 8px",
+            cursor: "pointer",
+            fontSize: 11,
+            fontFamily: "monospace",
+          }}
+        >
+          Night Shade
+        </button>
       </div>
       <div>緯度: {pos.lat}°</div>
       <div>経度: {pos.lon}°</div>

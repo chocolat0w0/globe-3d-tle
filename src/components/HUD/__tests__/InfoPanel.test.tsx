@@ -16,6 +16,8 @@ describe("InfoPanel", () => {
       <InfoPanel
         orbitRenderMode="geodesic"
         onOrbitRenderModeChange={vi.fn()}
+        showNightShade={false}
+        onNightShadeToggle={vi.fn()}
       />
     );
 
@@ -32,6 +34,8 @@ describe("InfoPanel", () => {
       <InfoPanel
         orbitRenderMode="geodesic"
         onOrbitRenderModeChange={onOrbitRenderModeChange}
+        showNightShade={false}
+        onNightShadeToggle={vi.fn()}
       />
     );
 
@@ -46,11 +50,42 @@ describe("InfoPanel", () => {
       <InfoPanel
         orbitRenderMode="cartesian"
         onOrbitRenderModeChange={onOrbitRenderModeChange}
+        showNightShade={false}
+        onNightShadeToggle={vi.fn()}
       />
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Geodesic" }));
     expect(onOrbitRenderModeChange).toHaveBeenCalledTimes(1);
     expect(onOrbitRenderModeChange).toHaveBeenCalledWith("geodesic");
+  });
+
+  it("renders Night Shade button with correct pressed state", () => {
+    render(
+      <InfoPanel
+        orbitRenderMode="geodesic"
+        onOrbitRenderModeChange={vi.fn()}
+        showNightShade={true}
+        onNightShadeToggle={vi.fn()}
+      />
+    );
+
+    const nightShade = screen.getByRole("button", { name: "Night Shade" });
+    expect(nightShade).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("calls onNightShadeToggle when Night Shade button is clicked", () => {
+    const onNightShadeToggle = vi.fn();
+    render(
+      <InfoPanel
+        orbitRenderMode="geodesic"
+        onOrbitRenderModeChange={vi.fn()}
+        showNightShade={false}
+        onNightShadeToggle={onNightShadeToggle}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Night Shade" }));
+    expect(onNightShadeToggle).toHaveBeenCalledTimes(1);
   });
 });

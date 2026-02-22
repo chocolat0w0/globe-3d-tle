@@ -12,6 +12,11 @@ const state: {
       postRender: {
         addEventListener: ReturnType<typeof vi.fn>;
       };
+      globe: {
+        enableLighting: boolean;
+        dynamicAtmosphereLighting: boolean;
+        dynamicAtmosphereLightingFromSun: boolean;
+      };
     };
   } | undefined;
 } = {
@@ -42,20 +47,25 @@ describe("GlobeRenderer", () => {
             return removeListener;
           }),
         },
+        globe: {
+          enableLighting: false,
+          dynamicAtmosphereLighting: false,
+          dynamicAtmosphereLightingFromSun: false,
+        },
       },
     };
   });
 
   it("VITE_PERF_LOG=true のとき postRender リスナーを登録する", () => {
     vi.stubEnv("VITE_PERF_LOG", "true");
-    render(<GlobeRenderer />);
+    render(<GlobeRenderer showNightShade={false} />);
 
     expect(state.viewer?.scene.postRender.addEventListener).toHaveBeenCalledTimes(1);
   });
 
   it("VITE_PERF_LOG が true 以外のとき FPS 計測を無効化する", () => {
     vi.stubEnv("VITE_PERF_LOG", "false");
-    render(<GlobeRenderer />);
+    render(<GlobeRenderer showNightShade={false} />);
 
     expect(state.viewer?.scene.postRender.addEventListener).not.toHaveBeenCalled();
   });
@@ -66,7 +76,7 @@ describe("GlobeRenderer", () => {
     nowSpy.mockReturnValue(0);
 
     const pushSpy = vi.spyOn(perfMetricsStore, "push");
-    render(<GlobeRenderer />);
+    render(<GlobeRenderer showNightShade={false} />);
     expect(postRenderCallback).toBeTypeOf("function");
 
     nowSpy.mockReturnValue(200);
@@ -94,10 +104,27 @@ describe("GlobeRenderer", () => {
 
   it("アンマウント時に postRender リスナーを解除する", () => {
     vi.stubEnv("VITE_PERF_LOG", "true");
-    const { unmount } = render(<GlobeRenderer />);
+    const { unmount } = render(<GlobeRenderer showNightShade={false} />);
 
     unmount();
 
     expect(removeListener).toHaveBeenCalledTimes(1);
+  });
+
+  it("showNightShade=true のとき globe lighting を有効化する", () => {
+    vi.stubEnv("VITE_PERF_LOG", "false");
+    render(<GlobeRenderer showNightShade={true} />);
+
+    expect(state.viewer?.scene.globe.enableLighting).toBe(true);
+    expect(state.viewer?.scene.globe.dynamicAtmosphereLighting).toBe(true);
+    expect(state.viewer?.scene.globe.dynamicAtmosphereLightingFromSun).toBe(true);
+  });
+
+  it("showNightShade=false のとき globe lighting を無効化する", () => {
+    vi.stubEnv("VITE_PERF_LOG", "false");
+    state.viewer!.scene.globe.enableLighting = true;
+    render(<GlobeRenderer showNightShade={false} />);
+
+    expect(state.viewer?.scene.globe.enableLighting).toBe(false);
   });
 });
