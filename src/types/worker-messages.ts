@@ -21,6 +21,13 @@ export interface ComputeDayRequest {
   };
 }
 
+export interface ComputeTimings {
+  orbitMs?: number;
+  footprintMs?: number;
+  swathMs?: number;
+  totalMs: number;
+}
+
 export interface ComputeDayResponse {
   type: "computed-day";
   requestId: string;
@@ -39,6 +46,7 @@ export interface ComputeDayResponse {
   swath?: {
     flat: FlatRings;
   };
+  timings?: ComputeTimings;
 }
 
 export interface WorkerError {
