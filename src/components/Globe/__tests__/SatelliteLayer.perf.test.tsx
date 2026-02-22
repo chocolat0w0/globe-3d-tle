@@ -53,7 +53,7 @@ describe("SatelliteLayer performance measurement", () => {
 
     expect(pushSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: "sampled-position-build:iss",
+        label: "callback-position-build:iss",
       }),
     );
   });

@@ -61,6 +61,21 @@ export class LRUCache<V> {
     return this.cache.delete(key);
   }
 
+  /**
+   * 指定プレフィックスで始まるすべてのエントリを削除する。
+   * @returns 削除したエントリ数
+   */
+  deleteByPrefix(prefix: string): number {
+    let count = 0;
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.delete(key);
+        count++;
+      }
+    }
+    return count;
+  }
+
   clear(): void {
     this.cache.clear();
     this.totalBytes = 0;

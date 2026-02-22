@@ -57,6 +57,7 @@ export function SwathLayer({
     tle2: tle.line2,
     swathParams,
     dayStartMs,
+    enabled: visible && showSwath,
   });
 
   const polygons = useMemo(

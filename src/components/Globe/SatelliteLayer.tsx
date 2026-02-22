@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useRef } from "react";
 import { Entity, useCesium } from "resium";
 import {
-  SampledPositionProperty,
+  CallbackPositionProperty,
   JulianDate,
   Cartesian3,
   Cartesian2,
@@ -11,7 +11,7 @@ import {
 } from "cesium";
 import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
-import type { OrbitRenderMode } from "../../types/orbit";
+import type { OrbitData, OrbitRenderMode } from "../../types/orbit";
 import { toCesiumArcType } from "./orbit-render-mode";
 import { PerfLogger } from "../../lib/perf/perf-logger";
 import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
@@ -28,6 +28,54 @@ interface Props {
   orbitRenderMode: OrbitRenderMode;
   /** 軌道サンプリング間隔（秒）。デフォルト 30。 */
   stepSec?: number;
+}
+
+/**
+ * timesMs を二分探索して targetMs 以下の最大インデックスを返す。
+ * targetMs が範囲外の場合はクランプする。
+ */
+function bisectLeft(timesMs: Float64Array, targetMs: number): number {
+  let lo = 0;
+  let hi = timesMs.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (timesMs[mid] <= targetMs) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
+}
+
+/**
+ * Float32Array の ECEF データから、指定時刻を線形補間して Cartesian3 を返す。
+ * SampledPositionProperty の代替として、追加メモリを使わずに動点位置を計算する。
+ */
+function buildCallbackPosition(data: OrbitData): CallbackPositionProperty {
+  return new CallbackPositionProperty((julianDate: JulianDate, result?: Cartesian3) => {
+    const targetMs = JulianDate.toDate(julianDate).getTime();
+    const { timesMs, ecef } = data;
+    const n = timesMs.length;
+    if (n === 0) return undefined;
+
+    const i = bisectLeft(timesMs, targetMs);
+
+    // 端点クランプ
+    if (i >= n - 1) {
+      const off = (n - 1) * 3;
+      return Cartesian3.fromElements(ecef[off], ecef[off + 1], ecef[off + 2], result);
+    }
+
+    const t0 = timesMs[i];
+    const t1 = timesMs[i + 1];
+    const dt = t1 - t0;
+    const alpha = dt > 0 ? (targetMs - t0) / dt : 0;
+
+    const off0 = i * 3;
+    const off1 = (i + 1) * 3;
+    const x = ecef[off0] + alpha * (ecef[off1] - ecef[off0]);
+    const y = ecef[off0 + 1] + alpha * (ecef[off1 + 1] - ecef[off0 + 1]);
+    const z = ecef[off0 + 2] + alpha * (ecef[off1 + 2] - ecef[off0 + 2]);
+    return Cartesian3.fromElements(x, y, z, result);
+  }, false);
 }
 
 export function SatelliteLayer({
@@ -58,20 +106,15 @@ export function SatelliteLayer({
     tle2: tle.line2,
     dayStartMs,
     stepSec,
+    enabled: visible,
   });
 
-  const sampledPosition = useMemo(() => {
+  // CallbackPositionProperty: Float32Array を直接参照し、サンプルごとの Cartesian3 生成を回避
+  const callbackPosition = useMemo(() => {
     if (!orbitData) return null;
-    return perfLogger.measure(`sampled-position-build:${id}`, () => {
-      const sp = new SampledPositionProperty();
-      const { timesMs, ecef } = orbitData;
-      for (let i = 0; i < timesMs.length; i++) {
-        const julianDate = JulianDate.fromDate(new Date(timesMs[i]));
-        const pos = new Cartesian3(ecef[i * 3], ecef[i * 3 + 1], ecef[i * 3 + 2]);
-        sp.addSample(julianDate, pos);
-      }
-      return sp;
-    });
+    return perfLogger.measure(`callback-position-build:${id}`, () =>
+      buildCallbackPosition(orbitData)
+    );
   }, [orbitData, perfLogger, id]);
 
   const orbitPositions = useMemo(() => {
@@ -102,7 +145,7 @@ export function SatelliteLayer({
 
   const cesiumColor = useMemo(() => Color.fromCssColorString(color), [color]);
 
-  if (loading || error || !orbitData || !sampledPosition || !visible) return null;
+  if (loading || error || !orbitData || !callbackPosition || !visible) return null;
 
   return (
     <>
@@ -120,7 +163,7 @@ export function SatelliteLayer({
       {/* 衛星動点 */}
       <Entity
         name={name}
-        position={sampledPosition}
+        position={callbackPosition}
         point={{
           pixelSize: selected ? 12 : 8,
           color: cesiumColor,

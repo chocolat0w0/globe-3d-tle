@@ -15,10 +15,11 @@ function generateRequestId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-/**
- * モジュールレベルのLRUキャッシュ（10機 × 7日 = 70エントリ）
- */
-const swathCache = new LRUCache<SwathData>(70);
+function estimateSwathBytes(value: SwathData): number {
+  return value.rings.byteLength + value.offsets.byteLength + value.counts.byteLength;
+}
+
+export const swathCache = new LRUCache<SwathData>(30, estimateSwathBytes);
 
 interface UseSwathDataOptions {
   satelliteId: string;
@@ -27,6 +28,8 @@ interface UseSwathDataOptions {
   swathParams: SwathParams;
   /** 外部から注入する日開始時刻（ms UTC）。未指定の場合は当日0時を使用。 */
   dayStartMs?: number;
+  /** false の場合、Worker計算・先読みをスキップしてデータをnullにリセットする */
+  enabled?: boolean;
 }
 
 interface UseSwathDataResult {
@@ -48,6 +51,7 @@ export function useSwathData({
   tle2,
   swathParams,
   dayStartMs: externalDayStartMs,
+  enabled = true,
 }: UseSwathDataOptions): UseSwathDataResult {
   const [swathData, setSwathData] = useState<SwathData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,8 +109,22 @@ export function useSwathData({
   const postMessageRef = useRef(postMessage);
   postMessageRef.current = postMessage;
 
+  // enabled=false になったとき、5秒デバウンスでこの衛星のキャッシュを解放する
+  useEffect(() => {
+    if (enabled) return;
+    const timer = setTimeout(() => {
+      swathCache.deleteByPrefix(`${satelliteId}:`);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [enabled, satelliteId]);
+
   // メインリクエスト
   useEffect(() => {
+    if (!enabled) {
+      setSwathData(null);
+      setLoading(false);
+      return;
+    }
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
     const cacheKey = `${satelliteId}:${dayStartMs}:${paramsKey}`;
 
@@ -139,10 +157,11 @@ export function useSwathData({
 
     postMessageRef.current(request);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satelliteId, tle1, tle2, externalDayStartMs, paramsKey]);
+  }, [satelliteId, tle1, tle2, externalDayStartMs, paramsKey, enabled]);
 
   // 先読み: D-1 / D+1 をバックグラウンドで取得
   useEffect(() => {
+    if (!enabled) return;
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
 
     for (const offset of [-DAY_MS, DAY_MS]) {
@@ -169,7 +188,7 @@ export function useSwathData({
       postMessageRef.current(request);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satelliteId, tle1, tle2, externalDayStartMs, paramsKey]);
+  }, [satelliteId, tle1, tle2, externalDayStartMs, paramsKey, enabled]);
 
   return { swathData, loading, error };
 }

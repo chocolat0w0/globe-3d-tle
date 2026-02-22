@@ -107,6 +107,7 @@ export function FootprintLayer({
     footprintParams,
     stepSec,
     dayStartMs,
+    enabled: visible && showFootprint,
   });
 
   // Cesium Clock に追従してフットプリントを更新する（半ステップごとに更新）

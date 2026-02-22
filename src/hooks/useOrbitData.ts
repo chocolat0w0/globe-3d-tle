@@ -8,7 +8,7 @@ import type {
 import { LRUCache } from "../lib/cache/lru-cache";
 
 const DAY_MS = 86400000;
-const ORBIT_CACHE_CAPACITY = 70;
+const ORBIT_CACHE_CAPACITY = 30;
 
 /** UTC 00:00 に丸めた日開始時刻を返す */
 function getDayStartMs(now: number): number {
@@ -39,6 +39,8 @@ interface UseOrbitDataOptions {
   stepSec?: number;
   /** 外部から注入する日開始時刻（ms UTC）。未指定の場合は当日0時を使用。 */
   dayStartMs?: number;
+  /** false の場合、Worker計算・先読みをスキップしてデータをnullにリセットする */
+  enabled?: boolean;
 }
 
 interface UseOrbitDataResult {
@@ -60,6 +62,7 @@ export function useOrbitData({
   tle2,
   stepSec = 30,
   dayStartMs: externalDayStartMs,
+  enabled = true,
 }: UseOrbitDataOptions): UseOrbitDataResult {
   const [orbitData, setOrbitData] = useState<OrbitData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -117,8 +120,23 @@ export function useOrbitData({
   const postMessageRef = useRef(postMessage);
   postMessageRef.current = postMessage;
 
+  // enabled=false になったとき、5秒デバウンスでこの衛星のキャッシュを解放する
+  // 頻繁なトグルによる無駄な再計算を防ぐため即時削除ではなくデバウンスを使用
+  useEffect(() => {
+    if (enabled) return;
+    const timer = setTimeout(() => {
+      orbitCache.deleteByPrefix(`${satelliteId}:`);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [enabled, satelliteId]);
+
   // メインリクエスト: dayStartMs / TLE / stepSec が変化したとき
   useEffect(() => {
+    if (!enabled) {
+      setOrbitData(null);
+      setLoading(false);
+      return;
+    }
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
     const cacheKey = `${satelliteId}:${dayStartMs}:${stepSec}`;
 
@@ -151,10 +169,11 @@ export function useOrbitData({
     };
 
     postMessageRef.current(request);
-  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs]);
+  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, enabled]);
 
   // 先読み: dayStartMs 変化時に D-1 / D+1 をバックグラウンドで取得
   useEffect(() => {
+    if (!enabled) return;
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
 
     for (const offset of [-DAY_MS, DAY_MS]) {
@@ -179,7 +198,7 @@ export function useOrbitData({
 
       postMessageRef.current(request);
     }
-  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs]);
+  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, enabled]);
 
   return { orbitData, loading, error };
 }

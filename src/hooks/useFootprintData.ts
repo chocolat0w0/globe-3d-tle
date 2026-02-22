@@ -18,10 +18,17 @@ function generateRequestId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-/**
- * モジュールレベルのLRUキャッシュ（10機 × 7日 = 70エントリを保持）
- */
-const footprintCache = new LRUCache<FootprintData>(70);
+function estimateFootprintBytes(value: FootprintData): number {
+  return (
+    value.timesMs.byteLength +
+    value.rings.byteLength +
+    value.offsets.byteLength +
+    value.counts.byteLength +
+    value.timeSizes.byteLength
+  );
+}
+
+export const footprintCache = new LRUCache<FootprintData>(30, estimateFootprintBytes);
 
 interface UseFootprintDataOptions {
   satelliteId: string;
@@ -31,6 +38,8 @@ interface UseFootprintDataOptions {
   stepSec?: number;
   /** 外部から注入する日開始時刻（ms UTC）。未指定の場合は当日0時を使用。 */
   dayStartMs?: number;
+  /** false の場合、Worker計算・先読みをスキップしてデータをnullにリセットする */
+  enabled?: boolean;
 }
 
 interface UseFootprintDataResult {
@@ -53,6 +62,7 @@ export function useFootprintData({
   footprintParams,
   stepSec = 30,
   dayStartMs: externalDayStartMs,
+  enabled = true,
 }: UseFootprintDataOptions): UseFootprintDataResult {
   const [footprintData, setFootprintData] = useState<FootprintData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,8 +125,22 @@ export function useFootprintData({
   const postMessageRef = useRef(postMessage);
   postMessageRef.current = postMessage;
 
+  // enabled=false になったとき、5秒デバウンスでこの衛星のキャッシュを解放する
+  useEffect(() => {
+    if (enabled) return;
+    const timer = setTimeout(() => {
+      footprintCache.deleteByPrefix(`${satelliteId}:`);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [enabled, satelliteId]);
+
   // メインリクエスト
   useEffect(() => {
+    if (!enabled) {
+      setFootprintData(null);
+      setLoading(false);
+      return;
+    }
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
     const cacheKey = `${satelliteId}:${dayStartMs}:${stepSec}:${paramsKey}`;
 
@@ -148,10 +172,11 @@ export function useFootprintData({
     };
 
     postMessageRef.current(request);
-  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, paramsKey, footprintParams]);
+  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, paramsKey, footprintParams, enabled]);
 
   // 先読み: D-1 / D+1 をバックグラウンドで取得
   useEffect(() => {
+    if (!enabled) return;
     const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
 
     for (const offset of [-DAY_MS, DAY_MS]) {
@@ -177,7 +202,7 @@ export function useFootprintData({
 
       postMessageRef.current(request);
     }
-  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, paramsKey, footprintParams]);
+  }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, paramsKey, footprintParams, enabled]);
 
   return { footprintData, loading, error };
 }
