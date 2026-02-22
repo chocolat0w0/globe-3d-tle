@@ -125,7 +125,7 @@ function PerfOverlayInner() {
         Worker RTT: {fmt(snapshot.workerRttAvg, 1, "ms")} / p95:{" "}
         {fmt(snapshot.workerRttp95, 1, "ms")}
       </div>
-      <div>FP update: {fmt(snapshot.fpUpdateAvg, 1, "ms")}</div>
+      <div>FP update: {fmt(snapshot.fpUpdateAvg, 3, "ms")}</div>
       <div>
         Cache: {snapshot.cacheSize}/{snapshot.cacheCapacity} ({cacheMB.toFixed(2)} MB)
       </div>

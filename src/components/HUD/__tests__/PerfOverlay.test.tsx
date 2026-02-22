@@ -95,6 +95,36 @@ describe("PerfOverlay", () => {
       expect(screen.getByText(/p95: 200\.0ms/)).toBeInTheDocument();
     });
 
+    it("footprint-update:* が小数3桁で表示される（サブミリ秒）", () => {
+      perfMetricsStore.push({
+        label: "footprint-update:iss",
+        durationMs: 0.1234,
+        timestamp: 0,
+      });
+
+      render(<PerfOverlay />);
+
+      expect(screen.getByText(/FP update: 0\.123ms/)).toBeInTheDocument();
+    });
+
+    it("footprint-update:* の集約 avg（各ラベルavgの平均）が表示される", () => {
+      perfMetricsStore.push({
+        label: "footprint-update:iss",
+        durationMs: 0.06,
+        timestamp: 0,
+      });
+      perfMetricsStore.push({
+        label: "footprint-update:terra",
+        durationMs: 0.14,
+        timestamp: 0,
+      });
+
+      render(<PerfOverlay />);
+
+      // avg = (0.06 + 0.14) / 2 = 0.10 => 0.100ms（小数3桁）
+      expect(screen.getByText(/FP update: 0\.100ms/)).toBeInTheDocument();
+    });
+
     it("キャッシュの size / capacity が表示される", () => {
       render(<PerfOverlay />);
 
