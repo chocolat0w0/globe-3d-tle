@@ -26,6 +26,8 @@ interface Props {
   /** 表示する日の開始時刻（UTC epoch ms）。未指定時は当日0時を使用。 */
   dayStartMs?: number;
   orbitRenderMode: OrbitRenderMode;
+  /** 軌道サンプリング間隔（秒）。デフォルト 30。 */
+  stepSec?: number;
 }
 
 export function SatelliteLayer({
@@ -37,6 +39,7 @@ export function SatelliteLayer({
   selected = false,
   dayStartMs,
   orbitRenderMode,
+  stepSec = 30,
 }: Props) {
   const { viewer } = useCesium();
   const entityRef = useRef<CesiumEntity | null>(null);
@@ -54,6 +57,7 @@ export function SatelliteLayer({
     tle1: tle.line1,
     tle2: tle.line2,
     dayStartMs,
+    stepSec,
   });
 
   const sampledPosition = useMemo(() => {

@@ -3,8 +3,18 @@ import { Viewer, useCesium } from "resium";
 import { Credit, CreditDisplay, ImageryLayer, type Viewer as CesiumViewer } from "cesium";
 import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
 
+const STEP_SEC_DEBOUNCE_MS = 1000;
+
+/** カメラ高度（m）から stepSec を決定する */
+export function getStepSecForHeight(heightM: number): number {
+  if (heightM < 5_000_000) return 30;
+  if (heightM < 20_000_000) return 60;
+  return 120;
+}
+
 interface Props {
   showNightShade: boolean;
+  onStepSecChange?: (stepSec: number) => void;
   children?: ReactNode;
 }
 
@@ -65,6 +75,36 @@ function FpsMonitor() {
   return null;
 }
 
+function StepSecController({ onStepSecChange }: { onStepSecChange: (stepSec: number) => void }) {
+  const { viewer } = useCesium();
+  const lastChangedAtRef = useRef(0);
+  const currentStepSecRef = useRef(30);
+
+  useEffect(() => {
+    if (!viewer) return;
+
+    const removeListener = viewer.scene.postRender.addEventListener(() => {
+      const height = viewer.camera.positionCartographic.height;
+      const newStepSec = getStepSecForHeight(height);
+
+      if (newStepSec === currentStepSecRef.current) return;
+
+      const now = performance.now();
+      if (now - lastChangedAtRef.current < STEP_SEC_DEBOUNCE_MS) return;
+
+      lastChangedAtRef.current = now;
+      currentStepSecRef.current = newStepSec;
+      onStepSecChange(newStepSec);
+    });
+
+    return () => {
+      removeListener();
+    };
+  }, [viewer, onStepSecChange]);
+
+  return null;
+}
+
 function NightShadeController({ showNightShade }: { showNightShade: boolean }) {
   const { viewer } = useCesium();
 
@@ -81,7 +121,7 @@ function NightShadeController({ showNightShade }: { showNightShade: boolean }) {
   return null;
 }
 
-export function GlobeRenderer({ showNightShade, children }: Props) {
+export function GlobeRenderer({ showNightShade, onStepSecChange, children }: Props) {
   return (
     <Viewer
       full
@@ -101,6 +141,7 @@ export function GlobeRenderer({ showNightShade, children }: Props) {
       <ViewerExposer />
       <FpsMonitor />
       <NightShadeController showNightShade={showNightShade} />
+      {onStepSecChange && <StepSecController onStepSecChange={onStepSecChange} />}
       {children}
     </Viewer>
   );

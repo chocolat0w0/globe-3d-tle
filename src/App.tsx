@@ -24,10 +24,11 @@ function App() {
   const [dayStartMs, setDayStartMs] = useState(() => getDayStartMs(Date.now()));
   const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("geodesic");
   const [showNightShade, setShowNightShade] = useState(false);
+  const [stepSec, setStepSec] = useState(30);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
 
   return (
-    <GlobeRenderer showNightShade={showNightShade}>
+    <GlobeRenderer showNightShade={showNightShade} onStepSecChange={setStepSec}>
       <BaseMapLayer />
       {satellites.map((sat) => (
         <SatelliteLayer
@@ -40,6 +41,7 @@ function App() {
           selected={sat.selected}
           dayStartMs={dayStartMs}
           orbitRenderMode={orbitRenderMode}
+          stepSec={stepSec}
         />
       ))}
       {satellites.map((sat) => (
@@ -51,6 +53,7 @@ function App() {
           visible={sat.visible}
           showFootprint={sat.showFootprint}
           dayStartMs={dayStartMs}
+          stepSec={stepSec}
         />
       ))}
       {satellites.map((sat) => (
