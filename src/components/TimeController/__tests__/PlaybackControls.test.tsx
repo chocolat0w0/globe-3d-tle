@@ -17,9 +17,9 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
-      expect(screen.getByRole("button", { name: "一時停止" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "一時停止" })).toBeInTheDocument();
     });
 
     it("停止中（isPlaying=false）のとき ▶ ボタンが表示される", () => {
@@ -29,9 +29,9 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
-      expect(screen.getByRole("button", { name: "再生" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "再生" })).toBeInTheDocument();
     });
 
     it("速度ボタンが 5 つ（×1, ×10, ×60, ×300, ×1800）描画される", () => {
@@ -41,7 +41,7 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
       // 再生/停止 1つ + 速度 5つ = 合計 6 ボタン
       const buttons = container.querySelectorAll("button");
@@ -55,10 +55,10 @@ describe("PlaybackControls", () => {
           multiplier={1}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
       // ×1800 など各速度ラベルが画面にある
-      expect(screen.getByText(`×${speed}`)).toBeDefined();
+      expect(screen.getByText(`×${speed}`)).toBeInTheDocument();
     });
 
     it("現在の multiplier に対応するボタンが aria-pressed=true になる", () => {
@@ -68,10 +68,10 @@ describe("PlaybackControls", () => {
           multiplier={300}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
-      const button = screen.getByText("×300").closest("button") as HTMLButtonElement;
-      expect(button.getAttribute("aria-pressed")).toBe("true");
+      const button = screen.getByText("×300").closest("button");
+      expect(button).toHaveAttribute("aria-pressed", "true");
     });
 
     it("現在の multiplier 以外のボタンは aria-pressed=false になる", () => {
@@ -81,12 +81,12 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
       for (const speed of SPEEDS) {
         if (speed === 60) continue;
-        const btn = screen.getByText(`×${speed}`).closest("button") as HTMLButtonElement;
-        expect(btn.getAttribute("aria-pressed")).toBe("false");
+        const btn = screen.getByText(`×${speed}`).closest("button");
+        expect(btn).toHaveAttribute("aria-pressed", "false");
       }
     });
   });
@@ -104,7 +104,7 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={onPlayPause}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
       fireEvent.click(screen.getByRole("button", { name: "一時停止" }));
       expect(onPlayPause).toHaveBeenCalledTimes(1);
@@ -118,7 +118,7 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={onPlayPause}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
       fireEvent.click(screen.getByRole("button", { name: "再生" }));
       expect(onPlayPause).toHaveBeenCalledTimes(1);
@@ -134,7 +134,7 @@ describe("PlaybackControls", () => {
           multiplier={1}
           onPlayPause={vi.fn()}
           onSetMultiplier={onSetMultiplier}
-        />
+        />,
       );
       fireEvent.click(screen.getByText(`×${speed}`));
       expect(onSetMultiplier).toHaveBeenCalledTimes(1);
@@ -149,7 +149,7 @@ describe("PlaybackControls", () => {
           multiplier={1}
           onPlayPause={onPlayPause}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
       fireEvent.click(screen.getByText("×60"));
       expect(onPlayPause).not.toHaveBeenCalled();
@@ -163,7 +163,7 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={onSetMultiplier}
-        />
+        />,
       );
       fireEvent.click(screen.getByRole("button", { name: "一時停止" }));
       expect(onSetMultiplier).not.toHaveBeenCalled();
@@ -182,9 +182,9 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
-      expect(screen.getByRole("button", { name: "再生" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "再生" })).toBeInTheDocument();
 
       rerender(
         <PlaybackControls
@@ -192,9 +192,9 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
-      expect(screen.getByRole("button", { name: "一時停止" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "一時停止" })).toBeInTheDocument();
     });
 
     it("multiplier が変わると aria-pressed が正しいボタンに移る", () => {
@@ -204,11 +204,9 @@ describe("PlaybackControls", () => {
           multiplier={60}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
-      expect(
-        (screen.getByText("×60").closest("button") as HTMLButtonElement).getAttribute("aria-pressed")
-      ).toBe("true");
+      expect(screen.getByText("×60").closest("button")).toHaveAttribute("aria-pressed", "true");
 
       rerender(
         <PlaybackControls
@@ -216,14 +214,10 @@ describe("PlaybackControls", () => {
           multiplier={1800}
           onPlayPause={vi.fn()}
           onSetMultiplier={vi.fn()}
-        />
+        />,
       );
-      expect(
-        (screen.getByText("×1800").closest("button") as HTMLButtonElement).getAttribute("aria-pressed")
-      ).toBe("true");
-      expect(
-        (screen.getByText("×60").closest("button") as HTMLButtonElement).getAttribute("aria-pressed")
-      ).toBe("false");
+      expect(screen.getByText("×1800").closest("button")).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText("×60").closest("button")).toHaveAttribute("aria-pressed", "false");
     });
   });
 });

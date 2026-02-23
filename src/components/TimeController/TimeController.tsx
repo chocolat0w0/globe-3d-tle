@@ -114,18 +114,7 @@ export function TimeController({ onDayChange, aoiDrawing = false }: TimeControll
   }
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: 28, // Cesium クレジットバー（~18px）の上に配置
-        left: 0,
-        right: 0,
-        padding: "8px 16px 12px",
-        background: "rgba(0, 0, 0, 0.72)",
-        zIndex: 100,
-        pointerEvents: "auto",
-      }}
-    >
+    <div className="timeline-shell">
       <PlaybackControls
         isPlaying={isPlaying}
         multiplier={multiplier}

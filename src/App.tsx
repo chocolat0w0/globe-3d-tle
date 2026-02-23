@@ -34,6 +34,9 @@ function App() {
 
   return (
     <GlobeRenderer showNightShade={showNightShade} onStepSecChange={setStepSec}>
+      <div className="cosmic-veil cosmic-veil--north" aria-hidden="true" />
+      <div className="cosmic-veil cosmic-veil--south" aria-hidden="true" />
+      <div className="cosmic-grid" aria-hidden="true" />
       <BaseMapLayer />
       {satellites.map((sat) => (
         <SatelliteLayer
@@ -74,20 +77,22 @@ function App() {
       ))}
       <AoiLayer aoi={aoi} mode={aoiMode} onAoiChange={setAoi} />
       <TimeController onDayChange={setWindowStartMs} aoiDrawing={aoiMode !== "none"} />
-      <InfoPanel
-        orbitRenderMode={orbitRenderMode}
-        onOrbitRenderModeChange={setOrbitRenderMode}
-        showNightShade={showNightShade}
-        onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
-      />
+      <div className="right-panel-stack">
+        <InfoPanel
+          orbitRenderMode={orbitRenderMode}
+          onOrbitRenderModeChange={setOrbitRenderMode}
+          showNightShade={showNightShade}
+          onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
+        />
+        <AoiPanel
+          mode={aoiMode}
+          aoi={aoi}
+          onSetMode={setAoiMode}
+          onClear={clearAoi}
+          onLoadGeoJSON={loadFromGeoJSON}
+        />
+      </div>
       <PerfOverlay />
-      <AoiPanel
-        mode={aoiMode}
-        aoi={aoi}
-        onSetMode={setAoiMode}
-        onClear={clearAoi}
-        onLoadGeoJSON={loadFromGeoJSON}
-      />
       <SatelliteList
         satellites={satellites}
         onToggleVisible={toggleVisible}
