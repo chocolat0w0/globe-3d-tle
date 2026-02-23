@@ -42,26 +42,13 @@ describe("TimeSlider", () => {
 
   describe("rendering", () => {
     it("input[type=range] が1つ描画される", () => {
-      const { container } = render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={vi.fn()}
-        />
-      );
-      const slider = container.querySelector('input[type="range"]');
-      expect(slider).not.toBeNull();
+      render(<TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={vi.fn()} />);
+      expect(screen.getByRole("slider", { name: "タイムスライダー" })).toBeInTheDocument();
     });
 
     it("スライダーの value が currentMs と一致する", () => {
       const { container } = render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={vi.fn()}
-        />
+        <TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={vi.fn()} />,
       );
       const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
       expect(Number(slider.value)).toBe(currentMs);
@@ -69,12 +56,7 @@ describe("TimeSlider", () => {
 
     it("スライダーの min / max が正しく設定される", () => {
       const { container } = render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={vi.fn()}
-        />
+        <TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={vi.fn()} />,
       );
       const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
       expect(Number(slider.min)).toBe(minMs);
@@ -82,28 +64,14 @@ describe("TimeSlider", () => {
     });
 
     it("UTC 時刻文字列が画面に表示される", () => {
-      render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={vi.fn()}
-        />
-      );
+      render(<TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={vi.fn()} />);
       // formatUTC(currentMs) = "2024-01-15 12:00:00 UTC"
-      expect(screen.getByText("2024-01-15 12:00:00 UTC")).toBeDefined();
+      expect(screen.getByText("2024-01-15 12:00:00 UTC")).toBeInTheDocument();
     });
 
     it("aria-label='タイムスライダー' がスライダーに付与される", () => {
-      render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={vi.fn()}
-        />
-      );
-      expect(screen.getByRole("slider", { name: "タイムスライダー" })).toBeDefined();
+      render(<TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={vi.fn()} />);
+      expect(screen.getByRole("slider", { name: "タイムスライダー" })).toBeInTheDocument();
     });
   });
 
@@ -116,12 +84,7 @@ describe("TimeSlider", () => {
       const onSeek = vi.fn();
       const targetMs = Date.UTC(2024, 0, 20);
       const { container } = render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={onSeek}
-        />
+        <TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={onSeek} />,
       );
       const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
       fireEvent.change(slider, { target: { value: String(targetMs) } });
@@ -135,12 +98,7 @@ describe("TimeSlider", () => {
       const firstTarget = Date.UTC(2024, 0, 10);
       const secondTarget = Date.UTC(2024, 0, 25);
       const { container } = render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={onSeek}
-        />
+        <TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={onSeek} />,
       );
       const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
 
@@ -161,24 +119,12 @@ describe("TimeSlider", () => {
     it("currentMs が変わると表示時刻も更新される", () => {
       const newMs = Date.UTC(2024, 0, 20, 18, 30, 0);
       const { rerender } = render(
-        <TimeSlider
-          currentMs={currentMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={vi.fn()}
-        />
+        <TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={vi.fn()} />,
       );
 
-      rerender(
-        <TimeSlider
-          currentMs={newMs}
-          minMs={minMs}
-          maxMs={maxMs}
-          onSeek={vi.fn()}
-        />
-      );
+      rerender(<TimeSlider currentMs={newMs} minMs={minMs} maxMs={maxMs} onSeek={vi.fn()} />);
 
-      expect(screen.getByText("2024-01-20 18:30:00 UTC")).toBeDefined();
+      expect(screen.getByText("2024-01-20 18:30:00 UTC")).toBeInTheDocument();
     });
   });
 });

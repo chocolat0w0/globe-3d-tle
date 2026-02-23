@@ -11,7 +11,9 @@ function makeProps(overrides: Partial<Parameters<typeof AoiPanel>[0]> = {}) {
     aoi: null,
     onSetMode: noop,
     onClear: noop,
-    onLoadGeoJSON: vi.fn().mockReturnValue({ success: true, aoi: { type: "Point", coordinate: [0, 0] } as Aoi }),
+    onLoadGeoJSON: vi
+      .fn()
+      .mockReturnValue({ success: true, aoi: { type: "Point", coordinate: [0, 0] } as Aoi }),
     ...overrides,
   };
 }
@@ -23,10 +25,10 @@ describe("AoiPanel", () => {
 
   it("ポイント・ポリゴン・GeoJSON読込・クリアの4つのボタンが存在する", () => {
     render(<AoiPanel {...makeProps()} />);
-    expect(screen.getByRole("button", { name: "ポイント" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "ポリゴン" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "GeoJSON読込" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "クリア" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "ポイント" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "ポリゴン" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "GeoJSON読込" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "クリア" })).toBeInTheDocument();
   });
 
   it("ポイントボタンをクリックすると onSetMode('point') が呼ばれる", () => {
@@ -61,37 +63,55 @@ describe("AoiPanel", () => {
   describe("aria-pressed の状態", () => {
     it("mode が none のとき、どちらのボタンも aria-pressed=false", () => {
       render(<AoiPanel {...makeProps({ mode: "none" })} />);
-      expect(screen.getByRole("button", { name: "ポイント" }).getAttribute("aria-pressed")).toBe("false");
-      expect(screen.getByRole("button", { name: "ポリゴン" }).getAttribute("aria-pressed")).toBe("false");
+      expect(screen.getByRole("button", { name: "ポイント" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      expect(screen.getByRole("button", { name: "ポリゴン" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
     });
 
     it("mode が point のとき、ポイントボタンが aria-pressed=true", () => {
       render(<AoiPanel {...makeProps({ mode: "point" })} />);
-      expect(screen.getByRole("button", { name: "ポイント" }).getAttribute("aria-pressed")).toBe("true");
-      expect(screen.getByRole("button", { name: "ポリゴン" }).getAttribute("aria-pressed")).toBe("false");
+      expect(screen.getByRole("button", { name: "ポイント" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByRole("button", { name: "ポリゴン" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
     });
 
     it("mode が polygon のとき、ポリゴンボタンが aria-pressed=true", () => {
       render(<AoiPanel {...makeProps({ mode: "polygon" })} />);
-      expect(screen.getByRole("button", { name: "ポイント" }).getAttribute("aria-pressed")).toBe("false");
-      expect(screen.getByRole("button", { name: "ポリゴン" }).getAttribute("aria-pressed")).toBe("true");
+      expect(screen.getByRole("button", { name: "ポイント" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      expect(screen.getByRole("button", { name: "ポリゴン" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
     });
   });
 
   describe("描画モードのヒント表示", () => {
     it("mode が none のときヒントは表示されない", () => {
       render(<AoiPanel {...makeProps({ mode: "none" })} />);
-      expect(screen.queryByText(/描画中/)).toBeNull();
+      expect(screen.queryByText(/描画中/)).not.toBeInTheDocument();
     });
 
     it("mode が point のときポイント描画のヒントが表示される", () => {
       render(<AoiPanel {...makeProps({ mode: "point" })} />);
-      expect(screen.getByText(/ポイント描画中/)).toBeTruthy();
+      expect(screen.getByText(/ポイント描画中/)).toBeInTheDocument();
     });
 
     it("mode が polygon のときポリゴン描画のヒントが表示される", () => {
       render(<AoiPanel {...makeProps({ mode: "polygon" })} />);
-      expect(screen.getByText(/ポリゴン描画中/)).toBeTruthy();
+      expect(screen.getByText(/ポリゴン描画中/)).toBeInTheDocument();
     });
   });
 
