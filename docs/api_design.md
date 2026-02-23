@@ -206,9 +206,11 @@ export interface ComputeDayRequest {
 /**
  * フットプリント計算パラメータ（geo4326準拠）
  */
+export type OffnadirRange = [number, number]; // [minDeg, maxDeg], 正は進行方向左
+
 export interface FootprintParams {
   fov: [number, number]; // [クロストラック, アロングトラック] 度
-  offnadir: number; // オフナディア角（度）
+  offnadirRanges: OffnadirRange[]; // 非連続レンジ対応
   insert?: number; // エッジ補間点数（デフォルト: 10）
 }
 
@@ -216,7 +218,7 @@ export interface FootprintParams {
  * スワス計算パラメータ（geo4326準拠）
  */
 export interface SwathParams {
-  roll: number; // 最大ロール角（度）
+  offnadirRanges: OffnadirRange[]; // 非連続レンジ対応
   split?: number; // 軌道周期の分割数（デフォルト: 360）
 }
 

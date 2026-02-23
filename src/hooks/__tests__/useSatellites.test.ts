@@ -19,10 +19,10 @@ import { useSatellites } from "../useSatellites";
 /** All satellite IDs present in sample-tle.json, in order */
 const ALL_IDS = [
   "iss",
-  "noaa19",
+  "sentinel1a",
   "terra",
-  "aqua",
-  "aura",
+  "capella",
+  "iceye",
   "landsat8",
   "sentinel2a",
   "sentinel2b",
@@ -94,14 +94,14 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleVisible("noaa19");
+        result.current.toggleVisible("sentinel1a");
       });
       act(() => {
-        result.current.toggleVisible("noaa19");
+        result.current.toggleVisible("sentinel1a");
       });
 
-      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
-      expect(noaa19.visible).toBe(true);
+      const sentinel1a = result.current.satellites.find((s) => s.id === "sentinel1a")!;
+      expect(sentinel1a.visible).toBe(true);
     });
 
     it("correctly toggles a satellite in the middle of the list (terra, index 2)", () => {
@@ -148,21 +148,21 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.selectSatellite("aqua");
+        result.current.selectSatellite("capella");
       });
 
-      const aqua = result.current.satellites.find((s) => s.id === "aqua")!;
-      expect(aqua.selected).toBe(true);
+      const capella = result.current.satellites.find((s) => s.id === "capella")!;
+      expect(capella.selected).toBe(true);
     });
 
     it("sets selected=false for all other satellites when one is selected (exclusive selection)", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.selectSatellite("aqua");
+        result.current.selectSatellite("capella");
       });
 
-      const others = result.current.satellites.filter((s) => s.id !== "aqua");
+      const others = result.current.satellites.filter((s) => s.id !== "capella");
       const noneSelected = others.every((s) => s.selected === false);
       expect(noneSelected).toBe(true);
     });
@@ -207,7 +207,7 @@ describe("useSatellites", () => {
 
       // Cycle through three different satellites
       act(() => { result.current.selectSatellite("iss"); });
-      act(() => { result.current.selectSatellite("noaa19"); });
+      act(() => { result.current.selectSatellite("sentinel1a"); });
       act(() => { result.current.selectSatellite("sentinel2a"); });
 
       const selectedCount = result.current.satellites.filter((s) => s.selected).length;
@@ -280,14 +280,14 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleFootprint("noaa19");
+        result.current.toggleFootprint("sentinel1a");
       });
       act(() => {
-        result.current.toggleFootprint("noaa19");
+        result.current.toggleFootprint("sentinel1a");
       });
 
-      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
-      expect(noaa19.showFootprint).toBe(false);
+      const sentinel1a = result.current.satellites.find((s) => s.id === "sentinel1a")!;
+      expect(sentinel1a.showFootprint).toBe(false);
     });
 
     it("does not change visible state of any satellite when toggleFootprint is called", () => {
@@ -305,7 +305,7 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleFootprint("aqua");
+        result.current.toggleFootprint("capella");
       });
 
       const noneSelected = result.current.satellites.every((s) => s.selected === false);
@@ -387,14 +387,14 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleSwath("noaa19");
+        result.current.toggleSwath("sentinel1a");
       });
       act(() => {
-        result.current.toggleSwath("noaa19");
+        result.current.toggleSwath("sentinel1a");
       });
 
-      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
-      expect(noaa19.showSwath).toBe(false);
+      const sentinel1a = result.current.satellites.find((s) => s.id === "sentinel1a")!;
+      expect(sentinel1a.showSwath).toBe(false);
     });
 
     it("does not change visible state of any satellite when toggleSwath is called", () => {
@@ -412,7 +412,7 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleSwath("aqua");
+        result.current.toggleSwath("capella");
       });
 
       const noneSelected = result.current.satellites.every((s) => s.selected === false);
@@ -469,12 +469,12 @@ describe("useSatellites", () => {
     it("hiding a non-selected satellite does not affect any selected state", () => {
       const { result } = renderHook(() => useSatellites());
 
-      // Select noaa19, then hide iss (different satellite)
-      act(() => { result.current.selectSatellite("noaa19"); });
+      // Select sentinel1a, then hide iss (different satellite)
+      act(() => { result.current.selectSatellite("sentinel1a"); });
       act(() => { result.current.toggleVisible("iss"); });
 
-      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
-      expect(noaa19.selected).toBe(true);
+      const sentinel1a = result.current.satellites.find((s) => s.id === "sentinel1a")!;
+      expect(sentinel1a.selected).toBe(true);
     });
 
     it("re-showing a previously hidden+selected satellite does not restore selected state", () => {
@@ -493,13 +493,13 @@ describe("useSatellites", () => {
     it("selecting a hidden satellite makes it selected without changing its visibility", () => {
       const { result } = renderHook(() => useSatellites());
 
-      // Hide noaa19 first, then select it
-      act(() => { result.current.toggleVisible("noaa19"); });
-      act(() => { result.current.selectSatellite("noaa19"); });
+      // Hide sentinel1a first, then select it
+      act(() => { result.current.toggleVisible("sentinel1a"); });
+      act(() => { result.current.selectSatellite("sentinel1a"); });
 
-      const noaa19 = result.current.satellites.find((s) => s.id === "noaa19")!;
-      expect(noaa19.visible).toBe(false);
-      expect(noaa19.selected).toBe(true);
+      const sentinel1a = result.current.satellites.find((s) => s.id === "sentinel1a")!;
+      expect(sentinel1a.visible).toBe(false);
+      expect(sentinel1a.selected).toBe(true);
     });
   });
 });

@@ -102,7 +102,7 @@ export function useSwathData({
       setError(null);
     }
     setLoading(false);
-  }, [paramsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [paramsKey]);
 
   const { postMessage } = useOrbitWorker(handleMessage);
 

@@ -1,8 +1,10 @@
 import { satellite as geo4326Satellite, flatten } from "geo4326";
+import { validateOffnadirRanges } from "./offnadir-ranges";
+import type { OffnadirRange } from "./offnadir-ranges";
 
 export interface FootprintParams {
   fov: [number, number];
-  offnadir: number;
+  offnadirRanges: OffnadirRange[];
   insert?: number;
 }
 
@@ -29,7 +31,7 @@ const MAX_SAMPLE_COUNT = 100_000;
  * @param startMs 開始時刻（UTC epoch ms）
  * @param durationMs 計算期間（ms）
  * @param stepSec サンプリング間隔（秒）
- * @param params フットプリントパラメータ（fov, offnadir, insert）
+ * @param params フットプリントパラメータ（fov, offnadirRanges, insert）
  */
 export function computeFootprints(
   tle1: string,
@@ -58,25 +60,44 @@ export function computeFootprints(
   const countsArr: number[] = [];
   const timeSizesArr: number[] = [];
 
-  const { fov, offnadir, insert } = params;
+  const { fov, offnadirRanges, insert } = params;
+  validateOffnadirRanges(offnadirRanges);
 
   for (let i = 0; i < count; i++) {
     const t = startMs + i * stepMs;
-    try {
-      const date = new Date(t);
-      const ring = geo4326Satellite.footprint(tle1, tle2, date, { fov, offnadir, insert });
-      const cut = flatten.cutRingAtAntimeridian(ring);
+    const date = new Date(t);
+    const polysAtTime: number[][][] = [];
 
-      // within + outside を結合。どちらも空の場合は元のリングをフォールバックとして使用
-      const polys =
-        cut.within.length > 0 || cut.outside.length > 0
-          ? [...cut.within, ...cut.outside]
-          : [ring];
+    for (const offnadirRange of offnadirRanges) {
+      // geo4326.footprint() は単一角を受けるため、レンジは端点を代表値として評価する。
+      const [minDeg, maxDeg] = offnadirRange;
+      const offnadirCandidates = minDeg === maxDeg ? [minDeg] : [minDeg, maxDeg];
 
+      for (const offnadirDeg of offnadirCandidates) {
+        try {
+          const ring = geo4326Satellite.footprint(tle1, tle2, date, {
+            fov,
+            offnadir: offnadirDeg,
+            insert,
+          });
+          const cut = flatten.cutRingAtAntimeridian(ring);
+          // within + outside を結合。どちらも空の場合は元のリングをフォールバックとして使用
+          const polys =
+            cut.within.length > 0 || cut.outside.length > 0
+              ? [...cut.within, ...cut.outside]
+              : [ring];
+          polysAtTime.push(...polys);
+        } catch {
+          // 計算失敗したレンジ端点はスキップ（特定角度での不成立など）
+        }
+      }
+    }
+
+    if (polysAtTime.length > 0) {
       timesArr.push(t);
-      timeSizesArr.push(polys.length);
+      timeSizesArr.push(polysAtTime.length);
 
-      for (const poly of polys) {
+      for (const poly of polysAtTime) {
         const startPairIdx = ringsArr.length / 2;
         offsetsArr.push(startPairIdx);
         countsArr.push(poly.length);
@@ -84,8 +105,6 @@ export function computeFootprints(
           ringsArr.push(point[0], point[1]); // lon, lat
         }
       }
-    } catch {
-      // 計算失敗した時刻はスキップ（invalid TLE や地平線以下の場合など）
     }
   }
 

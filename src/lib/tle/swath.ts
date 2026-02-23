@@ -1,7 +1,9 @@
 import { satellite as geo4326Satellite, flatten } from "geo4326";
+import { isZeroWidthRange, validateOffnadirRanges } from "./offnadir-ranges";
+import type { OffnadirRange } from "./offnadir-ranges";
 
 export interface SwathParams {
-  roll: number;
+  offnadirRanges: OffnadirRange[];
   split?: number;
 }
 
@@ -22,7 +24,7 @@ export interface ComputeSwathResult {
  * @param tle2 TLE第2行
  * @param startMs 開始時刻（UTC epoch ms）
  * @param durationMs 計算期間（ms）
- * @param params スワスパラメータ（roll, split）
+ * @param params スワスパラメータ（offnadirRanges, split）
  */
 export function computeSwath(
   tle1: string,
@@ -31,32 +33,46 @@ export function computeSwath(
   durationMs: number,
   params: SwathParams,
 ): ComputeSwathResult {
-  const { roll, split } = params;
+  const { offnadirRanges, split } = params;
+  validateOffnadirRanges(offnadirRanges);
+
+  const effectiveRanges = offnadirRanges.filter((range) => !isZeroWidthRange(range));
+  if (effectiveRanges.length === 0) {
+    return {
+      rings: new Float32Array(),
+      offsets: new Int32Array(),
+      counts: new Int32Array(),
+    };
+  }
+
   const start = new Date(startMs);
   const end = new Date(startMs + durationMs);
-
-  // split が未指定のときはキー自体を渡さず、geo4326 側のデフォルト値を使う
-  const accessAreaOptions = split === undefined ? { roll } : { roll, split };
-
-  // accessArea は期間全体の観測可能範囲を Points[] で返す
-  const areaRings = geo4326Satellite.accessArea(tle1, tle2, start, end, accessAreaOptions);
 
   const ringsArr: number[] = [];
   const offsetsArr: number[] = [];
   const countsArr: number[] = [];
 
-  for (const ring of areaRings) {
-    // dateline 跨ぎを分割
-    const cut = flatten.cutRingAtAntimeridian(ring);
-    const polys =
-      cut.within.length > 0 || cut.outside.length > 0 ? [...cut.within, ...cut.outside] : [ring];
+  for (const offnadirRange of effectiveRanges) {
+    // split が未指定のときはキー自体を渡さず、geo4326 側のデフォルト値を使う
+    const accessAreaOptions =
+      split === undefined ? { roll: offnadirRange } : { roll: offnadirRange, split };
 
-    for (const poly of polys) {
-      const startPairIdx = ringsArr.length / 2;
-      offsetsArr.push(startPairIdx);
-      countsArr.push(poly.length);
-      for (const point of poly) {
-        ringsArr.push(point[0], point[1]); // lon, lat
+    // accessArea は期間全体の観測可能範囲を Points[] で返す
+    const areaRings = geo4326Satellite.accessArea(tle1, tle2, start, end, accessAreaOptions);
+
+    for (const ring of areaRings) {
+      // dateline 跨ぎを分割
+      const cut = flatten.cutRingAtAntimeridian(ring);
+      const polys =
+        cut.within.length > 0 || cut.outside.length > 0 ? [...cut.within, ...cut.outside] : [ring];
+
+      for (const poly of polys) {
+        const startPairIdx = ringsArr.length / 2;
+        offsetsArr.push(startPairIdx);
+        countsArr.push(poly.length);
+        for (const point of poly) {
+          ringsArr.push(point[0], point[1]); // lon, lat
+        }
       }
     }
   }
