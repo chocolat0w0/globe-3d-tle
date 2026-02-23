@@ -44,16 +44,16 @@ function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
 /** 10 satellites that mirror the structure of sample-tle.json */
 function makeTenSatellites(): Satellite[] {
   const specs = [
-    { id: "iss",         name: "ISS (ZARYA)",   color: "#FF6B6B" },
-    { id: "sentinel1a",  name: "SENTINEL-1A",    color: "#6A8DFF" },
-    { id: "terra",       name: "TERRA",          color: "#45B7D1" },
-    { id: "capella",     name: "CAPELLA",        color: "#FF9F1C" },
-    { id: "iceye",       name: "ICEYE",          color: "#2EC4B6" },
-    { id: "landsat8",    name: "LANDSAT 8",      color: "#DDA0DD" },
-    { id: "sentinel2a",  name: "SENTINEL-2A",    color: "#FF8C00" },
-    { id: "sentinel2b",  name: "SENTINEL-2B",    color: "#FF4500" },
-    { id: "worldview3",  name: "WORLDVIEW-3",    color: "#20B2AA" },
-    { id: "pleiades1a",  name: "PLEIADES 1A",    color: "#9370DB" },
+    { id: "iss", name: "ISS (ZARYA)", color: "#FF6B6B" },
+    { id: "sentinel1a", name: "SENTINEL-1A", color: "#6A8DFF" },
+    { id: "terra", name: "TERRA", color: "#45B7D1" },
+    { id: "capella", name: "CAPELLA", color: "#FF9F1C" },
+    { id: "iceye", name: "ICEYE", color: "#2EC4B6" },
+    { id: "landsat8", name: "LANDSAT 8", color: "#DDA0DD" },
+    { id: "sentinel2a", name: "SENTINEL-2A", color: "#FF8C00" },
+    { id: "sentinel2b", name: "SENTINEL-2B", color: "#FF4500" },
+    { id: "worldview3", name: "WORLDVIEW-3", color: "#20B2AA" },
+    { id: "pleiades1a", name: "PLEIADES 1A", color: "#9370DB" },
   ];
   return specs.map((s) => makeSatellite(s));
 }
@@ -71,14 +71,14 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       // Each row contains the satellite name as visible text
       for (const sat of sats) {
-        expect(screen.getByText(sat.name)).toBeDefined();
+        expect(screen.getByText(sat.name)).toBeInTheDocument();
       }
     });
 
@@ -89,17 +89,25 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const expectedNames = [
-        "ISS (ZARYA)", "SENTINEL-1A", "TERRA", "CAPELLA", "ICEYE",
-        "LANDSAT 8", "SENTINEL-2A", "SENTINEL-2B", "WORLDVIEW-3", "PLEIADES 1A",
+        "ISS (ZARYA)",
+        "SENTINEL-1A",
+        "TERRA",
+        "CAPELLA",
+        "ICEYE",
+        "LANDSAT 8",
+        "SENTINEL-2A",
+        "SENTINEL-2B",
+        "WORLDVIEW-3",
+        "PLEIADES 1A",
       ];
       for (const name of expectedNames) {
-        expect(screen.getByText(name)).toBeDefined();
+        expect(screen.getByText(name)).toBeInTheDocument();
       }
     });
 
@@ -110,9 +118,9 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const checkboxes = container.querySelectorAll('input[type="checkbox"]');
@@ -125,9 +133,9 @@ describe("SatelliteList", () => {
           satellites={[]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
       const checkboxes = container.querySelectorAll('input[type="checkbox"]');
       expect(checkboxes).toHaveLength(0);
@@ -146,9 +154,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
       expect(checkbox.checked).toBe(true);
@@ -161,9 +169,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
       expect(checkbox.checked).toBe(false);
@@ -183,9 +191,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
@@ -207,9 +215,9 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       // terra is at index 2 — find the third checkbox
@@ -228,9 +236,9 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={onToggleVisible}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const checkboxes = container.querySelectorAll('input[type="checkbox"]');
@@ -248,9 +256,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={onToggleVisible}
           onSelect={onSelect}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
@@ -274,9 +282,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       fireEvent.click(screen.getByText("CAPELLA"));
@@ -293,9 +301,9 @@ describe("SatelliteList", () => {
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       // Click on SENTINEL-2B row
@@ -313,9 +321,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={onSelect}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       fireEvent.click(screen.getByText("LANDSAT 8"));
@@ -336,17 +344,17 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       // The row is the div that wraps the satellite name — walk up from the text node
       const nameEl = screen.getByText("ISS (ZARYA)");
-      const row = nameEl.closest('[style*="cursor: pointer"]') as HTMLElement;
-      expect(row).toBeDefined();
+      const row = nameEl.closest('[style*="cursor: pointer"]');
+      expect(row).not.toBeNull();
       // Background is NOT "transparent" when selected
-      expect(row.style.background).not.toBe("transparent");
+      expect((row as HTMLElement).style.background).not.toBe("transparent");
     });
 
     it("applies transparent background to the row of an unselected satellite", () => {
@@ -356,29 +364,29 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const nameEl = screen.getByText("ISS (ZARYA)");
-      const row = nameEl.closest('[style*="cursor: pointer"]') as HTMLElement;
-      expect(row).toBeDefined();
-      expect(row.style.background).toBe("transparent");
+      const row = nameEl.closest('[style*="cursor: pointer"]');
+      expect(row).not.toBeNull();
+      expect((row as HTMLElement).style.background).toBe("transparent");
     });
 
     it("only the selected satellite's row has a non-transparent background when one of ten is selected", () => {
       const sats = makeTenSatellites().map((s) =>
-        s.id === "iceye" ? { ...s, selected: true } : s
+        s.id === "iceye" ? { ...s, selected: true } : s,
       );
       const { container } = render(
         <SatelliteList
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       // Row divs have `display: flex` in their inline style.
@@ -412,7 +420,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       const fpButtons = screen.getAllByText("FP");
       expect(fpButtons).toHaveLength(10);
@@ -428,7 +436,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={onToggleFootprint}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       fireEvent.click(screen.getByText("FP"));
       expect(onToggleFootprint).toHaveBeenCalledTimes(1);
@@ -445,7 +453,7 @@ describe("SatelliteList", () => {
           onSelect={onSelect}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       fireEvent.click(screen.getByText("FP"));
       expect(onSelect).not.toHaveBeenCalled();
@@ -461,7 +469,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={onToggleFootprint}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       const fpButtons = screen.getAllByText("FP");
       fireEvent.click(fpButtons[2]); // terra は index 2
@@ -477,7 +485,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       const fpButton = screen.getByText("FP") as HTMLButtonElement;
       expect(fpButton.title).toBe("フットプリントを非表示");
@@ -492,7 +500,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       const fpButton = screen.getByText("FP") as HTMLButtonElement;
       expect(fpButton.title).toBe("フットプリントを表示");
@@ -513,7 +521,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       const swButtons = screen.getAllByText("SW");
       expect(swButtons).toHaveLength(10);
@@ -529,7 +537,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
           onToggleSwath={onToggleSwath}
-        />
+        />,
       );
       fireEvent.click(screen.getByText("SW"));
       expect(onToggleSwath).toHaveBeenCalledTimes(1);
@@ -546,7 +554,7 @@ describe("SatelliteList", () => {
           onSelect={onSelect}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       fireEvent.click(screen.getByText("SW"));
       expect(onSelect).not.toHaveBeenCalled();
@@ -561,7 +569,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       const swButton = screen.getByText("SW") as HTMLButtonElement;
       expect(swButton.title).toBe("スワスを非表示");
@@ -576,7 +584,7 @@ describe("SatelliteList", () => {
           onSelect={vi.fn()}
           onToggleFootprint={vi.fn()}
           onToggleSwath={vi.fn()}
-        />
+        />,
       );
       const swButton = screen.getByText("SW") as HTMLButtonElement;
       expect(swButton.title).toBe("スワスを表示");
@@ -595,9 +603,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const nameEl = screen.getByText("ISS (ZARYA)");
@@ -612,9 +620,9 @@ describe("SatelliteList", () => {
           satellites={[sat]}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const nameEl = screen.getByText("ISS (ZARYA)");
@@ -625,22 +633,20 @@ describe("SatelliteList", () => {
     it("only hidden satellites have opacity:0.4 when two of ten are hidden", () => {
       const hiddenIds = new Set(["terra", "sentinel2b"]);
       const sats = makeTenSatellites().map((s) =>
-        hiddenIds.has(s.id) ? { ...s, visible: false } : s
+        hiddenIds.has(s.id) ? { ...s, visible: false } : s,
       );
       const { container } = render(
         <SatelliteList
           satellites={sats}
           onToggleVisible={vi.fn()}
           onSelect={vi.fn()}
-        onToggleFootprint={vi.fn()}
-        onToggleSwath={vi.fn()}
-        />
+          onToggleFootprint={vi.fn()}
+          onToggleSwath={vi.fn()}
+        />,
       );
 
       const rows = container.querySelectorAll('[style*="cursor: pointer"]');
-      const dimmedRows = Array.from(rows).filter(
-        (r) => (r as HTMLElement).style.opacity === "0.4"
-      );
+      const dimmedRows = Array.from(rows).filter((r) => (r as HTMLElement).style.opacity === "0.4");
       expect(dimmedRows).toHaveLength(2);
     });
   });
