@@ -5,10 +5,11 @@ import { TimeSlider } from "./TimeSlider";
 import { PlaybackControls } from "./PlaybackControls";
 
 const DAY_MS = 86400000;
+const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
 const WINDOW_DAYS = 14;
 
-function getDayStartMs(ms: number): number {
-  return ms - (ms % DAY_MS);
+function getWindowStartMs(ms: number): number {
+  return Math.floor(ms / WINDOW_MS) * WINDOW_MS;
 }
 
 interface TimeControllerProps {
@@ -27,8 +28,8 @@ export function TimeController({ onDayChange, aoiDrawing = false }: TimeControll
   const onDayChangeRef = useRef(onDayChange);
   onDayChangeRef.current = onDayChange;
 
-  // 前回の dayStartMs を追跡して変化を検知する
-  const prevDayStartMs = useRef<number | null>(null);
+  // 前回の windowStartMs を追跡して変化を検知する
+  const prevWindowStartMs = useRef<number | null>(null);
 
   // Cesium Clock 初期化（viewer が準備できたとき1回だけ実行）
   useEffect(() => {
@@ -45,9 +46,9 @@ export function TimeController({ onDayChange, aoiDrawing = false }: TimeControll
     viewer.clock.multiplier = 60;
     viewer.clock.shouldAnimate = true;
 
-    const dayStartMs = getDayStartMs(nowMs);
-    prevDayStartMs.current = dayStartMs;
-    onDayChangeRef.current(dayStartMs);
+    const windowStartMs = getWindowStartMs(nowMs);
+    prevWindowStartMs.current = windowStartMs;
+    onDayChangeRef.current(windowStartMs);
   }, [viewer]);
 
   // AOI描画モード中は時刻アニメーションを一時停止し、終了時に元の状態へ復元する
@@ -76,11 +77,11 @@ export function TimeController({ onDayChange, aoiDrawing = false }: TimeControll
       // 500ms 未満の変化はスキップしてレンダリングを抑制
       setCurrentMs((prev) => (Math.abs(prev - ms) >= 500 ? ms : prev));
 
-      // 日跨ぎ検知
-      const dayStartMs = getDayStartMs(ms);
-      if (dayStartMs !== prevDayStartMs.current) {
-        prevDayStartMs.current = dayStartMs;
-        onDayChangeRef.current(dayStartMs);
+      // 4時間窓跨ぎ検知
+      const windowStartMs = getWindowStartMs(ms);
+      if (windowStartMs !== prevWindowStartMs.current) {
+        prevWindowStartMs.current = windowStartMs;
+        onDayChangeRef.current(windowStartMs);
       }
     });
 
@@ -116,7 +117,7 @@ export function TimeController({ onDayChange, aoiDrawing = false }: TimeControll
     <div
       style={{
         position: "absolute",
-        bottom: 28,   // Cesium クレジットバー（~18px）の上に配置
+        bottom: 28, // Cesium クレジットバー（~18px）の上に配置
         left: 0,
         right: 0,
         padding: "8px 16px 12px",
@@ -131,12 +132,7 @@ export function TimeController({ onDayChange, aoiDrawing = false }: TimeControll
         onPlayPause={handlePlayPause}
         onSetMultiplier={handleSetMultiplier}
       />
-      <TimeSlider
-        currentMs={currentMs}
-        minMs={minMs}
-        maxMs={maxMs}
-        onSeek={handleSeek}
-      />
+      <TimeSlider currentMs={currentMs} minMs={minMs} maxMs={maxMs} onSeek={handleSeek} />
     </div>
   );
 }

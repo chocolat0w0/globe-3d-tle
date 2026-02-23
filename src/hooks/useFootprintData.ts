@@ -1,17 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOrbitWorker } from "./useWorker";
 import type { FootprintData } from "../types/orbit";
-import type {
-  ComputeDayRequest,
-  MainMessage,
-} from "../types/worker-messages";
+import type { ComputeDayRequest, MainMessage } from "../types/worker-messages";
 import type { FootprintParams } from "../lib/tle/footprint";
 import { LRUCache } from "../lib/cache/lru-cache";
 
-const DAY_MS = 86400000;
+const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
 
-function getDayStartMs(now: number): number {
-  return now - (now % DAY_MS);
+function getWindowStartMs(now: number): number {
+  return Math.floor(now / WINDOW_MS) * WINDOW_MS;
 }
 
 function generateRequestId(): string {
@@ -74,19 +71,37 @@ export function useFootprintData({
   // footprintParams の変化を検知するため JSON 文字列でキー化
   const paramsKey = JSON.stringify(footprintParams);
 
-  const handleMessage = useCallback((msg: MainMessage) => {
-    if (msg.type === "error") {
-      if (msg.requestId === pendingRequestId.current) {
-        setError(msg.message);
-        setLoading(false);
+  const handleMessage = useCallback(
+    (msg: MainMessage) => {
+      if (msg.type === "error") {
+        if (msg.requestId === pendingRequestId.current) {
+          setError(msg.message);
+          setLoading(false);
+        }
+        prefetchIds.current.delete(msg.requestId);
+        return;
       }
-      prefetchIds.current.delete(msg.requestId);
-      return;
-    }
 
-    // --- 先読みレスポンス: キャッシュに保存するだけ ---
-    if (prefetchIds.current.has(msg.requestId)) {
-      prefetchIds.current.delete(msg.requestId);
+      // --- 先読みレスポンス: キャッシュに保存するだけ ---
+      if (prefetchIds.current.has(msg.requestId)) {
+        prefetchIds.current.delete(msg.requestId);
+        if (msg.footprint) {
+          const data: FootprintData = {
+            timesMs: new Float64Array(msg.footprint.timesMs),
+            rings: new Float32Array(msg.footprint.flat.rings),
+            offsets: new Int32Array(msg.footprint.flat.offsets),
+            counts: new Int32Array(msg.footprint.flat.counts),
+            timeSizes: new Int32Array(msg.footprint.timeSizes),
+          };
+          const key = `${msg.satelliteId}:${msg.dayStartMs}:${msg.stepSec}:${paramsKey}`;
+          footprintCache.set(key, data);
+        }
+        return;
+      }
+
+      // --- メインレスポンス ---
+      if (msg.requestId !== pendingRequestId.current) return;
+
       if (msg.footprint) {
         const data: FootprintData = {
           timesMs: new Float64Array(msg.footprint.timesMs),
@@ -97,28 +112,13 @@ export function useFootprintData({
         };
         const key = `${msg.satelliteId}:${msg.dayStartMs}:${msg.stepSec}:${paramsKey}`;
         footprintCache.set(key, data);
+        setFootprintData(data);
+        setError(null);
       }
-      return;
-    }
-
-    // --- メインレスポンス ---
-    if (msg.requestId !== pendingRequestId.current) return;
-
-    if (msg.footprint) {
-      const data: FootprintData = {
-        timesMs: new Float64Array(msg.footprint.timesMs),
-        rings: new Float32Array(msg.footprint.flat.rings),
-        offsets: new Int32Array(msg.footprint.flat.offsets),
-        counts: new Int32Array(msg.footprint.flat.counts),
-        timeSizes: new Int32Array(msg.footprint.timeSizes),
-      };
-      const key = `${msg.satelliteId}:${msg.dayStartMs}:${msg.stepSec}:${paramsKey}`;
-      footprintCache.set(key, data);
-      setFootprintData(data);
-      setError(null);
-    }
-    setLoading(false);
-  }, [paramsKey]);
+      setLoading(false);
+    },
+    [paramsKey],
+  );
 
   const { postMessage } = useOrbitWorker(handleMessage);
 
@@ -141,7 +141,7 @@ export function useFootprintData({
       setLoading(false);
       return;
     }
-    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
+    const dayStartMs = externalDayStartMs ?? getWindowStartMs(Date.now());
     const cacheKey = `${satelliteId}:${dayStartMs}:${stepSec}:${paramsKey}`;
 
     const cached = footprintCache.get(cacheKey);
@@ -165,7 +165,7 @@ export function useFootprintData({
       tle1,
       tle2,
       dayStartMs,
-      durationMs: DAY_MS,
+      durationMs: WINDOW_MS,
       stepSec,
       outputs: { orbit: false, footprint: true, swath: false },
       footprintParams,
@@ -174,12 +174,12 @@ export function useFootprintData({
     postMessageRef.current(request);
   }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, paramsKey, footprintParams, enabled]);
 
-  // 先読み: D-1 / D+1 をバックグラウンドで取得
+  // 先読み: W-1 / W+1 をバックグラウンドで取得
   useEffect(() => {
     if (!enabled) return;
-    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
+    const dayStartMs = externalDayStartMs ?? getWindowStartMs(Date.now());
 
-    for (const offset of [-DAY_MS, DAY_MS]) {
+    for (const offset of [-WINDOW_MS, WINDOW_MS]) {
       const targetDay = dayStartMs + offset;
       const cacheKey = `${satelliteId}:${targetDay}:${stepSec}:${paramsKey}`;
       if (footprintCache.has(cacheKey)) continue;
@@ -194,7 +194,7 @@ export function useFootprintData({
         tle1,
         tle2,
         dayStartMs: targetDay,
-        durationMs: DAY_MS,
+        durationMs: WINDOW_MS,
         stepSec,
         outputs: { orbit: false, footprint: true, swath: false },
         footprintParams,

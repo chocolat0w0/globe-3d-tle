@@ -1,18 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOrbitWorker } from "./useWorker";
 import type { OrbitData } from "../types/orbit";
-import type {
-  ComputeDayRequest,
-  MainMessage,
-} from "../types/worker-messages";
+import type { ComputeDayRequest, MainMessage } from "../types/worker-messages";
 import { LRUCache } from "../lib/cache/lru-cache";
 
-const DAY_MS = 86400000;
+const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
 const ORBIT_CACHE_CAPACITY = 30;
 
-/** UTC 00:00 に丸めた日開始時刻を返す */
-function getDayStartMs(now: number): number {
-  return now - (now % DAY_MS);
+/** 4時間単位に丸めた窓開始時刻を返す */
+function getWindowStartMs(now: number): number {
+  return Math.floor(now / WINDOW_MS) * WINDOW_MS;
 }
 
 function generateRequestId(): string {
@@ -27,10 +24,7 @@ function estimateOrbitDataBytes(value: OrbitData): number {
   return value.timesMs.byteLength + value.ecef.byteLength;
 }
 
-export const orbitCache = new LRUCache<OrbitData>(
-  ORBIT_CACHE_CAPACITY,
-  estimateOrbitDataBytes,
-);
+export const orbitCache = new LRUCache<OrbitData>(ORBIT_CACHE_CAPACITY, estimateOrbitDataBytes);
 
 interface UseOrbitDataOptions {
   satelliteId: string;
@@ -137,7 +131,7 @@ export function useOrbitData({
       setLoading(false);
       return;
     }
-    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
+    const dayStartMs = externalDayStartMs ?? getWindowStartMs(Date.now());
     const cacheKey = `${satelliteId}:${dayStartMs}:${stepSec}`;
 
     // キャッシュヒット → Worker 不要
@@ -163,7 +157,7 @@ export function useOrbitData({
       tle1,
       tle2,
       dayStartMs,
-      durationMs: DAY_MS,
+      durationMs: WINDOW_MS,
       stepSec,
       outputs: { orbit: true, footprint: false, swath: false },
     };
@@ -171,12 +165,12 @@ export function useOrbitData({
     postMessageRef.current(request);
   }, [satelliteId, tle1, tle2, stepSec, externalDayStartMs, enabled]);
 
-  // 先読み: dayStartMs 変化時に D-1 / D+1 をバックグラウンドで取得
+  // 先読み: W-1 / W+1 をバックグラウンドで取得
   useEffect(() => {
     if (!enabled) return;
-    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
+    const dayStartMs = externalDayStartMs ?? getWindowStartMs(Date.now());
 
-    for (const offset of [-DAY_MS, DAY_MS]) {
+    for (const offset of [-WINDOW_MS, WINDOW_MS]) {
       const targetDay = dayStartMs + offset;
       const cacheKey = `${satelliteId}:${targetDay}:${stepSec}`;
       if (orbitCache.has(cacheKey)) continue;
@@ -191,7 +185,7 @@ export function useOrbitData({
         tle1,
         tle2,
         dayStartMs: targetDay,
-        durationMs: DAY_MS,
+        durationMs: WINDOW_MS,
         stepSec,
         outputs: { orbit: true, footprint: false, swath: false },
       };
