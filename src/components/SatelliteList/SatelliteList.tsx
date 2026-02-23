@@ -8,126 +8,77 @@ interface Props {
   onToggleSwath: (id: string) => void;
 }
 
-export function SatelliteList({ satellites, onToggleVisible, onSelect, onToggleFootprint, onToggleSwath }: Props) {
+export function SatelliteList({
+  satellites,
+  onToggleVisible,
+  onSelect,
+  onToggleFootprint,
+  onToggleSwath,
+}: Props) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: 8,
-        left: 8,
-        background: "rgba(0, 0, 0, 0.72)",
-        color: "#e8e8e8",
-        borderRadius: 4,
-        fontSize: 12,
-        fontFamily: "monospace",
-        zIndex: 10,
-        userSelect: "none",
-        minWidth: 200,
-      }}
-    >
-      <div
-        style={{
-          padding: "6px 10px",
-          borderBottom: "1px solid rgba(255,255,255,0.15)",
-          fontWeight: "bold",
-          letterSpacing: 1,
-        }}
-      >
-        衛星リスト
+    <div className="ui-panel satellite-panel">
+      <div className="satellite-panel-header">
+        <div className="ui-panel-title">衛星リスト</div>
+        <div className="ui-panel-subtitle">Click to follow target</div>
       </div>
-      {satellites.map((sat) => (
-        <div
-          key={sat.id}
-          onClick={() => onSelect(sat.id)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "5px 10px",
-            cursor: "pointer",
-            background: sat.selected ? "rgba(255,255,255,0.12)" : "transparent",
-            opacity: sat.visible ? 1 : 0.4,
-            transition: "background 0.1s",
-          }}
-        >
-          {/* 色インジケーター */}
-          <span
+      <div className="satellite-list">
+        {satellites.map((sat) => (
+          <div
+            key={sat.id}
+            onClick={() => onSelect(sat.id)}
+            className={`satellite-row ${sat.selected ? "is-selected" : ""} ${sat.visible ? "" : "is-dimmed"}`.trim()}
             style={{
-              display: "inline-block",
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: sat.color,
-              flexShrink: 0,
-              border: sat.selected ? "2px solid #fff" : "2px solid transparent",
-            }}
-          />
-
-          {/* 衛星名 */}
-          <span style={{ flex: 1, fontSize: 11 }}>{sat.name}</span>
-
-          {/* フットプリント ON/OFF ボタン */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFootprint(sat.id);
-            }}
-            title={sat.showFootprint ? "フットプリントを非表示" : "フットプリントを表示"}
-            style={{
-              background: sat.showFootprint ? sat.color : "rgba(255,255,255,0.15)",
-              border: "none",
-              borderRadius: 3,
-              color: sat.showFootprint ? "#000" : "rgba(255,255,255,0.6)",
+              display: "flex",
+              alignItems: "center",
               cursor: "pointer",
-              fontSize: 9,
-              padding: "1px 4px",
-              lineHeight: 1.4,
-              flexShrink: 0,
+              background: sat.selected ? "rgba(255,255,255,0.12)" : "transparent",
+              opacity: sat.visible ? 1 : 0.4,
             }}
           >
-            FP
-          </button>
+            <span
+              className="satellite-indicator"
+              style={{ color: sat.color, background: sat.color }}
+            />
+            <span className="satellite-name">{sat.name}</span>
+            <div className="satellite-actions">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFootprint(sat.id);
+                }}
+                title={sat.showFootprint ? "フットプリントを非表示" : "フットプリントを表示"}
+                className={`satellite-pill ${sat.showFootprint ? "is-active" : ""}`.trim()}
+              >
+                FP
+              </button>
 
-          {/* スワス ON/OFF ボタン */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSwath(sat.id);
-            }}
-            title={sat.showSwath ? "スワスを非表示" : "スワスを表示"}
-            style={{
-              background: sat.showSwath ? sat.color : "rgba(255,255,255,0.15)",
-              border: "none",
-              borderRadius: 3,
-              color: sat.showSwath ? "#000" : "rgba(255,255,255,0.6)",
-              cursor: "pointer",
-              fontSize: 9,
-              padding: "1px 4px",
-              lineHeight: 1.4,
-              flexShrink: 0,
-            }}
-          >
-            SW
-          </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSwath(sat.id);
+                }}
+                title={sat.showSwath ? "スワスを非表示" : "スワスを表示"}
+                className={`satellite-pill ${sat.showSwath ? "is-active" : ""}`.trim()}
+              >
+                SW
+              </button>
 
-          {/* ON/OFF チェックボックス */}
-          <input
-            type="checkbox"
-            checked={sat.visible}
-            onChange={() => onToggleVisible(sat.id)}
-            onClick={(e) => e.stopPropagation()}
-            style={{ cursor: "pointer", accentColor: sat.color }}
-          />
-        </div>
-      ))}
-      <div
-        style={{
-          padding: "4px 10px",
-          fontSize: 10,
-          color: "rgba(255,255,255,0.4)",
-          borderTop: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
+              <label className="visibility-toggle" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={sat.visible}
+                  onChange={() => onToggleVisible(sat.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`${sat.name} 表示切替`}
+                />
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="satellite-panel-hint">
         クリックで追尾 / FP: フットプリント / SW: スワス / チェック: 表示切替
       </div>
     </div>

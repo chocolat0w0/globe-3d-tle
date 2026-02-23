@@ -15,53 +15,22 @@ export function PlaybackControls({
   onSetMultiplier,
 }: PlaybackControlsProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        marginBottom: 6,
-      }}
-    >
+    <div className="playback-controls">
       <button
         onClick={onPlayPause}
         aria-label={isPlaying ? "一時停止" : "再生"}
-        style={{
-          background: "rgba(255,255,255,0.15)",
-          border: "1px solid rgba(255,255,255,0.3)",
-          borderRadius: 4,
-          color: "#e8e8e8",
-          padding: "2px 10px",
-          fontSize: 16,
-          cursor: "pointer",
-          minWidth: 36,
-        }}
+        className="playback-primary"
       >
         {isPlaying ? "⏸" : "▶"}
       </button>
 
-      <div style={{ display: "flex", gap: 4 }}>
+      <div className="speed-button-group">
         {SPEEDS.map((speed) => (
           <button
             key={speed}
             onClick={() => onSetMultiplier(speed)}
             aria-pressed={multiplier === speed}
-            style={{
-              background:
-                multiplier === speed
-                  ? "rgba(100,180,255,0.35)"
-                  : "rgba(255,255,255,0.1)",
-              border:
-                multiplier === speed
-                  ? "1px solid rgba(100,180,255,0.8)"
-                  : "1px solid rgba(255,255,255,0.25)",
-              borderRadius: 4,
-              color: "#e8e8e8",
-              padding: "2px 8px",
-              fontSize: 12,
-              fontFamily: "monospace",
-              cursor: "pointer",
-            }}
+            className={`ui-button speed-button ${multiplier === speed ? "is-active" : ""}`.trim()}
           >
             ×{speed}
           </button>

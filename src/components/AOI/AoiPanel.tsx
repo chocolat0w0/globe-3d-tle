@@ -6,33 +6,8 @@ interface Props {
   aoi: Aoi | null;
   onSetMode: (mode: AoiDrawingMode) => void;
   onClear: () => void;
-  onLoadGeoJSON: (
-    json: unknown
-  ) => { success: true; aoi: Aoi } | { success: false; error: string };
+  onLoadGeoJSON: (json: unknown) => { success: true; aoi: Aoi } | { success: false; error: string };
 }
-
-const BTN_BASE: React.CSSProperties = {
-  border: "1px solid rgba(255,255,255,0.25)",
-  borderRadius: 4,
-  color: "#e8e8e8",
-  padding: "3px 10px",
-  cursor: "pointer",
-  fontSize: 11,
-  fontFamily: "monospace",
-  background: "rgba(255,255,255,0.1)",
-};
-
-const BTN_ACTIVE: React.CSSProperties = {
-  ...BTN_BASE,
-  background: "rgba(100,180,255,0.35)",
-  borderColor: "rgba(100,180,255,0.6)",
-};
-
-const BTN_DISABLED: React.CSSProperties = {
-  ...BTN_BASE,
-  opacity: 0.35,
-  cursor: "default",
-};
 
 export function AoiPanel({ mode, aoi, onSetMode, onClear, onLoadGeoJSON }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,33 +48,18 @@ export function AoiPanel({ mode, aoi, onSetMode, onClear, onLoadGeoJSON }: Props
   };
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: 110,
-        left: 8,
-        background: "rgba(0, 0, 0, 0.72)",
-        color: "#e8e8e8",
-        padding: "8px 12px",
-        borderRadius: 4,
-        fontSize: 12,
-        fontFamily: "monospace",
-        zIndex: 10,
-        pointerEvents: "auto",
-        userSelect: "none",
-        minWidth: 160,
-      }}
-    >
-      <div style={{ marginBottom: 6, fontWeight: "bold", fontSize: 11, color: "#aaa" }}>
-        AOI
+    <div className="ui-panel aoi-panel">
+      <div className="aoi-section">
+        <div className="ui-panel-title">AOI</div>
+        <div className="ui-panel-subtitle">Area of Interest</div>
       </div>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+      <div className="aoi-section aoi-control-row">
         <button
           type="button"
           onClick={() => toggleMode("point")}
           aria-pressed={mode === "point"}
-          style={mode === "point" ? BTN_ACTIVE : BTN_BASE}
+          className={`ui-button ${mode === "point" ? "is-active" : ""}`.trim()}
         >
           ポイント
         </button>
@@ -107,57 +67,29 @@ export function AoiPanel({ mode, aoi, onSetMode, onClear, onLoadGeoJSON }: Props
           type="button"
           onClick={() => toggleMode("polygon")}
           aria-pressed={mode === "polygon"}
-          style={mode === "polygon" ? BTN_ACTIVE : BTN_BASE}
+          className={`ui-button ${mode === "polygon" ? "is-active" : ""}`.trim()}
         >
           ポリゴン
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          style={BTN_BASE}
-        >
+      <div className="aoi-section aoi-control-row">
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-button">
           GeoJSON読込
         </button>
         <button
           type="button"
           onClick={onClear}
           disabled={aoi === null && mode === "none"}
-          style={aoi === null && mode === "none" ? BTN_DISABLED : BTN_BASE}
+          className={`ui-button is-danger ${aoi === null && mode === "none" ? "is-disabled" : ""}`.trim()}
         >
           クリア
         </button>
       </div>
 
-      {mode !== "none" && (
-        <div
-          style={{
-            fontSize: 10,
-            color: "#88ccff",
-            marginTop: 2,
-            lineHeight: 1.4,
-            maxWidth: 180,
-          }}
-        >
-          {modeLabel[mode]}
-        </div>
-      )}
+      {mode !== "none" && <div className="aoi-hint">{modeLabel[mode]}</div>}
 
-      {errorMsg && (
-        <div
-          style={{
-            fontSize: 10,
-            color: "#ff8888",
-            marginTop: 4,
-            lineHeight: 1.4,
-            maxWidth: 180,
-          }}
-        >
-          {errorMsg}
-        </div>
-      )}
+      {errorMsg && <div className="aoi-error">{errorMsg}</div>}
 
       <input
         ref={fileInputRef}

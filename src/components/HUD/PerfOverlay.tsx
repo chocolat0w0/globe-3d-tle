@@ -96,40 +96,25 @@ function PerfOverlayInner() {
     };
   }, []);
 
-  const heapMB =
-    snapshot.heapUsedBytes !== null
-      ? snapshot.heapUsedBytes / 1024 / 1024
-      : null;
+  const heapMB = snapshot.heapUsedBytes !== null ? snapshot.heapUsedBytes / 1024 / 1024 : null;
   const cacheMB = snapshot.cacheBytes / 1024 / 1024;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: 140,
-        right: 8,
-        background: "rgba(0, 0, 0, 0.65)",
-        color: "#00ff88",
-        padding: "8px 12px",
-        borderRadius: 4,
-        fontSize: 12,
-        fontFamily: "monospace",
-        lineHeight: 1.8,
-        zIndex: 200,
-        pointerEvents: "none",
-        userSelect: "none",
-      }}
-    >
-      <div>FPS: {fmt(snapshot.fpsLatest, 1)} / p95: {fmt(snapshot.fpsp95, 1)}</div>
-      <div>
+    <div className="ui-panel performance-panel">
+      <div className="performance-row">
+        FPS: {fmt(snapshot.fpsLatest, 1)} / p95: {fmt(snapshot.fpsp95, 1)}
+      </div>
+      <div className="performance-row">
         Worker RTT: {fmt(snapshot.workerRttAvg, 1, "ms")} / p95:{" "}
         {fmt(snapshot.workerRttp95, 1, "ms")}
       </div>
-      <div>FP update: {fmt(snapshot.fpUpdateAvg, 3, "ms")}</div>
-      <div>
+      <div className="performance-row">FP update: {fmt(snapshot.fpUpdateAvg, 3, "ms")}</div>
+      <div className="performance-row">
         Cache: {snapshot.cacheSize}/{snapshot.cacheCapacity} ({cacheMB.toFixed(2)} MB)
       </div>
-      <div>Heap: {heapMB !== null ? `${heapMB.toFixed(1)} MB` : "N/A"}</div>
+      <div className="performance-row">
+        Heap: {heapMB !== null ? `${heapMB.toFixed(1)} MB` : "N/A"}
+      </div>
     </div>
   );
 }

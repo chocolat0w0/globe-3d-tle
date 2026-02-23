@@ -48,43 +48,20 @@ export function InfoPanel({
   }, [viewer]);
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: 8,
-        right: 8,
-        background: "rgba(0, 0, 0, 0.65)",
-        color: "#e8e8e8",
-        padding: "8px 12px",
-        borderRadius: 4,
-        fontSize: 12,
-        fontFamily: "monospace",
-        lineHeight: 1.8,
-        zIndex: 10,
-        pointerEvents: "auto",
-        userSelect: "none",
-      }}
-    >
-      <div style={{ marginBottom: 6 }}>
-        <div style={{ marginBottom: 2 }}>軌道表示</div>
-        <div style={{ display: "flex", gap: 6 }}>
+    <div className="ui-panel info-panel">
+      <div className="info-panel-header">
+        <div className="ui-panel-title">Flight View</div>
+        <div className="ui-panel-subtitle">Orbital Display</div>
+      </div>
+
+      <div className="info-section">
+        <div className="ui-section-label">軌道表示</div>
+        <div className="ui-segment-group">
           <button
             type="button"
             onClick={() => onOrbitRenderModeChange("geodesic")}
             aria-pressed={orbitRenderMode === "geodesic"}
-            style={{
-              border: "1px solid rgba(255,255,255,0.25)",
-              borderRadius: 4,
-              color: "#e8e8e8",
-              background:
-                orbitRenderMode === "geodesic"
-                  ? "rgba(100,180,255,0.35)"
-                  : "rgba(255,255,255,0.1)",
-              padding: "2px 8px",
-              cursor: "pointer",
-              fontSize: 11,
-              fontFamily: "monospace",
-            }}
+            className={`ui-button ${orbitRenderMode === "geodesic" ? "is-active" : ""}`.trim()}
           >
             Geodesic
           </button>
@@ -92,47 +69,39 @@ export function InfoPanel({
             type="button"
             onClick={() => onOrbitRenderModeChange("cartesian")}
             aria-pressed={orbitRenderMode === "cartesian"}
-            style={{
-              border: "1px solid rgba(255,255,255,0.25)",
-              borderRadius: 4,
-              color: "#e8e8e8",
-              background:
-                orbitRenderMode === "cartesian"
-                  ? "rgba(100,180,255,0.35)"
-                  : "rgba(255,255,255,0.1)",
-              padding: "2px 8px",
-              cursor: "pointer",
-              fontSize: 11,
-              fontFamily: "monospace",
-            }}
+            className={`ui-button ${orbitRenderMode === "cartesian" ? "is-active" : ""}`.trim()}
           >
             Cartesian
           </button>
         </div>
       </div>
-      <div style={{ marginBottom: 6 }}>
-        <div style={{ marginBottom: 2 }}>表示</div>
+
+      <div className="info-section">
+        <div className="ui-section-label">表示</div>
         <button
           type="button"
           onClick={onNightShadeToggle}
           aria-pressed={showNightShade}
-          style={{
-            border: "1px solid rgba(255,255,255,0.25)",
-            borderRadius: 4,
-            color: "#e8e8e8",
-            background: showNightShade ? "rgba(100,180,255,0.35)" : "rgba(255,255,255,0.1)",
-            padding: "2px 8px",
-            cursor: "pointer",
-            fontSize: 11,
-            fontFamily: "monospace",
-          }}
+          className={`ui-button ${showNightShade ? "is-active" : ""}`.trim()}
         >
           Night Shade
         </button>
       </div>
-      <div>緯度: {pos.lat}°</div>
-      <div>経度: {pos.lon}°</div>
-      <div>高度: {pos.alt} km</div>
+
+      <div className="camera-readout">
+        <div className="camera-readout-row">
+          <span className="camera-readout-label">緯度</span>
+          <span>{pos.lat}°</span>
+        </div>
+        <div className="camera-readout-row">
+          <span className="camera-readout-label">経度</span>
+          <span>{pos.lon}°</span>
+        </div>
+        <div className="camera-readout-row">
+          <span className="camera-readout-label">高度</span>
+          <span>{pos.alt} km</span>
+        </div>
+      </div>
     </div>
   );
 }
