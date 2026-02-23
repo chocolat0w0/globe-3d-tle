@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useCallback } from "react";
 import { Entity, useCesium } from "resium";
 import {
   CallbackPositionProperty,
@@ -92,16 +92,17 @@ export function SatelliteLayer({
 }: Props) {
   const { viewer } = useCesium();
   const entityRef = useRef<CesiumEntity | null>(null);
+  const trackedByThisLayerRef = useRef<CesiumEntity | null>(null);
   const perfLogger = useMemo(
     () =>
       new PerfLogger({
         enabled: import.meta.env.VITE_PERF_LOG === "true",
         onEntry: (entry) => perfMetricsStore.push(entry),
       }),
-    []
+    [],
   );
 
-  const { orbitData, loading, error } = useOrbitData({
+  const { orbitData, error } = useOrbitData({
     satelliteId: id,
     tle1: tle.line1,
     tle2: tle.line2,
@@ -114,7 +115,7 @@ export function SatelliteLayer({
   const callbackPosition = useMemo(() => {
     if (!orbitData) return null;
     return perfLogger.measure(`callback-position-build:${id}`, () =>
-      buildCallbackPosition(orbitData)
+      buildCallbackPosition(orbitData),
     );
   }, [orbitData, perfLogger, id]);
 
@@ -128,25 +129,59 @@ export function SatelliteLayer({
     return positions;
   }, [orbitData]);
 
-  // カメラ追尾: selected=true のときこの衛星を trackedEntity に設定
-  useEffect(() => {
+  const clearTrackedEntityIfOwned = useCallback(() => {
     if (!viewer) return;
-    if (selected && entityRef.current) {
-      viewer.trackedEntity = entityRef.current;
-    } else if (!selected && viewer.trackedEntity === entityRef.current) {
+    const owned = trackedByThisLayerRef.current;
+    if (owned && viewer.trackedEntity === owned) {
       viewer.trackedEntity = undefined;
     }
-    return () => {
-      // アンマウント時（visible=false で Entity が消える際）にも追尾を解除
-      if (viewer.trackedEntity === entityRef.current) {
-        viewer.trackedEntity = undefined;
+    trackedByThisLayerRef.current = null;
+  }, [viewer]);
+
+  const syncTrackedEntity = useCallback(() => {
+    if (!viewer) return;
+    const entity = entityRef.current;
+
+    if (selected && entity) {
+      if (viewer.trackedEntity !== entity) {
+        viewer.trackedEntity = entity;
       }
+      trackedByThisLayerRef.current = entity;
+      return;
+    }
+
+    clearTrackedEntityIfOwned();
+  }, [viewer, selected, clearTrackedEntityIfOwned]);
+
+  // selected / callbackPosition 更新時に追従対象を再同期する
+  useEffect(() => {
+    syncTrackedEntity();
+  }, [syncTrackedEntity, callbackPosition]);
+
+  // selected 中に Cesium 側で追従参照が外れた場合、毎フレーム補正する
+  useEffect(() => {
+    if (!viewer || !selected) return;
+
+    const removeListener = viewer.scene.postRender.addEventListener(() => {
+      syncTrackedEntity();
+    });
+
+    return () => {
+      removeListener();
     };
-  }, [viewer, selected]);
+  }, [viewer, selected, syncTrackedEntity]);
+
+  // アンマウント時に、このレイヤーが設定した trackedEntity だけ解除する
+  useEffect(
+    () => () => {
+      clearTrackedEntityIfOwned();
+    },
+    [clearTrackedEntityIfOwned],
+  );
 
   const cesiumColor = useMemo(() => Color.fromCssColorString(color), [color]);
 
-  if (loading || error || !orbitData || !callbackPosition || !visible) return null;
+  if (error || !orbitData || !callbackPosition || !visible) return null;
 
   return (
     <>
@@ -181,7 +216,24 @@ export function SatelliteLayer({
           distanceDisplayCondition: new DistanceDisplayCondition(0, 20000000),
         }}
         ref={(ref) => {
-          entityRef.current = ref?.cesiumElement ?? null;
+          const prevEntity = entityRef.current;
+          const nextEntity = ref?.cesiumElement ?? null;
+
+          entityRef.current = nextEntity;
+
+          if (
+            viewer &&
+            prevEntity &&
+            prevEntity !== nextEntity &&
+            viewer.trackedEntity === prevEntity
+          ) {
+            viewer.trackedEntity = undefined;
+            if (trackedByThisLayerRef.current === prevEntity) {
+              trackedByThisLayerRef.current = null;
+            }
+          }
+
+          syncTrackedEntity();
         }}
       />
     </>
