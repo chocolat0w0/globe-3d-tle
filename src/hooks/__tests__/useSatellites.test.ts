@@ -27,7 +27,7 @@ const ALL_IDS = [
   "sentinel2a",
   "sentinel2b",
   "worldview3",
-  "pleiades1a",
+  "himawari",
 ];
 
 describe("useSatellites", () => {
@@ -119,14 +119,14 @@ describe("useSatellites", () => {
       expect(others.every((s) => s.visible)).toBe(true);
     });
 
-    it("correctly toggles the last satellite in the list (pleiades1a)", () => {
+    it("correctly toggles the last satellite in the list (himawari)", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleVisible("pleiades1a");
+        result.current.toggleVisible("himawari");
       });
 
-      const pleiades = result.current.satellites.find((s) => s.id === "pleiades1a")!;
+      const pleiades = result.current.satellites.find((s) => s.id === "himawari")!;
       expect(pleiades.visible).toBe(false);
     });
 
@@ -234,16 +234,16 @@ describe("useSatellites", () => {
       expect(allVisible).toBe(true);
     });
 
-    it("selecting the last satellite (pleiades1a) leaves no other satellite selected", () => {
+    it("selecting the last satellite (himawari) leaves no other satellite selected", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.selectSatellite("pleiades1a");
+        result.current.selectSatellite("himawari");
       });
 
-      const others = result.current.satellites.filter((s) => s.id !== "pleiades1a");
+      const others = result.current.satellites.filter((s) => s.id !== "himawari");
       expect(others.every((s) => s.selected === false)).toBe(true);
-      const pleiades = result.current.satellites.find((s) => s.id === "pleiades1a")!;
+      const pleiades = result.current.satellites.find((s) => s.id === "himawari")!;
       expect(pleiades.selected).toBe(true);
     });
   });
@@ -318,18 +318,18 @@ describe("useSatellites", () => {
       expect(noneSelected).toBe(true);
     });
 
-    it("correctly toggles showFootprint for the last satellite in the list (pleiades1a)", () => {
+    it("correctly toggles showFootprint for the last satellite in the list (himawari)", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleFootprint("pleiades1a");
+        result.current.toggleFootprint("himawari");
       });
 
-      const pleiades = result.current.satellites.find((s) => s.id === "pleiades1a")!;
+      const pleiades = result.current.satellites.find((s) => s.id === "himawari")!;
       expect(pleiades.showFootprint).toBe(true);
 
       // All other satellites remain false
-      const others = result.current.satellites.filter((s) => s.id !== "pleiades1a");
+      const others = result.current.satellites.filter((s) => s.id !== "himawari");
       expect(others.every((s) => s.showFootprint === false)).toBe(true);
     });
 

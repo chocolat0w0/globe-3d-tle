@@ -53,7 +53,7 @@ function makeTenSatellites(): Satellite[] {
     { id: "sentinel2a", name: "SENTINEL-2A", color: "#FF8C00" },
     { id: "sentinel2b", name: "SENTINEL-2B", color: "#FF4500" },
     { id: "worldview3", name: "WORLDVIEW-3", color: "#20B2AA" },
-    { id: "pleiades1a", name: "PLEIADES 1A", color: "#9370DB" },
+    { id: "himawari", name: "ひまわり8号", color: "#9370DB" },
   ];
   return specs.map((s) => makeSatellite(s));
 }
@@ -104,7 +104,7 @@ describe("SatelliteList", () => {
         "SENTINEL-2A",
         "SENTINEL-2B",
         "WORLDVIEW-3",
-        "PLEIADES 1A",
+        "ひまわり8号",
       ];
       for (const name of expectedNames) {
         expect(screen.getByText(name)).toBeInTheDocument();
@@ -228,7 +228,7 @@ describe("SatelliteList", () => {
       expect(onToggleVisible).toHaveBeenCalledWith("terra");
     });
 
-    it("calls onToggleVisible with the id of the last satellite (pleiades1a) when its checkbox is clicked", () => {
+    it("calls onToggleVisible with the id of the last satellite (himawari) when its checkbox is clicked", () => {
       const onToggleVisible = vi.fn();
       const sats = makeTenSatellites();
       const { container } = render(
@@ -244,7 +244,7 @@ describe("SatelliteList", () => {
       const checkboxes = container.querySelectorAll('input[type="checkbox"]');
       fireEvent.click(checkboxes[9]);
 
-      expect(onToggleVisible).toHaveBeenCalledWith("pleiades1a");
+      expect(onToggleVisible).toHaveBeenCalledWith("himawari");
     });
 
     it("clicking the checkbox does NOT call onSelect (stopPropagation is in effect)", () => {
