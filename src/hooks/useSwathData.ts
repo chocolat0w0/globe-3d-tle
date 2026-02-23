@@ -5,10 +5,10 @@ import type { ComputeDayRequest, MainMessage } from "../types/worker-messages";
 import type { SwathParams } from "../lib/tle/swath";
 import { LRUCache } from "../lib/cache/lru-cache";
 
-const DAY_MS = 86400000;
+const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
 
-function getDayStartMs(now: number): number {
-  return now - (now % DAY_MS);
+function getWindowStartMs(now: number): number {
+  return Math.floor(now / WINDOW_MS) * WINDOW_MS;
 }
 
 function generateRequestId(): string {
@@ -26,7 +26,7 @@ interface UseSwathDataOptions {
   tle1: string;
   tle2: string;
   swathParams: SwathParams;
-  /** 外部から注入する日開始時刻（ms UTC）。未指定の場合は当日0時を使用。 */
+  /** 外部から注入する窓開始時刻（ms UTC）。未指定の場合は現在の4時間窓開始を使用。 */
   dayStartMs?: number;
   /** false の場合、Worker計算・先読みをスキップしてデータをnullにリセットする */
   enabled?: boolean;
@@ -39,10 +39,10 @@ interface UseSwathDataResult {
 }
 
 /**
- * Web Worker を使って1日窓のスワスデータを非同期に取得するフック。
+ * Web Worker を使って4時間窓のスワスデータを非同期に取得するフック。
  *
  * - LRUキャッシュを優先参照し、ヒット時は Worker を呼ばない
- * - dayStartMs 変化時に前後1日を先読みリクエストする
+ * - dayStartMs 変化時に前後1窓を先読みリクエストする
  * - スワスは時刻によらず窓単位で静的なため timeSizes 不要
  */
 export function useSwathData({
@@ -62,19 +62,35 @@ export function useSwathData({
 
   const paramsKey = JSON.stringify(swathParams);
 
-  const handleMessage = useCallback((msg: MainMessage) => {
-    if (msg.type === "error") {
-      if (msg.requestId === pendingRequestId.current) {
-        setError(msg.message);
-        setLoading(false);
+  const handleMessage = useCallback(
+    (msg: MainMessage) => {
+      if (msg.type === "error") {
+        if (msg.requestId === pendingRequestId.current) {
+          setError(msg.message);
+          setLoading(false);
+        }
+        prefetchIds.current.delete(msg.requestId);
+        return;
       }
-      prefetchIds.current.delete(msg.requestId);
-      return;
-    }
 
-    // --- 先読みレスポンス ---
-    if (prefetchIds.current.has(msg.requestId)) {
-      prefetchIds.current.delete(msg.requestId);
+      // --- 先読みレスポンス ---
+      if (prefetchIds.current.has(msg.requestId)) {
+        prefetchIds.current.delete(msg.requestId);
+        if (msg.swath) {
+          const data: SwathData = {
+            rings: new Float32Array(msg.swath.flat.rings),
+            offsets: new Int32Array(msg.swath.flat.offsets),
+            counts: new Int32Array(msg.swath.flat.counts),
+          };
+          const key = `${msg.satelliteId}:${msg.dayStartMs}:${paramsKey}`;
+          swathCache.set(key, data);
+        }
+        return;
+      }
+
+      // --- メインレスポンス ---
+      if (msg.requestId !== pendingRequestId.current) return;
+
       if (msg.swath) {
         const data: SwathData = {
           rings: new Float32Array(msg.swath.flat.rings),
@@ -83,26 +99,13 @@ export function useSwathData({
         };
         const key = `${msg.satelliteId}:${msg.dayStartMs}:${paramsKey}`;
         swathCache.set(key, data);
+        setSwathData(data);
+        setError(null);
       }
-      return;
-    }
-
-    // --- メインレスポンス ---
-    if (msg.requestId !== pendingRequestId.current) return;
-
-    if (msg.swath) {
-      const data: SwathData = {
-        rings: new Float32Array(msg.swath.flat.rings),
-        offsets: new Int32Array(msg.swath.flat.offsets),
-        counts: new Int32Array(msg.swath.flat.counts),
-      };
-      const key = `${msg.satelliteId}:${msg.dayStartMs}:${paramsKey}`;
-      swathCache.set(key, data);
-      setSwathData(data);
-      setError(null);
-    }
-    setLoading(false);
-  }, [paramsKey]);
+      setLoading(false);
+    },
+    [paramsKey],
+  );
 
   const { postMessage } = useOrbitWorker(handleMessage);
 
@@ -125,8 +128,8 @@ export function useSwathData({
       setLoading(false);
       return;
     }
-    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
-    const cacheKey = `${satelliteId}:${dayStartMs}:${paramsKey}`;
+    const windowStartMs = externalDayStartMs ?? getWindowStartMs(Date.now());
+    const cacheKey = `${satelliteId}:${windowStartMs}:${paramsKey}`;
 
     const cached = swathCache.get(cacheKey);
     if (cached) {
@@ -148,8 +151,8 @@ export function useSwathData({
       satelliteId,
       tle1,
       tle2,
-      dayStartMs,
-      durationMs: DAY_MS,
+      dayStartMs: windowStartMs,
+      durationMs: WINDOW_MS,
       stepSec: 30, // swath では使用しないが型の都合で必要
       outputs: { orbit: false, footprint: false, swath: true },
       swathParams,
@@ -159,13 +162,13 @@ export function useSwathData({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [satelliteId, tle1, tle2, externalDayStartMs, paramsKey, enabled]);
 
-  // 先読み: D-1 / D+1 をバックグラウンドで取得
+  // 先読み: W-1 / W+1 をバックグラウンドで取得
   useEffect(() => {
     if (!enabled) return;
-    const dayStartMs = externalDayStartMs ?? getDayStartMs(Date.now());
+    const windowStartMs = externalDayStartMs ?? getWindowStartMs(Date.now());
 
-    for (const offset of [-DAY_MS, DAY_MS]) {
-      const targetDay = dayStartMs + offset;
+    for (const offset of [-WINDOW_MS, WINDOW_MS]) {
+      const targetDay = windowStartMs + offset;
       const cacheKey = `${satelliteId}:${targetDay}:${paramsKey}`;
       if (swathCache.has(cacheKey)) continue;
 
@@ -179,7 +182,7 @@ export function useSwathData({
         tle1,
         tle2,
         dayStartMs: targetDay,
-        durationMs: DAY_MS,
+        durationMs: WINDOW_MS,
         stepSec: 30,
         outputs: { orbit: false, footprint: false, swath: true },
         swathParams,

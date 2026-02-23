@@ -16,7 +16,6 @@ import type { OrbitRenderMode } from "./types/orbit";
 import "./App.css";
 
 const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
-const DAY_MS = 86_400_000;
 
 function getWindowStartMs(now: number): number {
   return Math.floor(now / WINDOW_MS) * WINDOW_MS;
@@ -26,7 +25,6 @@ function App() {
   const { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath } =
     useSatellites();
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
-  const swathDayStartMs = windowStartMs - (windowStartMs % DAY_MS);
   const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("cartesian");
   const [showNightShade, setShowNightShade] = useState(false);
   const [stepSec, setStepSec] = useState(5);
@@ -73,7 +71,7 @@ function App() {
           color={sat.color}
           visible={sat.visible}
           showSwath={sat.showSwath}
-          dayStartMs={swathDayStartMs}
+          dayStartMs={windowStartMs}
           offnadirRanges={sat.offnadirRanges}
         />
       ))}
