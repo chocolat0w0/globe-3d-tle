@@ -66,7 +66,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={vi.fn()}
         showNightShade={false}
         onNightShadeToggle={vi.fn()}
-      />
+      />,
     );
 
     const geodesic = screen.getByRole("button", { name: "Geodesic" });
@@ -84,7 +84,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={onOrbitRenderModeChange}
         showNightShade={false}
         onNightShadeToggle={vi.fn()}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Cartesian" }));
@@ -100,7 +100,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={onOrbitRenderModeChange}
         showNightShade={false}
         onNightShadeToggle={vi.fn()}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Geodesic" }));
@@ -115,7 +115,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={vi.fn()}
         showNightShade={true}
         onNightShadeToggle={vi.fn()}
-      />
+      />,
     );
 
     const nightShade = screen.getByRole("button", { name: "Night Shade" });
@@ -130,7 +130,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={vi.fn()}
         showNightShade={false}
         onNightShadeToggle={onNightShadeToggle}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Night Shade" }));
@@ -146,7 +146,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={vi.fn()}
         showNightShade={false}
         onNightShadeToggle={vi.fn()}
-      />
+      />,
     );
 
     expect(state.viewer.scene.postRender.addEventListener).toHaveBeenCalledTimes(1);
@@ -161,7 +161,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={vi.fn()}
         showNightShade={false}
         onNightShadeToggle={vi.fn()}
-      />
+      />,
     );
 
     state.viewer.camera.positionCartographic.latitude = degToRad(35.6895);
@@ -186,7 +186,7 @@ describe("InfoPanel", () => {
         onOrbitRenderModeChange={vi.fn()}
         showNightShade={false}
         onNightShadeToggle={vi.fn()}
-      />
+      />,
     );
 
     unmount();

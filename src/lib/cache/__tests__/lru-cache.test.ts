@@ -227,7 +227,7 @@ describe("LRUCache", () => {
       cache.set("d", 4);
 
       expect(cache.has("b")).toBe(false); // b がエビクトされた
-      expect(cache.has("a")).toBe(true);  // a は MRU なので残っている
+      expect(cache.has("a")).toBe(true); // a は MRU なので残っている
       expect(cache.has("c")).toBe(true);
       expect(cache.has("d")).toBe(true);
     });
@@ -280,7 +280,10 @@ describe("LRUCache", () => {
 
   describe("generic type support", () => {
     it("オブジェクト値を格納できる", () => {
-      interface Payload { x: number; y: number }
+      interface Payload {
+        x: number;
+        y: number;
+      }
       const cache = new LRUCache<Payload>(5);
       cache.set("p1", { x: 1, y: 2 });
       expect(cache.get("p1")).toEqual({ x: 1, y: 2 });
