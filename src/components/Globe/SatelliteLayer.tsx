@@ -50,7 +50,8 @@ function bisectLeft(timesMs: Float64Array, targetMs: number): number {
  * SampledPositionProperty の代替として、追加メモリを使わずに動点位置を計算する。
  */
 function buildCallbackPosition(data: OrbitData): CallbackPositionProperty {
-  return new CallbackPositionProperty((julianDate: JulianDate, result?: Cartesian3) => {
+  return new CallbackPositionProperty((julianDate: JulianDate | undefined, result?: Cartesian3) => {
+    if (!julianDate) return undefined;
     const targetMs = JulianDate.toDate(julianDate).getTime();
     const { timesMs, ecef } = data;
     const n = timesMs.length;

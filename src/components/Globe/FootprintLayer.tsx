@@ -81,8 +81,8 @@ export function FootprintLayer({
     if (!viewer) return;
 
     const makeHierarchyCallback = (polyIndex: number) =>
-      new CallbackProperty((julianDate: JulianDate): PolygonHierarchy | undefined => {
-        if (!lookupRef.current) return undefined;
+      new CallbackProperty((julianDate: JulianDate | undefined): PolygonHierarchy | undefined => {
+        if (!lookupRef.current || !julianDate) return undefined;
         const currentMs = JulianDate.toDate(julianDate).getTime();
 
         // secondary Entity: dateline 分割がないタイムステップでは undefined を返して非表示に
