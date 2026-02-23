@@ -4,17 +4,24 @@ import { FootprintLayer } from "../FootprintLayer";
 import { perfMetricsStore } from "../../../lib/perf/perf-metrics-store";
 import type { FootprintData } from "../../../types/orbit";
 
+// Entity は命令的管理（viewer.entities.add）に切り替わったため、
+// useCesium の viewer に entities.add / entities.remove を追加する
+const mockEntityPolygon = {
+  material: undefined as unknown,
+  outlineColor: undefined as unknown,
+};
+const mockEntity = { show: true, polygon: mockEntityPolygon };
+
 vi.mock("resium", () => ({
   Entity: () => null,
   useCesium: () => ({
     viewer: {
-      scene: {
-        postRender: {
-          addEventListener: vi.fn(() => vi.fn()),
-        },
+      entities: {
+        add: vi.fn(() => ({ ...mockEntity, polygon: { ...mockEntityPolygon } })),
+        remove: vi.fn(),
       },
       clock: {
-        currentTime: new Date(),
+        currentTime: {},
       },
     },
   }),
