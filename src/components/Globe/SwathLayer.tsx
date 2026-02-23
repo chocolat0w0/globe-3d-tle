@@ -3,6 +3,7 @@ import { Entity } from "resium";
 import { Cartesian3, Color, PolygonHierarchy } from "cesium";
 import { useSwathData } from "../../hooks/useSwathData";
 import type { SwathParams } from "../../lib/tle/swath";
+import type { OffnadirRange } from "../../lib/tle/offnadir-ranges";
 import type { TLEData } from "../../types/satellite";
 import type { SwathData } from "../../types/orbit";
 
@@ -13,11 +14,12 @@ interface Props {
   visible: boolean;
   showSwath: boolean;
   dayStartMs: number;
+  offnadirRanges?: OffnadirRange[];
   swathParams?: SwathParams;
 }
 
 const DEFAULT_SWATH_PARAMS: SwathParams = {
-  roll: 30,
+  offnadirRanges: [[-30, 30]],
   split: 360,
 };
 
@@ -49,13 +51,22 @@ export function SwathLayer({
   visible,
   showSwath,
   dayStartMs,
+  offnadirRanges,
   swathParams = DEFAULT_SWATH_PARAMS,
 }: Props) {
+  const resolvedSwathParams = useMemo<SwathParams>(() => {
+    if (!offnadirRanges) return swathParams;
+    return {
+      ...swathParams,
+      offnadirRanges,
+    };
+  }, [swathParams, offnadirRanges]);
+
   const { swathData } = useSwathData({
     satelliteId: id,
     tle1: tle.line1,
     tle2: tle.line2,
-    swathParams,
+    swathParams: resolvedSwathParams,
     dayStartMs,
     enabled: visible && showSwath,
   });

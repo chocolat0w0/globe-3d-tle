@@ -32,6 +32,7 @@ function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
       line2: "2 25544  51.6400 337.6580 0001584  86.9974 273.1408 15.50008824429730",
     },
     color: "#FF6B6B",
+    offnadirRanges: [[-30, 30]],
     visible: true,
     selected: false,
     showFootprint: false,
@@ -44,10 +45,10 @@ function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
 function makeTenSatellites(): Satellite[] {
   const specs = [
     { id: "iss", name: "ISS (ZARYA)", color: "#FF6B6B" },
-    { id: "noaa19", name: "NOAA 19", color: "#4ECDC4" },
+    { id: "sentinel1a", name: "SENTINEL-1A", color: "#6A8DFF" },
     { id: "terra", name: "TERRA", color: "#45B7D1" },
-    { id: "aqua", name: "AQUA", color: "#96CEB4" },
-    { id: "aura", name: "AURA", color: "#FFEAA7" },
+    { id: "capella", name: "CAPELLA", color: "#FF9F1C" },
+    { id: "iceye", name: "ICEYE", color: "#2EC4B6" },
     { id: "landsat8", name: "LANDSAT 8", color: "#DDA0DD" },
     { id: "sentinel2a", name: "SENTINEL-2A", color: "#FF8C00" },
     { id: "sentinel2b", name: "SENTINEL-2B", color: "#FF4500" },
@@ -95,10 +96,10 @@ describe("SatelliteList", () => {
 
       const expectedNames = [
         "ISS (ZARYA)",
-        "NOAA 19",
+        "SENTINEL-1A",
         "TERRA",
-        "AQUA",
-        "AURA",
+        "CAPELLA",
+        "ICEYE",
         "LANDSAT 8",
         "SENTINEL-2A",
         "SENTINEL-2B",
@@ -184,7 +185,7 @@ describe("SatelliteList", () => {
   describe("onToggleVisible callback", () => {
     it("calls onToggleVisible with the correct satellite id when the checkbox is clicked", () => {
       const onToggleVisible = vi.fn();
-      const sat = makeSatellite({ id: "noaa19", name: "NOAA 19" });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A" });
       const { container } = render(
         <SatelliteList
           satellites={[sat]}
@@ -203,7 +204,7 @@ describe("SatelliteList", () => {
       fireEvent.click(checkbox);
 
       expect(onToggleVisible).toHaveBeenCalledTimes(1);
-      expect(onToggleVisible).toHaveBeenCalledWith("noaa19");
+      expect(onToggleVisible).toHaveBeenCalledWith("sentinel1a");
     });
 
     it("calls onToggleVisible with the correct id for the checkbox in the middle of a list (terra)", () => {
@@ -275,7 +276,7 @@ describe("SatelliteList", () => {
   describe("onSelect callback", () => {
     it("calls onSelect with the correct satellite id when the row is clicked", () => {
       const onSelect = vi.fn();
-      const sat = makeSatellite({ id: "aqua", name: "AQUA" });
+      const sat = makeSatellite({ id: "capella", name: "CAPELLA" });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -286,10 +287,10 @@ describe("SatelliteList", () => {
         />,
       );
 
-      fireEvent.click(screen.getByText("AQUA"));
+      fireEvent.click(screen.getByText("CAPELLA"));
 
       expect(onSelect).toHaveBeenCalledTimes(1);
-      expect(onSelect).toHaveBeenCalledWith("aqua");
+      expect(onSelect).toHaveBeenCalledWith("capella");
     });
 
     it("calls onSelect with the correct id when any of the 10 rows are clicked", () => {
@@ -375,7 +376,9 @@ describe("SatelliteList", () => {
     });
 
     it("only the selected satellite's row has a non-transparent background when one of ten is selected", () => {
-      const sats = makeTenSatellites().map((s) => (s.id === "aura" ? { ...s, selected: true } : s));
+      const sats = makeTenSatellites().map((s) =>
+        s.id === "iceye" ? { ...s, selected: true } : s,
+      );
       const { container } = render(
         <SatelliteList
           satellites={sats}
@@ -425,7 +428,7 @@ describe("SatelliteList", () => {
 
     it("calls onToggleFootprint with the correct id when FP button is clicked", () => {
       const onToggleFootprint = vi.fn();
-      const sat = makeSatellite({ id: "noaa19", name: "NOAA 19" });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A" });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -437,7 +440,7 @@ describe("SatelliteList", () => {
       );
       fireEvent.click(screen.getByText("FP"));
       expect(onToggleFootprint).toHaveBeenCalledTimes(1);
-      expect(onToggleFootprint).toHaveBeenCalledWith("noaa19");
+      expect(onToggleFootprint).toHaveBeenCalledWith("sentinel1a");
     });
 
     it("clicking FP button does NOT call onSelect (stopPropagation is in effect)", () => {
@@ -526,7 +529,7 @@ describe("SatelliteList", () => {
 
     it("calls onToggleSwath with the correct id when SW button is clicked", () => {
       const onToggleSwath = vi.fn();
-      const sat = makeSatellite({ id: "noaa19", name: "NOAA 19" });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A" });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -538,7 +541,7 @@ describe("SatelliteList", () => {
       );
       fireEvent.click(screen.getByText("SW"));
       expect(onToggleSwath).toHaveBeenCalledTimes(1);
-      expect(onToggleSwath).toHaveBeenCalledWith("noaa19");
+      expect(onToggleSwath).toHaveBeenCalledWith("sentinel1a");
     });
 
     it("clicking SW button does NOT call onSelect (stopPropagation is in effect)", () => {

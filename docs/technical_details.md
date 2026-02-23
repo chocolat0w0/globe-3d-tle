@@ -212,7 +212,7 @@ import { footprint } from "geo4326/satellite";
 // TLEと時刻からフットプリントを計算
 const result = footprint(tle1, tle2, date, {
   fov: [30, 30], // [クロストラック, アロングトラック] 度
-  offnadir: 0, // オフナディア角（度）
+  offnadir: [-45, -15], // オフナディア角レンジ [minDeg, maxDeg]
   insert: 10, // エッジ補間点数
 });
 
@@ -224,7 +224,9 @@ const result = footprint(tle1, tle2, date, {
 - `fov`: 視野角 `[クロストラック, アロングトラック]`（度）
   - クロストラック: 衛星進行方向に垂直な方向の視野角
   - アロングトラック: 衛星進行方向の視野角
-- `offnadir`: オフナディア角（度）- センサーが直下点から傾いている角度
+- `offnadir`: オフナディア角レンジ `[minDeg, maxDeg]`（度）
+  - 符号規約: 正の値は進行方向左側
+  - 例: `[-45, -15]`, `[15, 45]`, `[0, 0]`
 - `insert`: エッジ上の補間点数 - 大きいほど滑らかな曲線
 
 **利点**:
@@ -299,7 +301,7 @@ function computeFootprintSimple(
 2. 視錐台の各辺と地球楕円体の交線を計算
 3. 交線から地表ポリゴンを生成
 
-**推奨**: geo4326の`fov`と`offnadir`パラメータで多くのケースに対応可能。より複雑な姿勢制御が必要な場合のみ自前実装を検討。
+**推奨**: geo4326の`fov`と`offnadir`レンジで多くのケースに対応可能。より複雑な姿勢制御が必要な場合のみ自前実装を検討。
 
 ### 3.4 dateline跨ぎ対策
 
@@ -402,7 +404,7 @@ import { accessArea } from "geo4326/satellite";
 
 // 期間指定でスワス（観測可能範囲）を計算
 const swath = accessArea(tle1, tle2, startDate, endDate, {
-  roll: 30, // 最大ロール角（左右傾き、度）
+  roll: [-45, -15], // オフナディア角レンジ [minDeg, maxDeg]
   split: 360, // 軌道周期の分割数
 });
 
@@ -412,7 +414,9 @@ const swath = accessArea(tle1, tle2, startDate, endDate, {
 
 **パラメータ**:
 
-- `roll`: 最大ロール角（度）- 衛星が左右に傾ける最大角度
+- `roll`: オフナディア角レンジ `[minDeg, maxDeg]`（度）
+  - 符号規約: 正の値は進行方向左側
+  - `[[0,0]]` はゼロ幅のため、実装側では空スワスを返す
 - `split`: 軌道周期の分割数 - 大きいほど精密だが計算時間が増加
 
 **利点**:

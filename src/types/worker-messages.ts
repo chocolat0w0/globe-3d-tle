@@ -1,4 +1,6 @@
 import { FlatRings } from "./polygon";
+import type { FootprintParams } from "../lib/tle/footprint";
+import type { SwathParams } from "../lib/tle/swath";
 
 export interface ComputeDayRequest {
   type: "compute-day";
@@ -10,15 +12,8 @@ export interface ComputeDayRequest {
   durationMs: number;
   stepSec: number;
   outputs: { orbit: boolean; footprint: boolean; swath: boolean };
-  footprintParams?: {
-    fov: [number, number];
-    offnadir: number;
-    insert?: number;
-  };
-  swathParams?: {
-    roll: number;
-    split?: number;
-  };
+  footprintParams?: FootprintParams;
+  swathParams?: SwathParams;
 }
 
 export interface ComputeTimings {

@@ -172,9 +172,12 @@ describe("InfoPanel", () => {
       postRenderCallback?.();
     });
 
-    expect(screen.getByText("緯度: 35.6895°")).toBeInTheDocument();
-    expect(screen.getByText("経度: 139.7001°")).toBeInTheDocument();
-    expect(screen.getByText("高度: 12.3 km")).toBeInTheDocument();
+    expect(screen.getByText("緯度")).toBeInTheDocument();
+    expect(screen.getByText("35.6895°")).toBeInTheDocument();
+    expect(screen.getByText("経度")).toBeInTheDocument();
+    expect(screen.getByText("139.7001°")).toBeInTheDocument();
+    expect(screen.getByText("高度")).toBeInTheDocument();
+    expect(screen.getByText("12.3 km")).toBeInTheDocument();
   });
 
   it("unmount 時に postRender リスナーを解除する", () => {

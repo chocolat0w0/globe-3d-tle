@@ -61,6 +61,7 @@ function App() {
           visible={sat.visible}
           showFootprint={sat.showFootprint}
           dayStartMs={windowStartMs}
+          offnadirRanges={sat.offnadirRanges}
           stepSec={stepSec}
         />
       ))}
@@ -73,6 +74,7 @@ function App() {
           visible={sat.visible}
           showSwath={sat.showSwath}
           dayStartMs={swathDayStartMs}
+          offnadirRanges={sat.offnadirRanges}
         />
       ))}
       <AoiLayer aoi={aoi} mode={aoiMode} onAoiChange={setAoi} />

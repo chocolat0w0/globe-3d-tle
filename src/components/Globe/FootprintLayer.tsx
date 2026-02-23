@@ -12,6 +12,7 @@ import {
 } from "cesium";
 import { useFootprintData } from "../../hooks/useFootprintData";
 import type { FootprintParams } from "../../lib/tle/footprint";
+import type { OffnadirRange } from "../../lib/tle/offnadir-ranges";
 import type { TLEData } from "../../types/satellite";
 import { PerfLogger } from "../../lib/perf/perf-logger";
 import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
@@ -29,13 +30,14 @@ interface Props {
   visible: boolean;
   showFootprint: boolean;
   dayStartMs: number;
+  offnadirRanges?: OffnadirRange[];
   footprintParams?: FootprintParams;
   stepSec?: number;
 }
 
 const DEFAULT_FOOTPRINT_PARAMS: FootprintParams = {
   fov: [30, 30],
-  offnadir: 0,
+  offnadirRanges: [[-30, 30]],
 };
 
 export function FootprintLayer({
@@ -45,6 +47,7 @@ export function FootprintLayer({
   visible,
   showFootprint,
   dayStartMs,
+  offnadirRanges,
   footprintParams = DEFAULT_FOOTPRINT_PARAMS,
   stepSec = 30,
 }: Props) {
@@ -59,11 +62,19 @@ export function FootprintLayer({
     [],
   );
 
+  const resolvedFootprintParams = useMemo<FootprintParams>(() => {
+    if (!offnadirRanges) return footprintParams;
+    return {
+      ...footprintParams,
+      offnadirRanges,
+    };
+  }, [footprintParams, offnadirRanges]);
+
   const { footprintData } = useFootprintData({
     satelliteId: id,
     tle1: tle.line1,
     tle2: tle.line2,
-    footprintParams,
+    footprintParams: resolvedFootprintParams,
     stepSec,
     dayStartMs,
     enabled: visible && showFootprint,

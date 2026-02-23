@@ -1,14 +1,24 @@
 import { useState, useCallback } from "react";
 import type { Satellite } from "../types/satellite";
 import rawTle from "../data/sample-tle.json";
+import type { OffnadirRange } from "../lib/tle/offnadir-ranges";
 
-type TleEntry = { id: string; name: string; tle: { line1: string; line2: string }; color: string };
+type TleEntry = {
+  id: string;
+  name: string;
+  tle: { line1: string; line2: string };
+  offnadirRanges: number[][];
+  color: string;
+};
 
 const tleEntries = rawTle satisfies TleEntry[];
 const INITIAL: Satellite[] = tleEntries.map((s) => ({
   id: s.id,
   name: s.name,
   tle: s.tle,
+  offnadirRanges: s.offnadirRanges.map(
+    ([minDeg, maxDeg]) => [minDeg, maxDeg] as OffnadirRange,
+  ),
   color: s.color,
   visible: true,
   selected: false,
