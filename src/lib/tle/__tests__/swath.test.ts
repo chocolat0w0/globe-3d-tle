@@ -9,10 +9,8 @@ import { computeSwath } from "../swath";
  * ISS TLE — epoch near 2024-01-01T12:00:00Z.
  * Known to produce valid access-area polygons for reasonable roll values.
  */
-const ISS_TLE1 =
-  "1 25544U 98067A   24001.50000000  .00020137  00000-0  36371-3 0  9993";
-const ISS_TLE2 =
-  "2 25544  51.6400 337.6580 0001584  86.9974 273.1408 15.50008824429730";
+const ISS_TLE1 = "1 25544U 98067A   24001.50000000  .00020137  00000-0  36371-3 0  9993";
+const ISS_TLE2 = "2 25544  51.6400 337.6580 0001584  86.9974 273.1408 15.50008824429730";
 
 /** 2024-01-01T12:00:00Z — aligns with TLE epoch for deterministic propagation */
 const TLE_EPOCH_MS = 1704110400000;
@@ -24,8 +22,8 @@ const TLE_EPOCH_MS = 1704110400000;
 // 1. split parameter
 //    geo4326.satellite.accessArea() uses Object.assign({ split: 360, ... }, opts).
 //    If opts contains { split: undefined }, Object.assign copies the `undefined` key
-//    and overwrites the default, causing dt = orbitPeriod / undefined = NaN and
-//    therefore an empty result.  Tests must pass an explicit numeric `split` value.
+//    and overwrites the default, causing dt = orbitPeriod / undefined = NaN.
+//    computeSwath() 側で split 未指定時はキー自体を渡さないようにして回避している。
 //    split=60 is fast and produces reliable output for ISS near epoch.
 //
 // 2. longitude range
@@ -248,6 +246,15 @@ describe("computeSwath", () => {
   // -------------------------------------------------------------------------
 
   describe("split parameter", () => {
+    it("produces valid output when split is omitted (geo4326 default is used)", () => {
+      const result = computeSwath(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 3_600_000, {
+        roll: 10,
+      });
+      expect(result.offsets.length).toBeGreaterThanOrEqual(1);
+      expect(result.offsets.length).toBe(result.counts.length);
+      expect(result.rings.length).toBe(sumInt32(result.counts) * 2);
+    });
+
     it("produces valid output when split=30 is specified (coarser orbit subdivision)", () => {
       const result = computeSwath(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 3_600_000, {
         roll: 10,
@@ -281,7 +288,7 @@ describe("computeSwath", () => {
       // (zero swath width) that self-intersects; geo4326 detects this and throws
       // InvalidSelfintersectionError.  computeSwath does not suppress the error.
       expect(() =>
-        computeSwath(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 3_600_000, { roll: 0, split: 60 })
+        computeSwath(ISS_TLE1, ISS_TLE2, TLE_EPOCH_MS, 3_600_000, { roll: 0, split: 60 }),
       ).toThrow(/selfintersection/i);
     });
 
@@ -345,7 +352,7 @@ describe("computeSwath", () => {
       // geo4326.satellite.accessArea throws "not found ground point." for invalid TLE.
       // computeSwath does not wrap the call in a try/catch, so the error propagates.
       expect(() =>
-        computeSwath("", "", TLE_EPOCH_MS, 3_600_000, { roll: 10, split: 60 })
+        computeSwath("", "", TLE_EPOCH_MS, 3_600_000, { roll: 10, split: 60 }),
       ).toThrow();
     });
 
@@ -356,8 +363,8 @@ describe("computeSwath", () => {
           "NOT A VALID TLE LINE TWO",
           TLE_EPOCH_MS,
           3_600_000,
-          { roll: 10, split: 60 }
-        )
+          { roll: 10, split: 60 },
+        ),
       ).toThrow();
     });
   });

@@ -29,14 +29,17 @@ export function computeSwath(
   tle2: string,
   startMs: number,
   durationMs: number,
-  params: SwathParams
+  params: SwathParams,
 ): ComputeSwathResult {
   const { roll, split } = params;
   const start = new Date(startMs);
   const end = new Date(startMs + durationMs);
 
+  // split が未指定のときはキー自体を渡さず、geo4326 側のデフォルト値を使う
+  const accessAreaOptions = split === undefined ? { roll } : { roll, split };
+
   // accessArea は期間全体の観測可能範囲を Points[] で返す
-  const areaRings = geo4326Satellite.accessArea(tle1, tle2, start, end, { roll, split });
+  const areaRings = geo4326Satellite.accessArea(tle1, tle2, start, end, accessAreaOptions);
 
   const ringsArr: number[] = [];
   const offsetsArr: number[] = [];
@@ -46,9 +49,7 @@ export function computeSwath(
     // dateline 跨ぎを分割
     const cut = flatten.cutRingAtAntimeridian(ring);
     const polys =
-      cut.within.length > 0 || cut.outside.length > 0
-        ? [...cut.within, ...cut.outside]
-        : [ring];
+      cut.within.length > 0 || cut.outside.length > 0 ? [...cut.within, ...cut.outside] : [ring];
 
     for (const poly of polys) {
       const startPairIdx = ringsArr.length / 2;
