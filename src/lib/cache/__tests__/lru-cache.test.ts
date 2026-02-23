@@ -130,6 +130,50 @@ describe("LRUCache", () => {
     });
   });
 
+  describe("deleteByPrefix", () => {
+    it("一致するプレフィックスのキーだけを削除し、削除件数を返す", () => {
+      const cache = new LRUCache<number>(10);
+      cache.set("sat1:2024-01-01:30", 1);
+      cache.set("sat1:2024-01-02:30", 2);
+      cache.set("sat2:2024-01-01:30", 3);
+
+      const deleted = cache.deleteByPrefix("sat1:");
+
+      expect(deleted).toBe(2);
+      expect(cache.has("sat1:2024-01-01:30")).toBe(false);
+      expect(cache.has("sat1:2024-01-02:30")).toBe(false);
+      expect(cache.has("sat2:2024-01-01:30")).toBe(true);
+      expect(cache.size).toBe(1);
+    });
+
+    it("一致するキーがない場合は 0 を返して状態を変えない", () => {
+      const cache = new LRUCache<number>(5);
+      cache.set("a", 1);
+      cache.set("b", 2);
+
+      const deleted = cache.deleteByPrefix("sat:");
+
+      expect(deleted).toBe(0);
+      expect(cache.size).toBe(2);
+      expect(cache.get("a")).toBe(1);
+      expect(cache.get("b")).toBe(2);
+    });
+
+    it("削除されたエントリ分だけ estimatedBytes が減る", () => {
+      const cache = new LRUCache<{ bytes: number }>(10, (v) => v.bytes);
+      cache.set("sat1:day1", { bytes: 10 });
+      cache.set("sat1:day2", { bytes: 20 });
+      cache.set("sat2:day1", { bytes: 30 });
+      expect(cache.estimatedBytes).toBe(60);
+
+      const deleted = cache.deleteByPrefix("sat1:");
+
+      expect(deleted).toBe(2);
+      expect(cache.estimatedBytes).toBe(30);
+      expect(cache.has("sat2:day1")).toBe(true);
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // 容量超過: LRU エビクション
   // ---------------------------------------------------------------------------
@@ -183,7 +227,7 @@ describe("LRUCache", () => {
       cache.set("d", 4);
 
       expect(cache.has("b")).toBe(false); // b がエビクトされた
-      expect(cache.has("a")).toBe(true);  // a は MRU なので残っている
+      expect(cache.has("a")).toBe(true); // a は MRU なので残っている
       expect(cache.has("c")).toBe(true);
       expect(cache.has("d")).toBe(true);
     });
@@ -236,7 +280,10 @@ describe("LRUCache", () => {
 
   describe("generic type support", () => {
     it("オブジェクト値を格納できる", () => {
-      interface Payload { x: number; y: number }
+      interface Payload {
+        x: number;
+        y: number;
+      }
       const cache = new LRUCache<Payload>(5);
       cache.set("p1", { x: 1, y: 2 });
       expect(cache.get("p1")).toEqual({ x: 1, y: 2 });
