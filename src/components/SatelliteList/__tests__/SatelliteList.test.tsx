@@ -25,14 +25,14 @@ import type { Satellite } from "../../../types/satellite";
 
 function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
   return {
-    id: "iss",
-    name: "ISS (ZARYA)",
+    id: "sentinel1a",
+    name: "SENTINEL-1A",
     tle: {
-      line1: "1 25544U 98067A   24001.50000000  .00020137  00000-0  36371-3 0  9993",
-      line2: "2 25544  51.6400 337.6580 0001584  86.9974 273.1408 15.50008824429730",
+      line1: "1 39634U 14016A   26053.99037749 -.00000228  00000+0 -38637-4 0  9995",
+      line2: "2 39634  98.1817  63.1723 0001334  84.0618 276.0734 14.59197482633361",
     },
-    color: "#FF6B6B",
-    offnadirRanges: [[-30, 30]],
+    color: "#6A8DFF",
+    offnadirRanges: [[22.3, 44.5]],
     visible: true,
     selected: false,
     showFootprint: false,
@@ -44,8 +44,8 @@ function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
 /** 10 satellites that mirror the structure of sample-tle.json */
 function makeTenSatellites(): Satellite[] {
   const specs = [
-    { id: "iss", name: "ISS (ZARYA)", color: "#FF6B6B" },
-    { id: "sentinel1a", name: "SENTINEL-1A", color: "#6A8DFF" },
+    { id: "sentinel1a", name: "SENTINEL-1A", color: "#FF6B6B" },
+    { id: "sentinel1b", name: "SENTINEL-1B", color: "#6A8DFF" },
     { id: "terra", name: "TERRA", color: "#45B7D1" },
     { id: "capella", name: "CAPELLA", color: "#FF9F1C" },
     { id: "iceye", name: "ICEYE", color: "#2EC4B6" },
@@ -95,8 +95,8 @@ describe("SatelliteList", () => {
       );
 
       const expectedNames = [
-        "ISS (ZARYA)",
         "SENTINEL-1A",
+        "SENTINEL-1B",
         "TERRA",
         "CAPELLA",
         "ICEYE",
@@ -148,7 +148,7 @@ describe("SatelliteList", () => {
 
   describe("checkbox reflects visible prop", () => {
     it("checkbox is checked when satellite visible=true", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", visible: true });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", visible: true });
       const { container } = render(
         <SatelliteList
           satellites={[sat]}
@@ -163,7 +163,7 @@ describe("SatelliteList", () => {
     });
 
     it("checkbox is unchecked when satellite visible=false", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", visible: false });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", visible: false });
       const { container } = render(
         <SatelliteList
           satellites={[sat]}
@@ -250,7 +250,7 @@ describe("SatelliteList", () => {
     it("clicking the checkbox does NOT call onSelect (stopPropagation is in effect)", () => {
       const onSelect = vi.fn();
       const onToggleVisible = vi.fn();
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)" });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A" });
       const { container } = render(
         <SatelliteList
           satellites={[sat]}
@@ -338,7 +338,7 @@ describe("SatelliteList", () => {
 
   describe("visual feedback for selected state", () => {
     it("applies a non-transparent background style to the row of a selected satellite", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", selected: true });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", selected: true });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -350,7 +350,7 @@ describe("SatelliteList", () => {
       );
 
       // The row is the div that wraps the satellite name — walk up from the text node
-      const nameEl = screen.getByText("ISS (ZARYA)");
+      const nameEl = screen.getByText("SENTINEL-1A");
       const row = nameEl.closest('[style*="cursor: pointer"]');
       expect(row).not.toBeNull();
       // Background is NOT "transparent" when selected
@@ -358,7 +358,7 @@ describe("SatelliteList", () => {
     });
 
     it("applies transparent background to the row of an unselected satellite", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", selected: false });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", selected: false });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -369,7 +369,7 @@ describe("SatelliteList", () => {
         />,
       );
 
-      const nameEl = screen.getByText("ISS (ZARYA)");
+      const nameEl = screen.getByText("SENTINEL-1A");
       const row = nameEl.closest('[style*="cursor: pointer"]');
       expect(row).not.toBeNull();
       expect((row as HTMLElement).style.background).toBe("transparent");
@@ -445,7 +445,7 @@ describe("SatelliteList", () => {
 
     it("clicking FP button does NOT call onSelect (stopPropagation is in effect)", () => {
       const onSelect = vi.fn();
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)" });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A" });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -477,7 +477,7 @@ describe("SatelliteList", () => {
     });
 
     it("FP button title changes when showFootprint=true", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showFootprint: true });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", showFootprint: true });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -492,7 +492,7 @@ describe("SatelliteList", () => {
     });
 
     it("FP button title shows 'フットプリントを表示' when showFootprint=false", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showFootprint: false });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", showFootprint: false });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -546,7 +546,7 @@ describe("SatelliteList", () => {
 
     it("clicking SW button does NOT call onSelect (stopPropagation is in effect)", () => {
       const onSelect = vi.fn();
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)" });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A" });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -561,7 +561,7 @@ describe("SatelliteList", () => {
     });
 
     it("SW button title changes when showSwath=true", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showSwath: true });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", showSwath: true });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -576,7 +576,7 @@ describe("SatelliteList", () => {
     });
 
     it("SW button title shows 'スワスを表示' when showSwath=false", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", showSwath: false });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", showSwath: false });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -597,7 +597,7 @@ describe("SatelliteList", () => {
 
   describe("visual feedback for visible state", () => {
     it("applies opacity:1 to the row of a visible satellite", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", visible: true });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", visible: true });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -608,13 +608,13 @@ describe("SatelliteList", () => {
         />,
       );
 
-      const nameEl = screen.getByText("ISS (ZARYA)");
+      const nameEl = screen.getByText("SENTINEL-1A");
       const row = nameEl.closest('[style*="cursor: pointer"]') as HTMLElement;
       expect(row.style.opacity).toBe("1");
     });
 
     it("applies opacity:0.4 to the row of a hidden satellite (visible=false)", () => {
-      const sat = makeSatellite({ id: "iss", name: "ISS (ZARYA)", visible: false });
+      const sat = makeSatellite({ id: "sentinel1a", name: "SENTINEL-1A", visible: false });
       render(
         <SatelliteList
           satellites={[sat]}
@@ -625,7 +625,7 @@ describe("SatelliteList", () => {
         />,
       );
 
-      const nameEl = screen.getByText("ISS (ZARYA)");
+      const nameEl = screen.getByText("SENTINEL-1A");
       const row = nameEl.closest('[style*="cursor: pointer"]') as HTMLElement;
       expect(row.style.opacity).toBe("0.4");
     });

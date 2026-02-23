@@ -18,12 +18,12 @@ import { useSatellites } from "../useSatellites";
 
 /** All satellite IDs present in sample-tle.json, in order */
 const ALL_IDS = [
-  "iss",
   "sentinel1a",
-  "terra",
+  "sentinel1b",
+  "terrasar",
+  "tandemx",
   "capella",
   "iceye",
-  "landsat8",
   "sentinel2a",
   "sentinel2b",
   "worldview3",
@@ -71,21 +71,21 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleVisible("iss");
+        result.current.toggleVisible("sentinel1a");
       });
 
-      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      const iss = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(iss.visible).toBe(false);
     });
 
-    it("does not change visible for any other satellite when toggling iss", () => {
+    it("does not change visible for any other satellite when toggling sentinel1a", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleVisible("iss");
+        result.current.toggleVisible("sentinel1a");
       });
 
-      const others = result.current.satellites.filter((s) => s.id !== "iss");
+      const others = result.current.satellites.filter((s) => s.id !== "sentinel1a");
       const allStillVisible = others.every((s) => s.visible === true);
       expect(allStillVisible).toBe(true);
     });
@@ -108,14 +108,14 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleVisible("terra");
+        result.current.toggleVisible("terrasar");
       });
 
-      const terra = result.current.satellites.find((s) => s.id === "terra")!;
+      const terra = result.current.satellites.find((s) => s.id === "terrasar")!;
       expect(terra.visible).toBe(false);
 
       // All other 9 satellites remain visible
-      const others = result.current.satellites.filter((s) => s.id !== "terra");
+      const others = result.current.satellites.filter((s) => s.id !== "terrasar");
       expect(others.every((s) => s.visible)).toBe(true);
     });
 
@@ -135,7 +135,7 @@ describe("useSatellites", () => {
 
       // No satellite is selected — hiding one should leave all selected=false
       act(() => {
-        result.current.toggleVisible("iss");
+        result.current.toggleVisible("sentinel1a");
       });
 
       const noneSelected = result.current.satellites.every((s) => s.selected === false);
@@ -171,13 +171,13 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.selectSatellite("terra");
+        result.current.selectSatellite("terrasar");
       });
       act(() => {
-        result.current.selectSatellite("terra");
+        result.current.selectSatellite("terrasar");
       });
 
-      const terra = result.current.satellites.find((s) => s.id === "terra")!;
+      const terra = result.current.satellites.find((s) => s.id === "terrasar")!;
       expect(terra.selected).toBe(false);
     });
 
@@ -186,29 +186,35 @@ describe("useSatellites", () => {
 
       // First select iss
       act(() => {
-        result.current.selectSatellite("iss");
+        result.current.selectSatellite("sentinel1a");
       });
-      const issAfterFirst = result.current.satellites.find((s) => s.id === "iss")!;
+      const issAfterFirst = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(issAfterFirst.selected).toBe(true);
 
-      // Now select landsat8 — iss must become false
+      // Now select tandemx — sentinel1a must become false
       act(() => {
-        result.current.selectSatellite("landsat8");
+        result.current.selectSatellite("tandemx");
       });
 
-      const issAfterSecond = result.current.satellites.find((s) => s.id === "iss")!;
-      const landsat8 = result.current.satellites.find((s) => s.id === "landsat8")!;
+      const issAfterSecond = result.current.satellites.find((s) => s.id === "sentinel1a")!;
+      const tandemx = result.current.satellites.find((s) => s.id === "tandemx")!;
       expect(issAfterSecond.selected).toBe(false);
-      expect(landsat8.selected).toBe(true);
+      expect(tandemx.selected).toBe(true);
     });
 
     it("at most one satellite is selected at any time after multiple selectSatellite calls", () => {
       const { result } = renderHook(() => useSatellites());
 
       // Cycle through three different satellites
-      act(() => { result.current.selectSatellite("iss"); });
-      act(() => { result.current.selectSatellite("sentinel1a"); });
-      act(() => { result.current.selectSatellite("sentinel2a"); });
+      act(() => {
+        result.current.selectSatellite("sentinel1a");
+      });
+      act(() => {
+        result.current.selectSatellite("sentinel1a");
+      });
+      act(() => {
+        result.current.selectSatellite("sentinel2a");
+      });
 
       const selectedCount = result.current.satellites.filter((s) => s.selected).length;
       expect(selectedCount).toBe(1);
@@ -246,7 +252,7 @@ describe("useSatellites", () => {
     it("initialises every satellite with showFootprint=false", () => {
       const { result } = renderHook(() => useSatellites());
       const noneShowingFootprint = result.current.satellites.every(
-        (s) => s.showFootprint === false
+        (s) => s.showFootprint === false,
       );
       expect(noneShowingFootprint).toBe(true);
     });
@@ -257,10 +263,10 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleFootprint("iss");
+        result.current.toggleFootprint("sentinel1a");
       });
 
-      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      const iss = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(iss.showFootprint).toBe(true);
     });
 
@@ -268,10 +274,10 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleFootprint("iss");
+        result.current.toggleFootprint("sentinel1a");
       });
 
-      const others = result.current.satellites.filter((s) => s.id !== "iss");
+      const others = result.current.satellites.filter((s) => s.id !== "sentinel1a");
       const noneChanged = others.every((s) => s.showFootprint === false);
       expect(noneChanged).toBe(true);
     });
@@ -294,7 +300,7 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleFootprint("terra");
+        result.current.toggleFootprint("terrasar");
       });
 
       const allVisible = result.current.satellites.every((s) => s.visible === true);
@@ -352,9 +358,7 @@ describe("useSatellites", () => {
   describe("showSwath initial state", () => {
     it("initialises every satellite with showSwath=false", () => {
       const { result } = renderHook(() => useSatellites());
-      const noneShowingSwath = result.current.satellites.every(
-        (s) => s.showSwath === false
-      );
+      const noneShowingSwath = result.current.satellites.every((s) => s.showSwath === false);
       expect(noneShowingSwath).toBe(true);
     });
   });
@@ -364,10 +368,10 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleSwath("iss");
+        result.current.toggleSwath("sentinel1a");
       });
 
-      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      const iss = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(iss.showSwath).toBe(true);
     });
 
@@ -375,10 +379,10 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleSwath("iss");
+        result.current.toggleSwath("sentinel1a");
       });
 
-      const others = result.current.satellites.filter((s) => s.id !== "iss");
+      const others = result.current.satellites.filter((s) => s.id !== "sentinel1a");
       const noneChanged = others.every((s) => s.showSwath === false);
       expect(noneChanged).toBe(true);
     });
@@ -401,7 +405,7 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleSwath("terra");
+        result.current.toggleSwath("terrasar");
       });
 
       const allVisible = result.current.satellites.every((s) => s.visible === true);
@@ -423,11 +427,11 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       act(() => {
-        result.current.toggleSwath("landsat8");
+        result.current.toggleSwath("tandemx");
       });
 
       const noneShowingFootprint = result.current.satellites.every(
-        (s) => s.showFootprint === false
+        (s) => s.showFootprint === false,
       );
       expect(noneShowingFootprint).toBe(true);
     });
@@ -458,10 +462,14 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       // Select iss, then hide it
-      act(() => { result.current.selectSatellite("iss"); });
-      act(() => { result.current.toggleVisible("iss"); });
+      act(() => {
+        result.current.selectSatellite("sentinel1a");
+      });
+      act(() => {
+        result.current.toggleVisible("sentinel1a");
+      });
 
-      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      const iss = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(iss.visible).toBe(false);
       expect(iss.selected).toBe(false);
     });
@@ -469,9 +477,13 @@ describe("useSatellites", () => {
     it("hiding a non-selected satellite does not affect any selected state", () => {
       const { result } = renderHook(() => useSatellites());
 
-      // Select sentinel1a, then hide iss (different satellite)
-      act(() => { result.current.selectSatellite("sentinel1a"); });
-      act(() => { result.current.toggleVisible("iss"); });
+      // Select sentinel1a, then hide sentinel1b (different satellite)
+      act(() => {
+        result.current.selectSatellite("sentinel1a");
+      });
+      act(() => {
+        result.current.toggleVisible("sentinel1b");
+      });
 
       const sentinel1a = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(sentinel1a.selected).toBe(true);
@@ -481,11 +493,17 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       // Select iss → hide iss → show iss again
-      act(() => { result.current.selectSatellite("iss"); });
-      act(() => { result.current.toggleVisible("iss"); }); // hide (selected becomes false)
-      act(() => { result.current.toggleVisible("iss"); }); // show again
+      act(() => {
+        result.current.selectSatellite("sentinel1a");
+      });
+      act(() => {
+        result.current.toggleVisible("sentinel1a");
+      }); // hide (selected becomes false)
+      act(() => {
+        result.current.toggleVisible("sentinel1a");
+      }); // show again
 
-      const iss = result.current.satellites.find((s) => s.id === "iss")!;
+      const iss = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(iss.visible).toBe(true);
       expect(iss.selected).toBe(false); // requires explicit re-selection
     });
@@ -494,8 +512,12 @@ describe("useSatellites", () => {
       const { result } = renderHook(() => useSatellites());
 
       // Hide sentinel1a first, then select it
-      act(() => { result.current.toggleVisible("sentinel1a"); });
-      act(() => { result.current.selectSatellite("sentinel1a"); });
+      act(() => {
+        result.current.toggleVisible("sentinel1a");
+      });
+      act(() => {
+        result.current.selectSatellite("sentinel1a");
+      });
 
       const sentinel1a = result.current.satellites.find((s) => s.id === "sentinel1a")!;
       expect(sentinel1a.visible).toBe(false);

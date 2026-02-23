@@ -61,7 +61,7 @@ describe("FootprintLayer performance measurement", () => {
 
     render(
       <FootprintLayer
-        id="iss"
+        id="sentinel1a"
         tle={{ line1: "L1", line2: "L2" }}
         color="#ffffff"
         visible={false}
@@ -72,7 +72,7 @@ describe("FootprintLayer performance measurement", () => {
 
     expect(pushSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: "footprint-update:iss",
+        label: "footprint-update:sentinel1a",
       }),
     );
   });
@@ -88,7 +88,7 @@ describe("FootprintLayer performance measurement", () => {
 
     render(
       <FootprintLayer
-        id="iss"
+        id="sentinel1a"
         tle={{ line1: "L1", line2: "L2" }}
         color="#ffffff"
         visible={false}
@@ -111,7 +111,7 @@ describe("FootprintLayer performance measurement", () => {
 
     render(
       <FootprintLayer
-        id="iss"
+        id="sentinel1a"
         tle={{ line1: "L1", line2: "L2" }}
         color="#ffffff"
         visible={false}

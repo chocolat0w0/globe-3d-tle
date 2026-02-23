@@ -40,8 +40,8 @@ describe("SatelliteLayer performance measurement", () => {
 
     render(
       <SatelliteLayer
-        id="iss"
-        name="ISS"
+        id="sentinel1a"
+        name="sentinel1a"
         tle={{ line1: "L1", line2: "L2" }}
         color="#ffffff"
         visible={false}
@@ -53,7 +53,7 @@ describe("SatelliteLayer performance measurement", () => {
 
     expect(pushSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: "callback-position-build:iss",
+        label: "callback-position-build:sentinel1a",
       }),
     );
   });
@@ -69,8 +69,8 @@ describe("SatelliteLayer performance measurement", () => {
 
     render(
       <SatelliteLayer
-        id="iss"
-        name="ISS"
+        id="sentinel1a"
+        name="sentinel1a"
         tle={{ line1: "L1", line2: "L2" }}
         color="#ffffff"
         visible={false}
@@ -94,8 +94,8 @@ describe("SatelliteLayer performance measurement", () => {
 
     render(
       <SatelliteLayer
-        id="iss"
-        name="ISS"
+        id="sentinel1a"
+        name="sentinel1a"
         tle={{ line1: "L1", line2: "L2" }}
         color="#ffffff"
         visible={false}
