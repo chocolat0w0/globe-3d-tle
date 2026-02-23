@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "prepare": "husky",
     "bench": "node scripts/bench-worker.ts",
+    "update-tle": "node scripts/update-tle-from-celestrak.ts",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "test": "vitest run",
