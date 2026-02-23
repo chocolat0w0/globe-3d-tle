@@ -2,16 +2,9 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { Viewer, useCesium } from "resium";
 import { Credit, CreditDisplay, ImageryLayer, type Viewer as CesiumViewer } from "cesium";
 import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
+import { getStepSecForHeight } from "./step-sec";
 
 const STEP_SEC_DEBOUNCE_MS = 1000;
-
-/** カメラ高度（m）から stepSec を決定する */
-// eslint-disable-next-line react-refresh/only-export-components
-export function getStepSecForHeight(heightM: number): number {
-  if (heightM < 5_000_000) return 5;
-  if (heightM < 20_000_000) return 10;
-  return 20;
-}
 
 interface Props {
   showNightShade: boolean;

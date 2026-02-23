@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { GlobeRenderer, getStepSecForHeight } from "../GlobeRenderer";
+import { GlobeRenderer } from "../GlobeRenderer";
+import { getStepSecForHeight } from "../step-sec";
 import { perfMetricsStore } from "../../../lib/perf/perf-metrics-store";
 
 type PostRenderCallback = () => void;
