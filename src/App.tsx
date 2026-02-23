@@ -22,7 +22,7 @@ function getDayStartMs(now: number): number {
 function App() {
   const { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath } = useSatellites();
   const [dayStartMs, setDayStartMs] = useState(() => getDayStartMs(Date.now()));
-  const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("geodesic");
+  const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("cartesian");
   const [showNightShade, setShowNightShade] = useState(false);
   const [stepSec, setStepSec] = useState(30);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
