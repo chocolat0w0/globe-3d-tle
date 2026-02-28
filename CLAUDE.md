@@ -63,25 +63,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-3D地球儀上に衛星軌道とその撮像範囲を可視化するWebアプリケーション。TLE（Two-Line Element）から衛星の軌道を計算し、約10機の衛星を同時表示。地球儀上にフットプリント（撮像範囲）とスワス（帯状掃引範囲）を描画する。
+3D地球儀上に衛星軌道とその撮像範囲を可視化するWebアプリケーション。TLE（Two-Line Element）から衛星の軌道を計算し、約10機の衛星を同時表示。地球儀上にフットプリント（撮像範囲）とスワス（帯状掃引範囲）を描画する。AOI（関心領域）のインタラクティブ描画・GeoJSON読込もサポート。
 
 詳細な要件は `docs/requirements_overview.md` を参照。
 
 ## 技術スタック
 
-- **React + TypeScript**: UIフレームワーク
-- **CesiumJS**: 3D地球儀エンジン
-- **Resium**: React統合（任意、Cesiumの参照/初期化は1箇所に集約）
-- **satellite.js**: TLE計算（SGP4）
-- **geo4326**: フットプリント・スワス計算（satellite.jsベース）
-- **Web Worker**: 重計算のオフロード
+- **React 19.2.4 + TypeScript**: UIフレームワーク
+- **Cesium 1.138.0 + Resium 1.19.4**: 3D地球儀エンジン + React統合
+- **satellite.js 6.0.2**: TLE計算（SGP4、型定義内包）
+- **geo4326 1.7.1**: フットプリント・スワス計算（satellite.jsベース）
+- **Web Worker**: 重計算のオフロード（WorkerPool、最大6ワーカー）
 
 ## 時間モデル（重要）
 
-- **1日窓（rolling window）方式**: 常に1日分（24h）の軌道・フットプリント・スワスを表示
+- **4時間窓（rolling window）方式**: 4時間単位に切り詰めた窓で軌道・フットプリント・スワスを計算
+  - `WINDOW_MS = 4 * 3600 * 1000`（4時間 = 14,400,000 ms）
+  - 窓開始: `Math.floor(now / WINDOW_MS) * WINDOW_MS`
 - **時刻はUTCベース**: 内部計算・キーはすべてUTC（UI表示のみローカルタイム可）
-- **日跨ぎ時の窓差し替え**: スライダーで日付境界を跨ぐと、次の1日窓データを取得（キャッシュ優先）
-- **サンプリング**: stepSec=30秒（初期値）で1日あたり2,880点/衛星
+- **窓跨ぎ時の差し替え**: スライダーで窓境界を跨ぐと、次の4時間窓データを取得（キャッシュ優先）
+- **サンプリング**: stepSec はカメラ高度に応じて動的変更（`getStepSecForHeight`）、初期値 5 秒
 
 ## アーキテクチャの要点
 
@@ -89,69 +90,73 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 App
-└── GlobePage
-    ├── GlobeRenderer (Cesium Viewerの生成・破棄)
-    │   ├── BaseMapLayer (自前タイル)
-    │   ├── PolygonLayer (AOI等のポリゴン)
-    │   ├── SatelliteLayer (衛星エンティティ/軌道ライン)
-    │   ├── FootprintLayer (撮像範囲フットプリント)
-    │   └── SwathLayer (スワス帯状ポリゴン)
-    ├── TimeController (タイムスライダー、再生/停止)
-    ├── SatelliteList/Legend (10機の表示切替、色、選択)
-    └── HUD (現在時刻、TLE更新日時等)
+├── GlobeRenderer (Cesium Viewer生成・破棄、FPS監視、stepSec動的調整)
+│   ├── BaseMapLayer (自前XYZタイル)
+│   ├── SatelliteLayer × 10 (衛星エンティティ/軌道ライン)
+│   ├── FootprintLayer × 10 (撮像範囲フットプリント)
+│   ├── SwathLayer × 10 (スワス帯状ポリゴン)
+│   └── AoiLayer (AOI描画・表示・インタラクション)
+├── TimeController (タイムスライダー、再生/停止)
+├── right-panel-stack
+│   ├── InfoPanel (軌道モード・夜間シェード切替)
+│   └── AoiPanel (AOI描画モード、GeoJSON読込)
+├── PerfOverlay (FPS・メモリ・Worker RTT表示)
+└── SatelliteList (10機の表示切替、フットプリント/スワス切替)
 ```
 
 ### データフロー
 
-1. TLE + 撮像パラメータ（姿勢、FOV等）を入力
+1. TLE + 撮像パラメータ（off-nadir 角度範囲等）を入力
 2. UIで表示対象衛星・時刻（T0）を決定
-3. Main → Worker へ「1日窓計算要求」（軌道/フットプリント/スワス）
-4. Worker で SGP4 + 自前フットプリント計算を実行
-5. TypedArray（Transferable）で結果を返却
+3. Main → Worker へ「4時間窓計算要求」（軌道/フットプリント/スワス）
+4. Worker で SGP4 + geo4326フットプリント計算を実行
+5. TypedArray（Transferable）で結果を返却（計算時間 timings 付き）
 6. Main で Cesium へ反映（動点 + 軌道 + ポリゴン）
-7. 同一日内はサンプル参照で追従、日跨ぎ時は窓差し替え
+7. 同一窓内はサンプル参照で追従、窓跨ぎ時は差し替え
 
 ### Web Worker メッセージ仕様
 
 #### Main → Worker: compute-day
 
 ```ts
-type ComputeDayRequest = {
+interface ComputeDayRequest {
   type: "compute-day";
   requestId: string;
   satelliteId: string;
   tle1: string;
   tle2: string;
-  dayStartMs: number; // UTC epoch ms
-  durationMs: number; // 86400000 (24h)
-  stepSec: number; // 30
-  outputs: { orbit: true; footprint: true; swath: true };
-  footprintParams?: unknown; // 姿勢/FOV等
-  swathParams?: unknown;
-};
+  dayStartMs: number;        // UTC epoch ms（4時間窓開始）
+  durationMs: number;        // WINDOW_MS = 14400000 (4h)
+  stepSec: number;           // カメラ高度依存の動的値（例: 5秒）
+  outputs: { orbit: boolean; footprint: boolean; swath: boolean };
+  footprintParams?: FootprintParams;  // off-nadir 角度範囲等
+  swathParams?: SwathParams;
+}
 ```
 
 #### Worker → Main: computed-day
 
 ```ts
-type ComputeDayResponse = {
+interface ComputeDayResponse {
   type: "computed-day";
   requestId: string;
   satelliteId: string;
   dayStartMs: number;
   stepSec: number;
   orbit?: {
-    timesMs: ArrayBuffer; // Float64Array
-    ecef: ArrayBuffer; // Float32Array [x,y,z,...] meters
+    timesMs: ArrayBuffer;   // Float64Array
+    ecef: ArrayBuffer;      // Float32Array [x,y,z,...] meters
   };
   footprint?: {
-    timesMs: ArrayBuffer; // Float64Array
-    flat: FlatRings; // lon/lat ポリゴン配列
+    timesMs: ArrayBuffer;   // Float64Array
+    flat: FlatRings;        // lon/lat ポリゴン配列
+    timeSizes: ArrayBuffer; // Int32Array: 各タイムステップのポリゴン数
   };
   swath?: {
-    flat: FlatRings; // 窓単位（1件）の帯状ポリゴン
+    flat: FlatRings;        // 窓単位（1件）の帯状ポリゴン
   };
-};
+  timings?: ComputeTimings; // orbitMs, footprintMs, swathMs, totalMs
+}
 ```
 
 - **FlatRings**: `{ rings: ArrayBuffer, offsets: ArrayBuffer, counts: ArrayBuffer }`
@@ -163,10 +168,11 @@ type ComputeDayResponse = {
 
 - 各サンプル時刻 `t` に対して地表面上のポリゴン（lon/lat度）を返す
 - dateline（±180°）跨ぎがある場合は **分割してMultiPolygon相当** で返す（描画破綻を回避）
+- `timeSizes[i]` で i 番目のタイムステップのポリゴン数（dateline分割で 1 または 2）
 
 ### スワス
 
-- 1日窓（[T0, T0+24h]）の掃引範囲を帯状ポリゴンとして返す
+- 4時間窓（[T0, T0+4h]）の掃引範囲を帯状ポリゴンとして返す
 - 窓単位で静的に描画し、窓切替時のみ差し替え（時刻ごとの更新なし）
 
 ## キャッシュ / 先読み
@@ -174,29 +180,37 @@ type ComputeDayResponse = {
 ### LRUキャッシュ
 
 - key: `${satelliteId}:${dayStartMs}:${stepSec}`
-- value: orbit / footprint / swath の TypedArray
-- 推奨保持量: 前後3日（計7日）程度
+- フットプリントは `${paramsKey}` も付加（JSON化した FootprintParams）
+- 容量: 各30エントリ（10機 × 約7窓 = 70エントリ相当）
+- disabled 衛星のキャッシュは 5秒デバウンスで解放
 
 ### 先読み（プリフェッチ）
 
-- 表示要求 D が来たら、バックグラウンドで D+1（翌日）、D-1（前日）を生成
-- スライダーが単調増加する利用が多い場合は D+1 を優先
+- 表示要求 W が来たら、バックグラウンドで W-1（前窓）、W+1（後窓）を生成
+- 既にキャッシュ済みの窓はスキップ
 
 ## パフォーマンス設計
 
-### 初期推奨値
+### stepSec の動的調整
 
-- `stepSec = 30` 秒（1日あたり2,880点/衛星）
-- 10機 → 28,800点/日（現実的な負荷）
-- Worker + キャッシュでスムーズな操作を実現
+- `getStepSecForHeight(height)` でカメラ高度から自動計算
+- 近くにズームするほど細かいサンプリング（点密度増加）
+- 1秒デバウンスで不要な再計算を防止
 
 ### 最適化の優先順位
 
 1. **Worker化**: SGP4計算をUIスレッドから隔離（必須）
 2. **TypedArray + Transferable**: postMessageのメモリコピー回避（必須）
-3. **LRUキャッシュ**: 日跨ぎ時の再計算を回避（必須）
-4. **先読み**: スライダー操作時の待ち時間削減（推奨）
+3. **LRUキャッシュ**: 窓跨ぎ時の再計算を回避（必須）
+4. **先読み**: スライダー操作時の待ち時間削減（実装済み）
 5. **Entity → Primitive移行**: 100機以上の大規模表示時に検討（将来）
+
+### パフォーマンス監視（`lib/perf/`）
+
+- `perf-logger`: ラベル付きタイマー記録
+- `perf-metrics-store`: メトリクス集約（FPS・Worker RTT等）
+- `memory-monitor`: メモリ使用量追跡
+- **有効化**: `VITE_PERF_LOG=true` 環境変数で FPS 監視 + PerfOverlay 表示
 
 ## リスク / 留意点
 
@@ -218,7 +232,7 @@ type ComputeDayResponse = {
 ### 描画性能
 
 - Entityの大量生成はボトルネックになり得る（将来はPrimitiveへ）
-- stepSec/簡略化の調整余地を確保
+- stepSec の動的調整で高度に応じた適切な密度を実現
 
 ## 座標系の理解（参考）
 
@@ -229,10 +243,11 @@ type ComputeDayResponse = {
 
 ## 受け入れ基準
 
-- 10機表示 + 1日窓で地球回転/ズームが滑らか
-- スライダーで日付切替してもUIがフリーズしない
+- 10機表示 + 4時間窓で地球回転/ズームが滑らか
+- スライダーで窓切替してもUIがフリーズしない
 - 自前タイルが正しく表示される
-- AOIポリゴンの描画とホバー/選択の強調ができる
+- AOIポリゴンのインタラクティブ描画・GeoJSON読込ができる
 - TLE軌道ラインと衛星動点が時刻に追従する
 - フットプリントが時刻追従し、dateline跨ぎで破綻しない
-- スワスが1日窓に対応して表示され、窓切替で正しく差し替わる
+- スワスが4時間窓に対応して表示され、窓切替で正しく差し替わる
+- カメラ高度に応じて stepSec が自動調整される
