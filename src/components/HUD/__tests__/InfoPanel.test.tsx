@@ -5,6 +5,7 @@ import { InfoPanel } from "../InfoPanel";
 type PostRenderCallback = () => void;
 
 interface ViewerMock {
+  trackedEntity: unknown;
   scene: {
     postRender: {
       addEventListener: ReturnType<typeof vi.fn>;
@@ -16,6 +17,7 @@ interface ViewerMock {
       longitude: number;
       height: number;
     };
+    flyTo: ReturnType<typeof vi.fn>;
   };
 }
 
@@ -29,6 +31,7 @@ function degToRad(deg: number): number {
 
 function createViewerMock(): ViewerMock {
   return {
+    trackedEntity: undefined,
     scene: {
       postRender: {
         addEventListener: vi.fn((cb: PostRenderCallback) => {
@@ -43,6 +46,7 @@ function createViewerMock(): ViewerMock {
         longitude: degToRad(0),
         height: 0,
       },
+      flyTo: vi.fn(),
     },
   };
 }
@@ -50,6 +54,14 @@ function createViewerMock(): ViewerMock {
 vi.mock("resium", () => ({
   useCesium: () => ({ viewer: state.viewer }),
 }));
+
+const defaultProps = {
+  orbitRenderMode: "geodesic" as const,
+  onOrbitRenderModeChange: vi.fn(),
+  showNightShade: false,
+  onNightShadeToggle: vi.fn(),
+  onGoHome: vi.fn(),
+};
 
 describe("InfoPanel", () => {
   beforeEach(() => {
@@ -60,14 +72,7 @@ describe("InfoPanel", () => {
   });
 
   it("renders mode buttons with correct pressed state", () => {
-    render(
-      <InfoPanel
-        orbitRenderMode="geodesic"
-        onOrbitRenderModeChange={vi.fn()}
-        showNightShade={false}
-        onNightShadeToggle={vi.fn()}
-      />,
-    );
+    render(<InfoPanel {...defaultProps} orbitRenderMode="geodesic" />);
 
     const geodesic = screen.getByRole("button", { name: "Geodesic" });
     const cartesian = screen.getByRole("button", { name: "Cartesian" });
@@ -78,14 +83,7 @@ describe("InfoPanel", () => {
 
   it("calls onOrbitRenderModeChange('cartesian') when Cartesian button is clicked", () => {
     const onOrbitRenderModeChange = vi.fn();
-    render(
-      <InfoPanel
-        orbitRenderMode="geodesic"
-        onOrbitRenderModeChange={onOrbitRenderModeChange}
-        showNightShade={false}
-        onNightShadeToggle={vi.fn()}
-      />,
-    );
+    render(<InfoPanel {...defaultProps} onOrbitRenderModeChange={onOrbitRenderModeChange} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Cartesian" }));
     expect(onOrbitRenderModeChange).toHaveBeenCalledTimes(1);
@@ -96,10 +94,9 @@ describe("InfoPanel", () => {
     const onOrbitRenderModeChange = vi.fn();
     render(
       <InfoPanel
+        {...defaultProps}
         orbitRenderMode="cartesian"
         onOrbitRenderModeChange={onOrbitRenderModeChange}
-        showNightShade={false}
-        onNightShadeToggle={vi.fn()}
       />,
     );
 
@@ -109,14 +106,7 @@ describe("InfoPanel", () => {
   });
 
   it("renders Night Shade button with correct pressed state", () => {
-    render(
-      <InfoPanel
-        orbitRenderMode="geodesic"
-        onOrbitRenderModeChange={vi.fn()}
-        showNightShade={true}
-        onNightShadeToggle={vi.fn()}
-      />,
-    );
+    render(<InfoPanel {...defaultProps} showNightShade={true} />);
 
     const nightShade = screen.getByRole("button", { name: "Night Shade" });
     expect(nightShade).toHaveAttribute("aria-pressed", "true");
@@ -124,14 +114,7 @@ describe("InfoPanel", () => {
 
   it("calls onNightShadeToggle when Night Shade button is clicked", () => {
     const onNightShadeToggle = vi.fn();
-    render(
-      <InfoPanel
-        orbitRenderMode="geodesic"
-        onOrbitRenderModeChange={vi.fn()}
-        showNightShade={false}
-        onNightShadeToggle={onNightShadeToggle}
-      />,
-    );
+    render(<InfoPanel {...defaultProps} onNightShadeToggle={onNightShadeToggle} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Night Shade" }));
     expect(onNightShadeToggle).toHaveBeenCalledTimes(1);
@@ -140,14 +123,7 @@ describe("InfoPanel", () => {
   it("viewer があるとき postRender リスナーを登録する", () => {
     state.viewer = createViewerMock();
 
-    render(
-      <InfoPanel
-        orbitRenderMode="geodesic"
-        onOrbitRenderModeChange={vi.fn()}
-        showNightShade={false}
-        onNightShadeToggle={vi.fn()}
-      />,
-    );
+    render(<InfoPanel {...defaultProps} />);
 
     expect(state.viewer.scene.postRender.addEventListener).toHaveBeenCalledTimes(1);
   });
@@ -155,14 +131,7 @@ describe("InfoPanel", () => {
   it("postRender コールバックでカメラ座標表示を更新する", () => {
     state.viewer = createViewerMock();
 
-    render(
-      <InfoPanel
-        orbitRenderMode="geodesic"
-        onOrbitRenderModeChange={vi.fn()}
-        showNightShade={false}
-        onNightShadeToggle={vi.fn()}
-      />,
-    );
+    render(<InfoPanel {...defaultProps} />);
 
     state.viewer.camera.positionCartographic.latitude = degToRad(35.6895);
     state.viewer.camera.positionCartographic.longitude = degToRad(139.7001);
@@ -183,16 +152,53 @@ describe("InfoPanel", () => {
   it("unmount 時に postRender リスナーを解除する", () => {
     state.viewer = createViewerMock();
 
-    const { unmount } = render(
-      <InfoPanel
-        orbitRenderMode="geodesic"
-        onOrbitRenderModeChange={vi.fn()}
-        showNightShade={false}
-        onNightShadeToggle={vi.fn()}
-      />,
-    );
+    const { unmount } = render(<InfoPanel {...defaultProps} />);
 
     unmount();
     expect(removeListener).toHaveBeenCalledTimes(1);
+  });
+
+  describe("Home ボタン", () => {
+    it("Home ボタンが表示される", () => {
+      render(<InfoPanel {...defaultProps} />);
+      expect(screen.getByRole("button", { name: "ホームポジションへ戻る" })).toBeInTheDocument();
+    });
+
+    it("Home ボタンをクリックすると onGoHome を呼ぶ", () => {
+      state.viewer = createViewerMock();
+      const onGoHome = vi.fn();
+
+      render(<InfoPanel {...defaultProps} onGoHome={onGoHome} />);
+      fireEvent.click(screen.getByRole("button", { name: "ホームポジションへ戻る" }));
+
+      expect(onGoHome).toHaveBeenCalledTimes(1);
+    });
+
+    it("Home ボタンをクリックすると camera.flyTo を呼ぶ", () => {
+      state.viewer = createViewerMock();
+      const onGoHome = vi.fn();
+
+      render(<InfoPanel {...defaultProps} onGoHome={onGoHome} />);
+      fireEvent.click(screen.getByRole("button", { name: "ホームポジションへ戻る" }));
+
+      expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
+      const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
+        destination: unknown;
+        duration: number;
+      };
+      expect(callArg.destination).toBeDefined();
+      expect(typeof callArg.duration).toBe("number");
+      expect(callArg.duration).toBeGreaterThan(0);
+    });
+
+    it("viewer がないとき Home ボタンをクリックしても onGoHome を呼ばない", () => {
+      state.viewer = undefined;
+      const onGoHome = vi.fn();
+
+      render(<InfoPanel {...defaultProps} onGoHome={onGoHome} />);
+      fireEvent.click(screen.getByRole("button", { name: "ホームポジションへ戻る" }));
+
+      expect(onGoHome).not.toHaveBeenCalled();
+    });
   });
 });

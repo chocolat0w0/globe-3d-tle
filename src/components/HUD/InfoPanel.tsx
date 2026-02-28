@@ -1,7 +1,11 @@
 import { useCesium } from "resium";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import * as Cesium from "cesium";
 import type { OrbitRenderMode } from "../../types/orbit";
+
+const HOME_DESTINATION = Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000);
+const HOME_FLIGHT_DURATION_SECONDS = 1.5;
 
 interface CameraPos {
   lat: number;
@@ -14,6 +18,7 @@ interface InfoPanelProps {
   onOrbitRenderModeChange: (mode: OrbitRenderMode) => void;
   showNightShade: boolean;
   onNightShadeToggle: () => void;
+  onGoHome: () => void;
 }
 
 export function InfoPanel({
@@ -21,10 +26,24 @@ export function InfoPanel({
   onOrbitRenderModeChange,
   showNightShade,
   onNightShadeToggle,
+  onGoHome,
 }: InfoPanelProps) {
   const { viewer } = useCesium();
   const [pos, setPos] = useState<CameraPos>({ lat: 0, lon: 0, alt: 0 });
   const prevRef = useRef("");
+
+  const handleGoHome = useCallback(() => {
+    if (!viewer) return;
+    // flushSync で React の deselect 更新を同期的に処理し、
+    // SatelliteLayer の trackedEntity クリアとリスナー解除が flyTo 前に完了することを保証する
+    flushSync(() => {
+      onGoHome();
+    });
+    viewer.camera.flyTo({
+      destination: HOME_DESTINATION,
+      duration: HOME_FLIGHT_DURATION_SECONDS,
+    });
+  }, [viewer, onGoHome]);
 
   useEffect(() => {
     if (!viewer) return;
@@ -85,6 +104,18 @@ export function InfoPanel({
           className={`ui-button ${showNightShade ? "is-active" : ""}`.trim()}
         >
           Night Shade
+        </button>
+      </div>
+
+      <div className="info-section">
+        <div className="ui-section-label">カメラ</div>
+        <button
+          type="button"
+          onClick={handleGoHome}
+          className="ui-button"
+          aria-label="ホームポジションへ戻る"
+        >
+          Home
         </button>
       </div>
 
