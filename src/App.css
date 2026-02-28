@@ -177,7 +177,10 @@ body {
   top: 16px;
   left: 16px;
   width: clamp(310px, 25vw, 390px);
-  max-height: min(62vh, 640px);
+  /* max-height is no longer needed here: the stack container is bottom-constrained.
+     Use a flex-shrink limit so the list doesn't collapse when detail panel is open. */
+  min-height: 0;
+  flex-shrink: 1;
   display: flex;
   flex-direction: column;
   animation: panel-rise 320ms ease-out;
@@ -323,12 +326,21 @@ body {
   position: absolute;
   top: 16px;
   left: 16px;
+  /* bottom offset: TimeController height (~120px) + bottom gap (28px) + extra margin (8px) */
+  bottom: 156px;
   width: clamp(310px, 25vw, 390px);
   display: flex;
   flex-direction: column;
   gap: 8px;
   z-index: 24;
   pointer-events: none;
+  overflow-y: auto;
+  /* Suppress scrollbar on the outer container; inner panels handle their own scroll */
+  scrollbar-width: none;
+}
+
+.satellite-panel-stack::-webkit-scrollbar {
+  display: none;
 }
 
 /* スタック内では .ui-panel の絶対配置をリセット */
@@ -346,6 +358,8 @@ body {
 /* 衛星詳細パネル */
 .satellite-detail-panel {
   padding: 12px 16px;
+  /* Do not shrink: the stack outer container scrolls to reveal the full detail panel */
+  flex-shrink: 0;
   animation: panel-rise 320ms ease-out;
 }
 
@@ -540,9 +554,9 @@ body {
   position: absolute;
   z-index: 25;
   bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(1120px, calc(100vw - 32px));
+  /* Inset from left/right panel edges (panel + 16px gap + 8px inner margin) */
+  left: calc(clamp(310px, 25vw, 390px) + 32px);
+  right: calc(clamp(290px, 24vw, 370px) + 32px);
   padding: 12px 16px 14px;
   border-radius: 20px;
   border: 1px solid var(--space-border);
@@ -682,7 +696,9 @@ body {
   }
 
   .timeline-shell {
-    width: calc(100vw - 20px);
+    /* Panels are narrower at this breakpoint (min(46vw, 360px) + 16px gap + 8px margin) */
+    left: calc(min(46vw, 360px) + 32px);
+    right: calc(min(46vw, 360px) + 32px);
     bottom: 24px;
   }
 }
@@ -691,11 +707,10 @@ body {
   .satellite-panel-stack {
     top: 12px;
     left: 12px;
+    bottom: auto;
+    max-height: min(40vh, 380px);
     width: calc(100vw - 24px);
-  }
-
-  .satellite-panel {
-    max-height: min(36vh, 320px);
+    overflow-y: auto;
   }
 
   .right-panel-stack {
@@ -708,10 +723,10 @@ body {
   }
 
   .timeline-shell {
+    /* Full-width on small screens: panels are no longer side-by-side */
     bottom: 20px;
     left: 12px;
-    transform: none;
-    width: calc(100vw - 24px);
+    right: 12px;
   }
 
   .performance-panel {
