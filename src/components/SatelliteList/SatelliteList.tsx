@@ -74,9 +74,20 @@ export function SatelliteList({
                   onShowDetail?.(sat.id);
                 }}
                 title="詳細情報を表示"
-                className="satellite-pill"
+                className="satellite-pill satellite-pill--info"
+                aria-label="詳細情報を表示"
               >
-                詳
+                <svg
+                  viewBox="0 0 16 16"
+                  width="13"
+                  height="13"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <circle cx="8" cy="8" r="7.5" stroke="currentColor" strokeWidth="1" fill="none" />
+                  <rect x="7.25" y="7" width="1.5" height="5" rx="0.5" />
+                  <circle cx="8" cy="4.5" r="0.9" />
+                </svg>
               </button>
 
               <label className="visibility-toggle" onClick={(e) => e.stopPropagation()}>
@@ -93,7 +104,7 @@ export function SatelliteList({
         ))}
       </div>
       <div className="satellite-panel-hint">
-        クリックで追尾 / FP: フットプリント / SW: スワス / チェック: 表示切替
+        クリックで追尾 / FP: フットプリント / SW: スワス / ⓘ: 詳細 / チェック: 表示切替
       </div>
     </div>
   );

@@ -273,6 +273,19 @@ body {
   border-color: rgba(163, 214, 255, 0.45);
 }
 
+.satellite-pill--info {
+  min-width: 28px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.satellite-pill--info:hover {
+  opacity: 1;
+}
+
 .satellite-pill.is-active {
   color: #f4fbff;
   border-color: rgba(163, 222, 255, 0.72);
