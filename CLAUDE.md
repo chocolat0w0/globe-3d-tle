@@ -61,11 +61,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
 
-## Git Operations
+## Git & GitHub CLI Operations
 
-When performing git operations (push, pull, pr create, etc.), follow these rules:
+When performing git operations (push, pull, pr create, etc.) and GitHub CLI operations, follow these rules:
 
-1. **Authentication:**
+1. **Local Config Directory:**
+   Create and use a dedicated config directory within the project:
+   ```bash
+   mkdir -p ./.claude_gh_config
+
+
+2. **Authentication:**
    - Always use the environment variable `GH_TOKEN` for authentication.
    - Do NOT embed tokens directly in remote URLs.
    - At the beginning of a session or before the first git operation, ensure the credential helper is configured by running:
@@ -73,7 +79,7 @@ When performing git operations (push, pull, pr create, etc.), follow these rules
      git config --global credential.helper "!gh auth setup-git"
      ```
 
-2. **Workflow:**
+3. **Workflow:**
    - Prefer using the `gh` CLI for GitHub-specific tasks (like PR creation) as it automatically picks up `GH_TOKEN`.
 
 ## プロジェクト概要
