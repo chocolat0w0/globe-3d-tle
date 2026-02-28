@@ -37,10 +37,10 @@ describe("useSatellites", () => {
       expect(result.current.satellites).toHaveLength(10);
     });
 
-    it("initialises every satellite with visible=true", () => {
+    it("initialises exactly 3 satellites with visible=true (memory optimisation)", () => {
       const { result } = renderHook(() => useSatellites());
-      const allVisible = result.current.satellites.every((s) => s.visible === true);
-      expect(allVisible).toBe(true);
+      const visibleCount = result.current.satellites.filter((s) => s.visible).length;
+      expect(visibleCount).toBe(3);
     });
 
     it("initialises every satellite with selected=false", () => {
@@ -70,6 +70,16 @@ describe("useSatellites", () => {
     it("sets visible=false for a satellite that was visible=true", () => {
       const { result } = renderHook(() => useSatellites());
 
+      // 初期状態に関わらず sentinel1a を visible=true にしてからテスト
+      const isInitiallyVisible = result.current.satellites.find(
+        (s) => s.id === "sentinel1a",
+      )!.visible;
+      if (!isInitiallyVisible) {
+        act(() => {
+          result.current.toggleVisible("sentinel1a");
+        });
+      }
+
       act(() => {
         result.current.toggleVisible("sentinel1a");
       });
@@ -81,17 +91,33 @@ describe("useSatellites", () => {
     it("does not change visible for any other satellite when toggling sentinel1a", () => {
       const { result } = renderHook(() => useSatellites());
 
+      const othersBefore = result.current.satellites
+        .filter((s) => s.id !== "sentinel1a")
+        .map((s) => ({ id: s.id, visible: s.visible }));
+
       act(() => {
         result.current.toggleVisible("sentinel1a");
       });
 
-      const others = result.current.satellites.filter((s) => s.id !== "sentinel1a");
-      const allStillVisible = others.every((s) => s.visible === true);
-      expect(allStillVisible).toBe(true);
+      const othersAfter = result.current.satellites
+        .filter((s) => s.id !== "sentinel1a")
+        .map((s) => ({ id: s.id, visible: s.visible }));
+
+      expect(othersAfter).toEqual(othersBefore);
     });
 
     it("restores visible=true when toggled twice (idempotent round-trip)", () => {
       const { result } = renderHook(() => useSatellites());
+
+      // 初期状態に関わらず sentinel1a を visible=true にしてから2回トグルしても true に戻ることを確認
+      const isInitiallyVisible = result.current.satellites.find(
+        (s) => s.id === "sentinel1a",
+      )!.visible;
+      if (!isInitiallyVisible) {
+        act(() => {
+          result.current.toggleVisible("sentinel1a");
+        });
+      }
 
       act(() => {
         result.current.toggleVisible("sentinel1a");
@@ -107,27 +133,37 @@ describe("useSatellites", () => {
     it("correctly toggles a satellite in the middle of the list (terra, index 2)", () => {
       const { result } = renderHook(() => useSatellites());
 
+      // terrasar の初期状態を記録してから、トグルすると反転することを確認
+      const terraBefore = result.current.satellites.find((s) => s.id === "terrasar")!;
+      const othersBefore = result.current.satellites
+        .filter((s) => s.id !== "terrasar")
+        .map((s) => ({ id: s.id, visible: s.visible }));
+
       act(() => {
         result.current.toggleVisible("terrasar");
       });
 
       const terra = result.current.satellites.find((s) => s.id === "terrasar")!;
-      expect(terra.visible).toBe(false);
+      expect(terra.visible).toBe(!terraBefore.visible);
 
-      // All other 9 satellites remain visible
-      const others = result.current.satellites.filter((s) => s.id !== "terrasar");
-      expect(others.every((s) => s.visible)).toBe(true);
+      // 他の衛星の visible は変化しない
+      const othersAfter = result.current.satellites
+        .filter((s) => s.id !== "terrasar")
+        .map((s) => ({ id: s.id, visible: s.visible }));
+      expect(othersAfter).toEqual(othersBefore);
     });
 
     it("correctly toggles the last satellite in the list (himawari)", () => {
       const { result } = renderHook(() => useSatellites());
 
+      const himawariBefore = result.current.satellites.find((s) => s.id === "himawari")!;
+
       act(() => {
         result.current.toggleVisible("himawari");
       });
 
-      const pleiades = result.current.satellites.find((s) => s.id === "himawari")!;
-      expect(pleiades.visible).toBe(false);
+      const himawari = result.current.satellites.find((s) => s.id === "himawari")!;
+      expect(himawari.visible).toBe(!himawariBefore.visible);
     });
 
     it("toggling a non-selected satellite does not change any selected state", () => {
@@ -226,12 +262,21 @@ describe("useSatellites", () => {
     it("selectSatellite does not change any satellite's visible state", () => {
       const { result } = renderHook(() => useSatellites());
 
+      const visibleBefore = result.current.satellites.map((s) => ({
+        id: s.id,
+        visible: s.visible,
+      }));
+
       act(() => {
         result.current.selectSatellite("worldview3");
       });
 
-      const allVisible = result.current.satellites.every((s) => s.visible === true);
-      expect(allVisible).toBe(true);
+      const visibleAfter = result.current.satellites.map((s) => ({
+        id: s.id,
+        visible: s.visible,
+      }));
+
+      expect(visibleAfter).toEqual(visibleBefore);
     });
 
     it("selecting the last satellite (himawari) leaves no other satellite selected", () => {
@@ -299,12 +344,21 @@ describe("useSatellites", () => {
     it("does not change visible state of any satellite when toggleFootprint is called", () => {
       const { result } = renderHook(() => useSatellites());
 
+      const visibleBefore = result.current.satellites.map((s) => ({
+        id: s.id,
+        visible: s.visible,
+      }));
+
       act(() => {
         result.current.toggleFootprint("terrasar");
       });
 
-      const allVisible = result.current.satellites.every((s) => s.visible === true);
-      expect(allVisible).toBe(true);
+      const visibleAfter = result.current.satellites.map((s) => ({
+        id: s.id,
+        visible: s.visible,
+      }));
+
+      expect(visibleAfter).toEqual(visibleBefore);
     });
 
     it("does not change selected state of any satellite when toggleFootprint is called", () => {
@@ -404,12 +458,21 @@ describe("useSatellites", () => {
     it("does not change visible state of any satellite when toggleSwath is called", () => {
       const { result } = renderHook(() => useSatellites());
 
+      const visibleBefore = result.current.satellites.map((s) => ({
+        id: s.id,
+        visible: s.visible,
+      }));
+
       act(() => {
         result.current.toggleSwath("terrasar");
       });
 
-      const allVisible = result.current.satellites.every((s) => s.visible === true);
-      expect(allVisible).toBe(true);
+      const visibleAfter = result.current.satellites.map((s) => ({
+        id: s.id,
+        visible: s.visible,
+      }));
+
+      expect(visibleAfter).toEqual(visibleBefore);
     });
 
     it("does not change selected state of any satellite when toggleSwath is called", () => {
@@ -461,6 +524,16 @@ describe("useSatellites", () => {
     it("hiding a selected satellite also clears its selected state (prevents stale trackedEntity)", () => {
       const { result } = renderHook(() => useSatellites());
 
+      // 初期状態に関わらず sentinel1a を visible=true にしてから「select → hide」シナリオを実行
+      const isInitiallyVisible = result.current.satellites.find(
+        (s) => s.id === "sentinel1a",
+      )!.visible;
+      if (!isInitiallyVisible) {
+        act(() => {
+          result.current.toggleVisible("sentinel1a");
+        });
+      }
+
       // Select iss, then hide it
       act(() => {
         result.current.selectSatellite("sentinel1a");
@@ -492,6 +565,16 @@ describe("useSatellites", () => {
     it("re-showing a previously hidden+selected satellite does not restore selected state", () => {
       const { result } = renderHook(() => useSatellites());
 
+      // 初期状態に関わらず sentinel1a を visible=true にしてから「select → hide → show」のシナリオを実行
+      const isInitiallyVisible = result.current.satellites.find(
+        (s) => s.id === "sentinel1a",
+      )!.visible;
+      if (!isInitiallyVisible) {
+        act(() => {
+          result.current.toggleVisible("sentinel1a");
+        });
+      }
+
       // Select iss → hide iss → show iss again
       act(() => {
         result.current.selectSatellite("sentinel1a");
@@ -511,10 +594,16 @@ describe("useSatellites", () => {
     it("selecting a hidden satellite makes it selected without changing its visibility", () => {
       const { result } = renderHook(() => useSatellites());
 
-      // Hide sentinel1a first, then select it
-      act(() => {
-        result.current.toggleVisible("sentinel1a");
-      });
+      // 初期状態に関わらず sentinel1a を visible=false にする
+      const isInitiallyVisible = result.current.satellites.find(
+        (s) => s.id === "sentinel1a",
+      )!.visible;
+      if (isInitiallyVisible) {
+        act(() => {
+          result.current.toggleVisible("sentinel1a");
+        });
+      }
+
       act(() => {
         result.current.selectSatellite("sentinel1a");
       });
