@@ -22,7 +22,7 @@ function getWindowStartMs(now: number): number {
 }
 
 function App() {
-  const { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath } =
+  const { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath } =
     useSatellites();
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
   const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("cartesian");
@@ -83,6 +83,7 @@ function App() {
           onOrbitRenderModeChange={setOrbitRenderMode}
           showNightShade={showNightShade}
           onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
+          onGoHome={deselectAll}
         />
         <AoiPanel
           mode={aoiMode}

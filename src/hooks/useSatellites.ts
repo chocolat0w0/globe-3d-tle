@@ -53,6 +53,7 @@ interface UseSatellitesResult {
   satellites: Satellite[];
   toggleVisible: (id: string) => void;
   selectSatellite: (id: string) => void;
+  deselectAll: () => void;
   toggleFootprint: (id: string) => void;
   toggleSwath: (id: string) => void;
 }
@@ -87,6 +88,10 @@ export function useSatellites(): UseSatellitesResult {
     );
   }, []);
 
+  const deselectAll = useCallback(() => {
+    setSatellites((prev) => prev.map((s) => ({ ...s, selected: false })));
+  }, []);
+
   const toggleFootprint = useCallback((id: string) => {
     setSatellites((prev) =>
       prev.map((s) => (s.id === id ? { ...s, showFootprint: !s.showFootprint } : s)),
@@ -97,5 +102,5 @@ export function useSatellites(): UseSatellitesResult {
     setSatellites((prev) => prev.map((s) => (s.id === id ? { ...s, showSwath: !s.showSwath } : s)));
   }, []);
 
-  return { satellites, toggleVisible, selectSatellite, toggleFootprint, toggleSwath };
+  return { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath };
 }
