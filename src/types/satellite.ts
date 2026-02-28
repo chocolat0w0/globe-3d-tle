@@ -8,6 +8,7 @@ export interface TLEData {
 export interface Satellite {
   id: string;
   name: string;
+  catalogNumber?: number;
   tle: TLEData;
   offnadirRanges: OffnadirRange[];
   color: string;

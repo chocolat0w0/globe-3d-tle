@@ -437,6 +437,36 @@ body {
   letter-spacing: 0.04em;
 }
 
+.satellite-detail-kv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.satellite-detail-kv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(6, 13, 23, 0.42);
+  border: 1px solid rgba(177, 211, 245, 0.1);
+}
+
+.satellite-detail-kv-label {
+  color: var(--text-soft);
+  font-size: 0.72rem;
+}
+
+.satellite-detail-kv-value {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-align: right;
+}
+
 .right-panel-stack {
   position: absolute;
   top: 16px;

@@ -28,3 +28,6 @@ Thumbs.db
 
 # Claude Code / GitHub CLI temporary config
 .claude_gh_config/
+
+# Temporary files
+.tmp/

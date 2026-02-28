@@ -6,6 +6,7 @@ import type { OffnadirRange } from "../lib/tle/offnadir-ranges";
 type TleEntry = {
   id: string;
   name: string;
+  catalogNumber?: number;
   tle: { line1: string; line2: string };
   offnadirRanges: number[][];
   color: string;
@@ -39,6 +40,7 @@ function buildInitialSatellites(): Satellite[] {
   return tleEntries.map((s, i) => ({
     id: s.id,
     name: s.name,
+    catalogNumber: s.catalogNumber,
     tle: s.tle,
     offnadirRanges: s.offnadirRanges.map(([minDeg, maxDeg]) => [minDeg, maxDeg] as OffnadirRange),
     color: s.color,

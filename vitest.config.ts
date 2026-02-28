@@ -9,6 +9,10 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: [path.resolve(__dirname, "src/test-setup.ts")],
+    // Fail fast when tests/hook teardown get stuck.
+    testTimeout: 10_000,
+    hookTimeout: 10_000,
+    teardownTimeout: 3_000,
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov", "html"],
