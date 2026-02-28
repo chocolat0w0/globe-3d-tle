@@ -7,9 +7,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: "jsdom",
-    setupFiles: [path.resolve(__dirname, "src/test-setup.ts")],
-    // Fail fast when tests/hook teardown get stuck.
+    // environment と setupFiles はワークスペース（vitest.workspace.ts）で設定する
     testTimeout: 10_000,
     hookTimeout: 10_000,
     teardownTimeout: 3_000,
