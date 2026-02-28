@@ -161,7 +161,7 @@ describe("InfoPanel", () => {
   describe("Home ボタン", () => {
     it("Home ボタンが表示される", () => {
       render(<InfoPanel {...defaultProps} />);
-      expect(screen.getByRole("button", { name: "ホームポジションへ戻る" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Home" })).toBeInTheDocument();
     });
 
     it("Home ボタンをクリックすると onGoHome を呼ぶ", () => {
@@ -169,7 +169,7 @@ describe("InfoPanel", () => {
       const onGoHome = vi.fn();
 
       render(<InfoPanel {...defaultProps} onGoHome={onGoHome} />);
-      fireEvent.click(screen.getByRole("button", { name: "ホームポジションへ戻る" }));
+      fireEvent.click(screen.getByRole("button", { name: "Home" }));
 
       expect(onGoHome).toHaveBeenCalledTimes(1);
     });
@@ -179,7 +179,7 @@ describe("InfoPanel", () => {
       const onGoHome = vi.fn();
 
       render(<InfoPanel {...defaultProps} onGoHome={onGoHome} />);
-      fireEvent.click(screen.getByRole("button", { name: "ホームポジションへ戻る" }));
+      fireEvent.click(screen.getByRole("button", { name: "Home" }));
 
       expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
       const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
@@ -196,7 +196,7 @@ describe("InfoPanel", () => {
       const onGoHome = vi.fn();
 
       render(<InfoPanel {...defaultProps} onGoHome={onGoHome} />);
-      fireEvent.click(screen.getByRole("button", { name: "ホームポジションへ戻る" }));
+      fireEvent.click(screen.getByRole("button", { name: "Home" }));
 
       expect(onGoHome).not.toHaveBeenCalled();
     });

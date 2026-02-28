@@ -113,7 +113,6 @@ export function InfoPanel({
           type="button"
           onClick={handleGoHome}
           className="ui-button"
-          aria-label="ホームポジションへ戻る"
         >
           Home
         </button>
