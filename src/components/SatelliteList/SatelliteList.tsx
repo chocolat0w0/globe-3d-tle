@@ -6,6 +6,7 @@ interface Props {
   onSelect: (id: string) => void;
   onToggleFootprint: (id: string) => void;
   onToggleSwath: (id: string) => void;
+  onShowDetail?: (id: string) => void;
 }
 
 export function SatelliteList({
@@ -14,6 +15,7 @@ export function SatelliteList({
   onSelect,
   onToggleFootprint,
   onToggleSwath,
+  onShowDetail,
 }: Props) {
   return (
     <div className="ui-panel satellite-panel">
@@ -63,6 +65,18 @@ export function SatelliteList({
                 className={`satellite-pill ${sat.showSwath ? "is-active" : ""}`.trim()}
               >
                 SW
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowDetail?.(sat.id);
+                }}
+                title="詳細情報を表示"
+                className="satellite-pill"
+              >
+                詳
               </button>
 
               <label className="visibility-toggle" onClick={(e) => e.stopPropagation()}>
