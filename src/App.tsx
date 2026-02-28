@@ -7,6 +7,7 @@ import { SwathLayer } from "./components/Globe/SwathLayer";
 import { AoiLayer } from "./components/Globe/AoiLayer";
 import { TimeController } from "./components/TimeController/TimeController";
 import { SatelliteList } from "./components/SatelliteList/SatelliteList";
+import { SatelliteDetailPanel } from "./components/SatelliteList/SatelliteDetailPanel";
 import { InfoPanel } from "./components/HUD/InfoPanel";
 import { PerfOverlay } from "./components/HUD/PerfOverlay";
 import { AoiPanel } from "./components/AOI/AoiPanel";
@@ -24,6 +25,8 @@ function getWindowStartMs(now: number): number {
 function App() {
   const { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath } =
     useSatellites();
+  const [detailSatelliteId, setDetailSatelliteId] = useState<string | null>(null);
+  const detailSatellite = satellites.find((s) => s.id === detailSatelliteId) ?? null;
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
   const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("cartesian");
   const [showNightShade, setShowNightShade] = useState(false);
@@ -94,13 +97,22 @@ function App() {
         />
       </div>
       <PerfOverlay />
-      <SatelliteList
-        satellites={satellites}
-        onToggleVisible={toggleVisible}
-        onSelect={selectSatellite}
-        onToggleFootprint={toggleFootprint}
-        onToggleSwath={toggleSwath}
-      />
+      <div className="satellite-panel-stack">
+        <SatelliteList
+          satellites={satellites}
+          onToggleVisible={toggleVisible}
+          onSelect={selectSatellite}
+          onToggleFootprint={toggleFootprint}
+          onToggleSwath={toggleSwath}
+          onShowDetail={setDetailSatelliteId}
+        />
+        {detailSatellite !== null && (
+          <SatelliteDetailPanel
+            satellite={detailSatellite}
+            onClose={() => setDetailSatelliteId(null)}
+          />
+        )}
+      </div>
     </GlobeRenderer>
   );
 }

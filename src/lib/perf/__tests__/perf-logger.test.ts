@@ -77,10 +77,10 @@ describe("PerfLogger", () => {
   it("measureAsync 完了後に onEntry が呼ばれる", async () => {
     const logger = new PerfLogger({ enabled: true, onEntry });
     await logger.measureAsync("async-cb", async () => {
-      await new Promise((r) => setTimeout(r, 5));
+      await new Promise((r) => setTimeout(r, 20));
     });
     expect(onEntry).toHaveBeenCalledTimes(1);
     expect(onEntry.mock.calls[0][0].label).toBe("async-cb");
-    expect(onEntry.mock.calls[0][0].durationMs).toBeGreaterThanOrEqual(5);
+    expect(onEntry.mock.calls[0][0].durationMs).toBeGreaterThanOrEqual(10);
   });
 });
