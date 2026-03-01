@@ -23,10 +23,8 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Agent memory
-.claude/agent-memory/
-
-# Claude Code / GitHub CLI temporary config
+# Claude Code
+.claude/
 .claude_gh_config/
 
 # Temporary files
