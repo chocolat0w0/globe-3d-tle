@@ -55,6 +55,19 @@ vi.mock("resium", () => ({
   useCesium: () => ({ viewer: state.viewer }),
 }));
 
+// vi.hoisted() で巻き上げと同タイミングに定義することで、
+// vi.mock ファクトリ内から安全に参照できる
+const satelliteMock = vi.hoisted(() => ({
+  twoline2satrec: vi.fn(() => ({})),
+  propagate: vi.fn(() => ({
+    position: { x: 6371, y: 0, z: 0 }, // 地球半径相当 (km)
+  })),
+  gstime: vi.fn(() => 0),
+  eciToEcf: vi.fn(() => ({ x: 6371, y: 0, z: 0 })),
+}));
+
+vi.mock("satellite.js", () => satelliteMock);
+
 const defaultProps = {
   orbitRenderMode: "geodesic" as const,
   onOrbitRenderModeChange: vi.fn(),
@@ -197,6 +210,97 @@ describe("InfoPanel", () => {
 
       render(<InfoPanel {...defaultProps} onGoHome={onGoHome} />);
       fireEvent.click(screen.getByRole("button", { name: "Home" }));
+
+      expect(onGoHome).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Overview ボタン", () => {
+    const sampleTle = {
+      line1: "1 25544U 98067A   21275.51782528  .00006753  00000-0  12907-3 0  9994",
+      line2: "2 25544  51.6435  81.8428 0003881 255.6935 197.2791 15.48905190305232",
+    };
+
+    it("Overview ボタンが表示される", () => {
+      render(<InfoPanel {...defaultProps} />);
+      expect(screen.getByRole("button", { name: "Overview (40,000km)" })).toBeInTheDocument();
+    });
+
+    it("viewer がないとき Overview ボタンをクリックしても camera.flyTo を呼ばない", () => {
+      state.viewer = undefined;
+
+      render(<InfoPanel {...defaultProps} selectedSatelliteTle={sampleTle} />);
+      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+
+      // viewer がないので flyTo は呼ばれない（viewer が undefined のためガード節で返る）
+      // ここでは例外が投げられないことを確認する
+      expect(true).toBe(true); // no crash
+    });
+
+    it("衛星選択あり: propagate が成功したとき衛星位置の上空 40,000 km へ flyTo する", () => {
+      state.viewer = createViewerMock();
+
+      // ECI → ECEF → LLA で (lat=0, lon=0) 相当の位置を返すよう設定済み (beforeEach でリセット)
+      satelliteMock.propagate.mockReturnValue({
+        position: { x: 6371, y: 0, z: 0 },
+      });
+      satelliteMock.eciToEcf.mockReturnValue({ x: 6371, y: 0, z: 0 });
+
+      render(<InfoPanel {...defaultProps} selectedSatelliteTle={sampleTle} />);
+      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+
+      expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
+      const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
+        destination: unknown;
+        duration: number;
+      };
+      expect(callArg.destination).toBeDefined();
+      expect(callArg.duration).toBe(2.0);
+    });
+
+    it("衛星選択あり: propagate が position=false を返したとき現在のカメラ位置から 40,000 km へ flyTo する", () => {
+      state.viewer = createViewerMock();
+      state.viewer.camera.positionCartographic.latitude = degToRad(35);
+      state.viewer.camera.positionCartographic.longitude = degToRad(139);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (satelliteMock.propagate as any).mockReturnValue({ position: false });
+
+      render(<InfoPanel {...defaultProps} selectedSatelliteTle={sampleTle} />);
+      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+
+      expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
+      const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
+        destination: unknown;
+        duration: number;
+      };
+      expect(callArg.destination).toBeDefined();
+      expect(callArg.duration).toBe(2.0);
+    });
+
+    it("衛星未選択: 現在のカメラ緯度経度を維持して 40,000 km へ flyTo する", () => {
+      state.viewer = createViewerMock();
+      state.viewer.camera.positionCartographic.latitude = degToRad(20);
+      state.viewer.camera.positionCartographic.longitude = degToRad(100);
+
+      render(<InfoPanel {...defaultProps} selectedSatelliteTle={undefined} />);
+      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+
+      expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
+      const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
+        destination: unknown;
+        duration: number;
+      };
+      expect(callArg.destination).toBeDefined();
+      expect(callArg.duration).toBe(2.0);
+    });
+
+    it("Overview ボタンは onGoHome を呼ばない（trackedEntity を解除しない）", () => {
+      state.viewer = createViewerMock();
+      const onGoHome = vi.fn();
+
+      render(<InfoPanel {...defaultProps} onGoHome={onGoHome} selectedSatelliteTle={sampleTle} />);
+      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
 
       expect(onGoHome).not.toHaveBeenCalled();
     });

@@ -25,6 +25,7 @@ function getWindowStartMs(now: number): number {
 function App() {
   const { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath } =
     useSatellites();
+  const selectedSatellite = satellites.find((s) => s.selected) ?? null;
   const [detailSatelliteId, setDetailSatelliteId] = useState<string | null>(null);
   const detailSatellite = satellites.find((s) => s.id === detailSatelliteId) ?? null;
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
@@ -87,6 +88,7 @@ function App() {
           showNightShade={showNightShade}
           onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
           onGoHome={deselectAll}
+          selectedSatelliteTle={selectedSatellite?.tle}
         />
         <AoiPanel
           mode={aoiMode}
