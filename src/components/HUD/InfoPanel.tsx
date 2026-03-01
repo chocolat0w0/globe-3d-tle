@@ -7,7 +7,7 @@ import type { OrbitRenderMode } from "../../types/orbit";
 
 const HOME_DESTINATION = Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000);
 const HOME_FLIGHT_DURATION_SECONDS = 1.5;
-const OVERVIEW_ALTITUDE_M = 40_000_000; // 40,000 km
+const OVERVIEW_ALTITUDE_M = 80_000_000; // 80,000 km
 const OVERVIEW_FLIGHT_DURATION_SECONDS = 2.0;
 
 interface CameraPos {
@@ -69,11 +69,7 @@ export function InfoPanel({
       if (typeof posVel.position !== "boolean" && posVel.position) {
         const gmst = satellite.gstime(now);
         const ecef = satellite.eciToEcf(posVel.position, gmst); // { x, y, z } km
-        const ecefCartesian = new Cesium.Cartesian3(
-          ecef.x * 1000,
-          ecef.y * 1000,
-          ecef.z * 1000,
-        );
+        const ecefCartesian = new Cesium.Cartesian3(ecef.x * 1000, ecef.y * 1000, ecef.z * 1000);
         const carto = Cesium.Cartographic.fromCartesian(ecefCartesian);
         const lat = Cesium.Math.toDegrees(carto.latitude);
         const lon = Cesium.Math.toDegrees(carto.longitude);
@@ -160,19 +156,11 @@ export function InfoPanel({
 
       <div className="info-section">
         <div className="ui-section-label">カメラ</div>
-        <button
-          type="button"
-          onClick={handleGoHome}
-          className="ui-button"
-        >
+        <button type="button" onClick={handleGoHome} className="ui-button">
           Home
         </button>
-        <button
-          type="button"
-          onClick={handleOverview}
-          className="ui-button"
-        >
-          Overview (40,000km)
+        <button type="button" onClick={handleOverview} className="ui-button">
+          Overview (80,000km)
         </button>
       </div>
 

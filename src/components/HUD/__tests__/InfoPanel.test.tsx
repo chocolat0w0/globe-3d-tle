@@ -223,21 +223,21 @@ describe("InfoPanel", () => {
 
     it("Overview ボタンが表示される", () => {
       render(<InfoPanel {...defaultProps} />);
-      expect(screen.getByRole("button", { name: "Overview (40,000km)" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Overview (80,000km)" })).toBeInTheDocument();
     });
 
     it("viewer がないとき Overview ボタンをクリックしても camera.flyTo を呼ばない", () => {
       state.viewer = undefined;
 
       render(<InfoPanel {...defaultProps} selectedSatelliteTle={sampleTle} />);
-      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+      fireEvent.click(screen.getByRole("button", { name: "Overview (80,000km)" }));
 
       // viewer がないので flyTo は呼ばれない（viewer が undefined のためガード節で返る）
       // ここでは例外が投げられないことを確認する
       expect(true).toBe(true); // no crash
     });
 
-    it("衛星選択あり: propagate が成功したとき衛星位置の上空 40,000 km へ flyTo する", () => {
+    it("衛星選択あり: propagate が成功したとき衛星位置の上空 80,000 km へ flyTo する", () => {
       state.viewer = createViewerMock();
 
       // ECI → ECEF → LLA で (lat=0, lon=0) 相当の位置を返すよう設定済み (beforeEach でリセット)
@@ -247,7 +247,7 @@ describe("InfoPanel", () => {
       satelliteMock.eciToEcf.mockReturnValue({ x: 6371, y: 0, z: 0 });
 
       render(<InfoPanel {...defaultProps} selectedSatelliteTle={sampleTle} />);
-      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+      fireEvent.click(screen.getByRole("button", { name: "Overview (80,000km)" }));
 
       expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
       const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
@@ -258,7 +258,7 @@ describe("InfoPanel", () => {
       expect(callArg.duration).toBe(2.0);
     });
 
-    it("衛星選択あり: propagate が position=false を返したとき現在のカメラ位置から 40,000 km へ flyTo する", () => {
+    it("衛星選択あり: propagate が position=false を返したとき現在のカメラ位置から 80,000 km へ flyTo する", () => {
       state.viewer = createViewerMock();
       state.viewer.camera.positionCartographic.latitude = degToRad(35);
       state.viewer.camera.positionCartographic.longitude = degToRad(139);
@@ -267,7 +267,7 @@ describe("InfoPanel", () => {
       (satelliteMock.propagate as any).mockReturnValue({ position: false });
 
       render(<InfoPanel {...defaultProps} selectedSatelliteTle={sampleTle} />);
-      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+      fireEvent.click(screen.getByRole("button", { name: "Overview (80,000km)" }));
 
       expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
       const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
@@ -278,13 +278,13 @@ describe("InfoPanel", () => {
       expect(callArg.duration).toBe(2.0);
     });
 
-    it("衛星未選択: 現在のカメラ緯度経度を維持して 40,000 km へ flyTo する", () => {
+    it("衛星未選択: 現在のカメラ緯度経度を維持して 80,000 km へ flyTo する", () => {
       state.viewer = createViewerMock();
       state.viewer.camera.positionCartographic.latitude = degToRad(20);
       state.viewer.camera.positionCartographic.longitude = degToRad(100);
 
       render(<InfoPanel {...defaultProps} selectedSatelliteTle={undefined} />);
-      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+      fireEvent.click(screen.getByRole("button", { name: "Overview (80,000km)" }));
 
       expect(state.viewer.camera.flyTo).toHaveBeenCalledTimes(1);
       const callArg = state.viewer.camera.flyTo.mock.calls[0][0] as {
@@ -300,7 +300,7 @@ describe("InfoPanel", () => {
       const onGoHome = vi.fn();
 
       render(<InfoPanel {...defaultProps} onGoHome={onGoHome} selectedSatelliteTle={sampleTle} />);
-      fireEvent.click(screen.getByRole("button", { name: "Overview (40,000km)" }));
+      fireEvent.click(screen.getByRole("button", { name: "Overview (80,000km)" }));
 
       expect(onGoHome).not.toHaveBeenCalled();
     });
