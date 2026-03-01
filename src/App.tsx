@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { GlobeRenderer } from "./components/Globe/GlobeRenderer";
 import { BaseMapLayer } from "./components/Globe/BaseMapLayer";
 import { SatelliteLayer } from "./components/Globe/SatelliteLayer";
@@ -13,6 +13,7 @@ import { PerfOverlay } from "./components/HUD/PerfOverlay";
 import { AoiPanel } from "./components/AOI/AoiPanel";
 import { useSatellites } from "./hooks/useSatellites";
 import { useAoi } from "./hooks/useAoi";
+import { captureGlobeScreenshot } from "./lib/screenshot";
 import type { OrbitRenderMode } from "./types/orbit";
 import "./App.css";
 
@@ -33,6 +34,12 @@ function App() {
   const [showNightShade, setShowNightShade] = useState(false);
   const [stepSec, setStepSec] = useState(5);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
+
+  const handleScreenshot = useCallback(() => {
+    const viewer = window.__CESIUM_VIEWER__;
+    if (!viewer || viewer.isDestroyed()) return;
+    captureGlobeScreenshot(viewer);
+  }, []);
 
   return (
     <GlobeRenderer showNightShade={showNightShade} onStepSecChange={setStepSec}>
@@ -89,6 +96,7 @@ function App() {
           onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
           onGoHome={deselectAll}
           selectedSatelliteTle={selectedSatellite?.tle}
+          onScreenshot={handleScreenshot}
         />
         <AoiPanel
           mode={aoiMode}

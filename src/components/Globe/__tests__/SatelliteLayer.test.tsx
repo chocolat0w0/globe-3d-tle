@@ -10,6 +10,7 @@ const { state, mockState, useOrbitDataMock } = vi.hoisted(() => ({
     viewer: undefined as
       | {
           trackedEntity: unknown;
+          isDestroyed: ReturnType<typeof vi.fn>;
           scene: {
             postRender: {
               addEventListener: ReturnType<typeof vi.fn>;
@@ -77,6 +78,7 @@ describe("SatelliteLayer trackedEntity sync", () => {
 
     state.viewer = {
       trackedEntity: undefined,
+      isDestroyed: vi.fn().mockReturnValue(false),
       scene: {
         postRender: {
           addEventListener: vi.fn((cb: PostRenderCallback) => {

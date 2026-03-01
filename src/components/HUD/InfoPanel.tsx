@@ -24,6 +24,7 @@ interface InfoPanelProps {
   onGoHome: () => void;
   /** 選択中の衛星の TLE データ。未選択の場合は undefined。 */
   selectedSatelliteTle?: { line1: string; line2: string };
+  onScreenshot?: () => void;
 }
 
 export function InfoPanel({
@@ -33,6 +34,7 @@ export function InfoPanel({
   onNightShadeToggle,
   onGoHome,
   selectedSatelliteTle,
+  onScreenshot,
 }: InfoPanelProps) {
   const { viewer } = useCesium();
   const [pos, setPos] = useState<CameraPos>({ lat: 0, lon: 0, alt: 0 });
@@ -96,6 +98,7 @@ export function InfoPanel({
     if (!viewer) return;
 
     const removeListener = viewer.scene.postRender.addEventListener(() => {
+      if (viewer.isDestroyed()) return;
       const carto = viewer.camera.positionCartographic;
       const lat = Cesium.Math.toDegrees(carto.latitude).toFixed(4);
       const lon = Cesium.Math.toDegrees(carto.longitude).toFixed(4);
@@ -109,7 +112,7 @@ export function InfoPanel({
     });
 
     return () => {
-      removeListener();
+      if (!viewer.isDestroyed()) removeListener();
     };
   }, [viewer]);
 
@@ -162,6 +165,11 @@ export function InfoPanel({
         <button type="button" onClick={handleOverview} className="ui-button">
           Overview (80,000km)
         </button>
+        {onScreenshot && (
+          <button type="button" onClick={onScreenshot} className="ui-button">
+            Screenshot
+          </button>
+        )}
       </div>
 
       <div className="camera-readout">

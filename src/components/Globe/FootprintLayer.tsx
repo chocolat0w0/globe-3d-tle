@@ -136,8 +136,10 @@ export function FootprintLayer({
     entitiesRef.current = [primaryEntity, secondaryEntity];
 
     return () => {
-      viewer.entities.remove(primaryEntity);
-      viewer.entities.remove(secondaryEntity);
+      if (!viewer.isDestroyed()) {
+        viewer.entities.remove(primaryEntity);
+        viewer.entities.remove(secondaryEntity);
+      }
       entitiesRef.current = [];
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps

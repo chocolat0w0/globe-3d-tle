@@ -5,6 +5,7 @@ import { InfoPanel } from "../InfoPanel";
 type PostRenderCallback = () => void;
 
 interface ViewerMock {
+  isDestroyed: ReturnType<typeof vi.fn>;
   trackedEntity: unknown;
   scene: {
     postRender: {
@@ -31,6 +32,7 @@ function degToRad(deg: number): number {
 
 function createViewerMock(): ViewerMock {
   return {
+    isDestroyed: vi.fn().mockReturnValue(false),
     trackedEntity: undefined,
     scene: {
       postRender: {

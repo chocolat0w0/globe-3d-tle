@@ -130,7 +130,7 @@ export function SatelliteLayer({
   }, [orbitData]);
 
   const clearTrackedEntityIfOwned = useCallback(() => {
-    if (!viewer) return;
+    if (!viewer || viewer.isDestroyed()) return;
     const owned = trackedByThisLayerRef.current;
     if (owned && viewer.trackedEntity === owned) {
       viewer.trackedEntity = undefined;
@@ -139,7 +139,7 @@ export function SatelliteLayer({
   }, [viewer]);
 
   const syncTrackedEntity = useCallback(() => {
-    if (!viewer) return;
+    if (!viewer || viewer.isDestroyed()) return;
     const entity = entityRef.current;
 
     if (selected && entity) {
@@ -163,11 +163,12 @@ export function SatelliteLayer({
     if (!viewer || !selected) return;
 
     const removeListener = viewer.scene.postRender.addEventListener(() => {
+      if (viewer.isDestroyed()) return;
       syncTrackedEntity();
     });
 
     return () => {
-      removeListener();
+      if (!viewer.isDestroyed()) removeListener();
     };
   }, [viewer, selected, syncTrackedEntity]);
 
@@ -223,6 +224,7 @@ export function SatelliteLayer({
 
           if (
             viewer &&
+            !viewer.isDestroyed() &&
             prevEntity &&
             prevEntity !== nextEntity &&
             viewer.trackedEntity === prevEntity
