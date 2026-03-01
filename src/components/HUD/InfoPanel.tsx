@@ -2,10 +2,13 @@ import { useCesium } from "resium";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import * as Cesium from "cesium";
+import * as satellite from "satellite.js";
 import type { OrbitRenderMode } from "../../types/orbit";
 
 const HOME_DESTINATION = Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000);
 const HOME_FLIGHT_DURATION_SECONDS = 1.5;
+const OVERVIEW_ALTITUDE_M = 80_000_000; // 80,000 km
+const OVERVIEW_FLIGHT_DURATION_SECONDS = 2.0;
 
 interface CameraPos {
   lat: number;
@@ -19,6 +22,8 @@ interface InfoPanelProps {
   showNightShade: boolean;
   onNightShadeToggle: () => void;
   onGoHome: () => void;
+  /** 選択中の衛星の TLE データ。未選択の場合は undefined。 */
+  selectedSatelliteTle?: { line1: string; line2: string };
 }
 
 export function InfoPanel({
@@ -27,6 +32,7 @@ export function InfoPanel({
   showNightShade,
   onNightShadeToggle,
   onGoHome,
+  selectedSatelliteTle,
 }: InfoPanelProps) {
   const { viewer } = useCesium();
   const [pos, setPos] = useState<CameraPos>({ lat: 0, lon: 0, alt: 0 });
@@ -44,6 +50,47 @@ export function InfoPanel({
       duration: HOME_FLIGHT_DURATION_SECONDS,
     });
   }, [viewer, onGoHome]);
+
+  /**
+   * 選択中の衛星の現在位置（ECI→ECEF変換）の上空 40,000 km へカメラを移動する。
+   * 衛星未選択の場合は現在のカメラ緯度経度を維持して 40,000 km へズームアウトする。
+   */
+  const handleOverview = useCallback(() => {
+    if (!viewer) return;
+
+    if (selectedSatelliteTle) {
+      const satrec = satellite.twoline2satrec(
+        selectedSatelliteTle.line1,
+        selectedSatelliteTle.line2,
+      );
+      const now = new Date();
+      const posVel = satellite.propagate(satrec, now);
+
+      if (typeof posVel.position !== "boolean" && posVel.position) {
+        const gmst = satellite.gstime(now);
+        const ecef = satellite.eciToEcf(posVel.position, gmst); // { x, y, z } km
+        const ecefCartesian = new Cesium.Cartesian3(ecef.x * 1000, ecef.y * 1000, ecef.z * 1000);
+        const carto = Cesium.Cartographic.fromCartesian(ecefCartesian);
+        const lat = Cesium.Math.toDegrees(carto.latitude);
+        const lon = Cesium.Math.toDegrees(carto.longitude);
+
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(lon, lat, OVERVIEW_ALTITUDE_M),
+          duration: OVERVIEW_FLIGHT_DURATION_SECONDS,
+        });
+        return;
+      }
+    }
+
+    // 衛星未選択、または位置計算失敗時: 現在のカメラ緯度経度を維持してズームアウト
+    const carto = viewer.camera.positionCartographic;
+    const lat = Cesium.Math.toDegrees(carto.latitude);
+    const lon = Cesium.Math.toDegrees(carto.longitude);
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(lon, lat, OVERVIEW_ALTITUDE_M),
+      duration: OVERVIEW_FLIGHT_DURATION_SECONDS,
+    });
+  }, [viewer, selectedSatelliteTle]);
 
   useEffect(() => {
     if (!viewer) return;
@@ -109,12 +156,11 @@ export function InfoPanel({
 
       <div className="info-section">
         <div className="ui-section-label">カメラ</div>
-        <button
-          type="button"
-          onClick={handleGoHome}
-          className="ui-button"
-        >
+        <button type="button" onClick={handleGoHome} className="ui-button">
           Home
+        </button>
+        <button type="button" onClick={handleOverview} className="ui-button">
+          Overview (80,000km)
         </button>
       </div>
 
