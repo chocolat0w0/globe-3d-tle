@@ -131,6 +131,7 @@ export function GlobeRenderer({ showNightShade, onStepSecChange, children }: Pro
       timeline={false}
       navigationHelpButton={false}
       navigationInstructionsInitiallyVisible={false}
+      contextOptions={{ webgl: { preserveDrawingBuffer: true } }}
     >
       <ViewerExposer />
       <FpsMonitor />
