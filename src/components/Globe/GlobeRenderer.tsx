@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { Viewer, useCesium } from "resium";
 import { Credit, CreditDisplay, ImageryLayer, type Viewer as CesiumViewer } from "cesium";
 import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
@@ -9,7 +9,6 @@ const STEP_SEC_DEBOUNCE_MS = 1000;
 interface Props {
   showNightShade: boolean;
   onStepSecChange?: (stepSec: number) => void;
-  preserveDrawingBuffer?: boolean;
   children?: ReactNode;
 }
 
@@ -118,14 +117,7 @@ function NightShadeController({ showNightShade }: { showNightShade: boolean }) {
   return null;
 }
 
-export function GlobeRenderer({ showNightShade, onStepSecChange, preserveDrawingBuffer, children }: Props) {
-  // Resium は readonly props を参照比較（!==）し、変化を検出すると Viewer を破棄・再作成する。
-  // オブジェクトリテラルだと毎レンダーで新参照になるため useMemo で安定化させる。
-  const contextOptions = useMemo(
-    () => ({ webgl: { preserveDrawingBuffer: preserveDrawingBuffer ?? false } }),
-    [preserveDrawingBuffer],
-  );
-
+export function GlobeRenderer({ showNightShade, onStepSecChange, children }: Props) {
   return (
     <Viewer
       full
@@ -141,7 +133,6 @@ export function GlobeRenderer({ showNightShade, onStepSecChange, preserveDrawing
       timeline={false}
       navigationHelpButton={false}
       navigationInstructionsInitiallyVisible={false}
-      contextOptions={contextOptions}
     >
       <ViewerExposer />
       <FpsMonitor />
