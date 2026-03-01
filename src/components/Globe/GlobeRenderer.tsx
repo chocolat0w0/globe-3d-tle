@@ -9,6 +9,7 @@ const STEP_SEC_DEBOUNCE_MS = 1000;
 interface Props {
   showNightShade: boolean;
   onStepSecChange?: (stepSec: number) => void;
+  preserveDrawingBuffer?: boolean;
   children?: ReactNode;
 }
 
@@ -115,7 +116,7 @@ function NightShadeController({ showNightShade }: { showNightShade: boolean }) {
   return null;
 }
 
-export function GlobeRenderer({ showNightShade, onStepSecChange, children }: Props) {
+export function GlobeRenderer({ showNightShade, onStepSecChange, preserveDrawingBuffer, children }: Props) {
   return (
     <Viewer
       full
@@ -131,6 +132,7 @@ export function GlobeRenderer({ showNightShade, onStepSecChange, children }: Pro
       timeline={false}
       navigationHelpButton={false}
       navigationInstructionsInitiallyVisible={false}
+      contextOptions={{ webgl: { preserveDrawingBuffer: preserveDrawingBuffer ?? false } }}
     >
       <ViewerExposer />
       <FpsMonitor />

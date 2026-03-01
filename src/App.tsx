@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useCesium } from "resium";
+import { Cartesian3, JulianDate } from "cesium";
 import { GlobeRenderer } from "./components/Globe/GlobeRenderer";
 import { BaseMapLayer } from "./components/Globe/BaseMapLayer";
 import { SatelliteLayer } from "./components/Globe/SatelliteLayer";
@@ -15,6 +17,82 @@ import { useSatellites } from "./hooks/useSatellites";
 import { useAoi } from "./hooks/useAoi";
 import type { OrbitRenderMode } from "./types/orbit";
 import "./App.css";
+
+type ScreenshotPhase = "idle" | "capture" | "restore";
+
+interface SavedCameraState {
+  position: Cartesian3;
+  direction: Cartesian3;
+  up: Cartesian3;
+  currentTime: JulianDate;
+}
+
+function formatTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}` +
+    `-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`
+  );
+}
+
+interface ScreenshotControllerProps {
+  phase: ScreenshotPhase;
+  savedState: SavedCameraState;
+  onCaptureDone: () => void;
+  onRestoreDone: () => void;
+}
+
+function ScreenshotController({ phase, savedState, onCaptureDone, onRestoreDone }: ScreenshotControllerProps) {
+  const { viewer } = useCesium();
+  const didActRef = useRef(false);
+
+  useEffect(() => {
+    if (!viewer || didActRef.current) return;
+    didActRef.current = true;
+
+    // Viewer 再マウント後にカメラ・時刻を復元
+    viewer.camera.setView({
+      destination: savedState.position,
+      orientation: {
+        direction: savedState.direction,
+        up: savedState.up,
+      },
+    });
+    viewer.clock.currentTime = savedState.currentTime.clone();
+
+    if (phase === "restore") {
+      onRestoreDone();
+      return;
+    }
+
+    // capture フェーズ: 2フレーム描画を待ってからキャプチャ
+    let frameCount = 0;
+    const removeListener = viewer.scene.postRender.addEventListener(() => {
+      frameCount += 1;
+      if (frameCount < 2) return;
+      removeListener();
+
+      viewer.scene.canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `globe-${formatTimestamp(new Date())}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+        onCaptureDone();
+      }, "image/png");
+    });
+
+    return () => {
+      removeListener();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewer]);
+
+  return null;
+}
 
 const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
 
@@ -34,8 +112,47 @@ function App() {
   const [stepSec, setStepSec] = useState(5);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
 
+  const [screenshotPhase, setScreenshotPhase] = useState<ScreenshotPhase>("idle");
+  const [screenshotKey, setScreenshotKey] = useState(0);
+  const savedStateRef = useRef<SavedCameraState | null>(null);
+
+  const handleScreenshot = useCallback(() => {
+    const cesiumViewer = window.__CESIUM_VIEWER__;
+    if (!cesiumViewer) return;
+    savedStateRef.current = {
+      position: cesiumViewer.camera.position.clone(),
+      direction: cesiumViewer.camera.direction.clone(),
+      up: cesiumViewer.camera.up.clone(),
+      currentTime: cesiumViewer.clock.currentTime.clone(),
+    };
+    setScreenshotPhase("capture");
+    setScreenshotKey((k) => k + 1);
+  }, []);
+
+  const handleCaptureDone = useCallback(() => {
+    setScreenshotPhase("restore");
+    setScreenshotKey((k) => k + 1);
+  }, []);
+
+  const handleRestoreDone = useCallback(() => {
+    setScreenshotPhase("idle");
+  }, []);
+
   return (
-    <GlobeRenderer showNightShade={showNightShade} onStepSecChange={setStepSec}>
+    <GlobeRenderer
+      key={screenshotKey}
+      preserveDrawingBuffer={screenshotPhase === "capture"}
+      showNightShade={showNightShade}
+      onStepSecChange={setStepSec}
+    >
+      {screenshotPhase !== "idle" && savedStateRef.current && (
+        <ScreenshotController
+          phase={screenshotPhase}
+          savedState={savedStateRef.current}
+          onCaptureDone={handleCaptureDone}
+          onRestoreDone={handleRestoreDone}
+        />
+      )}
       <div className="cosmic-veil cosmic-veil--north" aria-hidden="true" />
       <div className="cosmic-veil cosmic-veil--south" aria-hidden="true" />
       <div className="cosmic-grid" aria-hidden="true" />
@@ -89,6 +206,7 @@ function App() {
           onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
           onGoHome={deselectAll}
           selectedSatelliteTle={selectedSatellite?.tle}
+          onScreenshot={handleScreenshot}
         />
         <AoiPanel
           mode={aoiMode}
