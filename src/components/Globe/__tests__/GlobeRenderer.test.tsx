@@ -10,6 +10,7 @@ type PostRenderCallback = () => void;
 const state: {
   viewer:
     | {
+        isDestroyed: ReturnType<typeof vi.fn>;
         scene: {
           postRender: {
             addEventListener: ReturnType<typeof vi.fn>;
@@ -48,6 +49,7 @@ describe("GlobeRenderer", () => {
     postRenderCallback = undefined;
     removeListener = vi.fn();
     state.viewer = {
+      isDestroyed: vi.fn().mockReturnValue(false),
       scene: {
         postRender: {
           addEventListener: vi.fn((cb: PostRenderCallback) => {
@@ -185,6 +187,7 @@ describe("StepSecController", () => {
     stepSecPostRenderCallback = undefined;
     stepSecRemoveListener = vi.fn();
     state.viewer = {
+      isDestroyed: vi.fn().mockReturnValue(false),
       scene: {
         postRender: {
           addEventListener: vi.fn((cb: PostRenderCallback) => {

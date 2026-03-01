@@ -45,6 +45,14 @@ interface ScreenshotControllerProps {
 function ScreenshotController({ phase, savedState, onCaptureDone, onRestoreDone }: ScreenshotControllerProps) {
   const { viewer } = useCesium();
   const didActRef = useRef(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!viewer || didActRef.current) return;
@@ -68,6 +76,7 @@ function ScreenshotController({ phase, savedState, onCaptureDone, onRestoreDone 
     // capture フェーズ: 2フレーム描画を待ってからキャプチャ
     let frameCount = 0;
     const removeListener = viewer.scene.postRender.addEventListener(() => {
+      if (viewer.isDestroyed()) return;
       frameCount += 1;
       if (frameCount < 2) return;
       removeListener();
@@ -81,12 +90,12 @@ function ScreenshotController({ phase, savedState, onCaptureDone, onRestoreDone 
           a.click();
           URL.revokeObjectURL(url);
         }
-        onCaptureDone();
+        if (isMountedRef.current) onCaptureDone();
       }, "image/png");
     });
 
     return () => {
-      removeListener();
+      if (!viewer.isDestroyed()) removeListener();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewer]);

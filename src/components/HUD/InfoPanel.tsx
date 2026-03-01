@@ -98,6 +98,7 @@ export function InfoPanel({
     if (!viewer) return;
 
     const removeListener = viewer.scene.postRender.addEventListener(() => {
+      if (viewer.isDestroyed()) return;
       const carto = viewer.camera.positionCartographic;
       const lat = Cesium.Math.toDegrees(carto.latitude).toFixed(4);
       const lon = Cesium.Math.toDegrees(carto.longitude).toFixed(4);
@@ -111,7 +112,7 @@ export function InfoPanel({
     });
 
     return () => {
-      removeListener();
+      if (!viewer.isDestroyed()) removeListener();
     };
   }, [viewer]);
 

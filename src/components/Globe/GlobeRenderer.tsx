@@ -46,6 +46,7 @@ function FpsMonitor() {
     frameCountRef.current = 0;
 
     const removeListener = viewer.scene.postRender.addEventListener(() => {
+      if (viewer.isDestroyed()) return;
       frameCountRef.current += 1;
       const now = performance.now();
       const elapsedMs = now - windowStartRef.current;
@@ -63,7 +64,7 @@ function FpsMonitor() {
     });
 
     return () => {
-      removeListener();
+      if (!viewer.isDestroyed()) removeListener();
     };
   }, [viewer]);
 
@@ -79,6 +80,7 @@ function StepSecController({ onStepSecChange }: { onStepSecChange: (stepSec: num
     if (!viewer) return;
 
     const removeListener = viewer.scene.postRender.addEventListener(() => {
+      if (viewer.isDestroyed()) return;
       const height = viewer.camera.positionCartographic.height;
       const newStepSec = getStepSecForHeight(height);
 
@@ -93,7 +95,7 @@ function StepSecController({ onStepSecChange }: { onStepSecChange: (stepSec: num
     });
 
     return () => {
-      removeListener();
+      if (!viewer.isDestroyed()) removeListener();
     };
   }, [viewer, onStepSecChange]);
 
