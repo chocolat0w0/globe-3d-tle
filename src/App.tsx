@@ -23,7 +23,7 @@ function getWindowStartMs(now: number): number {
 }
 
 function App() {
-  const { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath } =
+  const { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath, updateOffnadirRanges } =
     useSatellites();
   const selectedSatellite = satellites.find((s) => s.selected) ?? null;
   const [detailSatelliteId, setDetailSatelliteId] = useState<string | null>(null);
@@ -112,6 +112,7 @@ function App() {
           <SatelliteDetailPanel
             satellite={detailSatellite}
             onClose={() => setDetailSatelliteId(null)}
+            onUpdateOffnadirRanges={(ranges) => updateOffnadirRanges(detailSatellite.id, ranges)}
           />
         )}
       </div>

@@ -9,8 +9,7 @@ import type { Satellite } from "../../../types/satellite";
  * The component renders a detail panel for a single satellite with:
  *   - A satellite name heading
  *   - A colored indicator dot (.satellite-indicator) using satellite.color as background
- *   - An "オフナディア角" section listing each OffnadirRange as "#N min — max"
- *   - formatDeg: non-negative values get a "+" prefix (e.g. +22.3°), negatives are bare (e.g. -60°)
+ *   - An "オフナディア角" section with editable min/max number inputs per range
  *   - A close button (aria-label="詳細パネルを閉じる") that calls onClose when clicked
  */
 
@@ -50,7 +49,7 @@ const TERRASAR: Satellite = {
   showSwath: false,
 };
 
-/** SENTINEL-2A: zero-width range spanning −5 to +5 */
+/** SENTINEL-2A: range spanning −5 to +5 */
 const SENTINEL2A: Satellite = {
   id: "sentinel2a",
   name: "SENTINEL-2A",
@@ -72,18 +71,18 @@ const SENTINEL2A: Satellite = {
 
 describe("SatelliteDetailPanel — satellite name and color indicator", () => {
   it("renders the satellite name for SENTINEL-1A", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.getByText("SENTINEL-1A")).toBeInTheDocument();
   });
 
   it("renders the satellite name for TERRASAR-X", () => {
-    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.getByText("TERRASAR-X")).toBeInTheDocument();
   });
 
   it("sets the background style of .satellite-indicator to satellite.color (#FF6B6B for SENTINEL-1A)", () => {
     const { container } = render(
-      <SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} />,
+      <SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />,
     );
     const indicator = container.querySelector(".satellite-indicator") as HTMLElement;
     expect(indicator).not.toBeNull();
@@ -93,7 +92,7 @@ describe("SatelliteDetailPanel — satellite name and color indicator", () => {
 
   it("sets the background style of .satellite-indicator to satellite.color (#45B7D1 for TERRASAR-X)", () => {
     const { container } = render(
-      <SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />,
+      <SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />,
     );
     const indicator = container.querySelector(".satellite-indicator") as HTMLElement;
     expect(indicator).not.toBeNull();
@@ -102,7 +101,7 @@ describe("SatelliteDetailPanel — satellite name and color indicator", () => {
 
   it("sets the background style of .satellite-indicator to satellite.color (#FF8C00 for SENTINEL-2A)", () => {
     const { container } = render(
-      <SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} />,
+      <SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />,
     );
     const indicator = container.querySelector(".satellite-indicator") as HTMLElement;
     expect(indicator).not.toBeNull();
@@ -116,14 +115,14 @@ describe("SatelliteDetailPanel — satellite name and color indicator", () => {
 
 describe("SatelliteDetailPanel — close button", () => {
   it("renders a button with aria-label='詳細パネルを閉じる'", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     const btn = screen.getByRole("button", { name: "詳細パネルを閉じる" });
     expect(btn).toBeInTheDocument();
   });
 
   it("calls onClose exactly once when the close button is clicked", () => {
     const onClose = vi.fn();
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={onClose} />);
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={onClose} onUpdateOffnadirRanges={vi.fn()} />);
     const btn = screen.getByRole("button", { name: "詳細パネルを閉じる" });
     fireEvent.click(btn);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -131,7 +130,7 @@ describe("SatelliteDetailPanel — close button", () => {
 
   it("does not call onClose before the button is clicked", () => {
     const onClose = vi.fn();
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={onClose} />);
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={onClose} onUpdateOffnadirRanges={vi.fn()} />);
     expect(onClose).not.toHaveBeenCalled();
   });
 });
@@ -142,12 +141,12 @@ describe("SatelliteDetailPanel — close button", () => {
 
 describe("SatelliteDetailPanel — オフナディア角 section label", () => {
   it("displays the 'オフナディア角' section label for a satellite with a single range", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.getByText("オフナディア角")).toBeInTheDocument();
   });
 
   it("displays the 'オフナディア角' section label for a satellite with two ranges", () => {
-    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.getByText("オフナディア角")).toBeInTheDocument();
   });
 });
@@ -158,22 +157,21 @@ describe("SatelliteDetailPanel — オフナディア角 section label", () => {
 
 describe("SatelliteDetailPanel — single range [[22.3, 44.5]] (SENTINEL-1A)", () => {
   it("renders exactly one range row with index '#1'", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.getByText("#1")).toBeInTheDocument();
     expect(screen.queryByText("#2")).toBeNull();
   });
 
-  it("renders the min value with '+' prefix as '+22.3°'", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} />);
-    // The range text is rendered as a single span containing both values
-    const rangeSpan = screen.getByText("+22.3° — +44.5°");
-    expect(rangeSpan).toBeInTheDocument();
+  it("renders the min input with value '22.3'", () => {
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" }) as HTMLInputElement;
+    expect(minInput.value).toBe("22.3");
   });
 
-  it("renders the max value with '+' prefix as '+44.5°'", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} />);
-    const rangeSpan = screen.getByText("+22.3° — +44.5°");
-    expect(rangeSpan.textContent).toContain("+44.5°");
+  it("renders the max input with value '44.5'", () => {
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const maxInput = screen.getByRole("spinbutton", { name: "レンジ1 最大値" }) as HTMLInputElement;
+    expect(maxInput.value).toBe("44.5");
   });
 });
 
@@ -183,31 +181,38 @@ describe("SatelliteDetailPanel — single range [[22.3, 44.5]] (SENTINEL-1A)", (
 
 describe("SatelliteDetailPanel — two ranges [[-60, -15], [15, 60]] (TERRASAR-X)", () => {
   it("renders two range rows with indices '#1' and '#2'", () => {
-    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.getByText("#1")).toBeInTheDocument();
     expect(screen.getByText("#2")).toBeInTheDocument();
   });
 
   it("does not render a third index '#3'", () => {
-    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.queryByText("#3")).toBeNull();
   });
 
-  it("renders range #1 with negative values without '+' prefix: '-60° — -15°'", () => {
-    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />);
-    expect(screen.getByText("-60° — -15°")).toBeInTheDocument();
+  it("renders range #1 min input with value '-60'", () => {
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" }) as HTMLInputElement;
+    expect(minInput.value).toBe("-60");
   });
 
-  it("renders range #2 with positive values with '+' prefix: '+15° — +60°'", () => {
-    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />);
-    expect(screen.getByText("+15° — +60°")).toBeInTheDocument();
+  it("renders range #1 max input with value '-15'", () => {
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const maxInput = screen.getByRole("spinbutton", { name: "レンジ1 最大値" }) as HTMLInputElement;
+    expect(maxInput.value).toBe("-15");
   });
 
-  it("negative min value '-60°' does NOT have a '+' prefix", () => {
-    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} />);
-    const rangeSpan = screen.getByText("-60° — -15°");
-    expect(rangeSpan.textContent).not.toContain("+-60°");
-    expect(rangeSpan.textContent).toContain("-60°");
+  it("renders range #2 min input with value '15'", () => {
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ2 最小値" }) as HTMLInputElement;
+    expect(minInput.value).toBe("15");
+  });
+
+  it("renders range #2 max input with value '60'", () => {
+    render(<SatelliteDetailPanel satellite={TERRASAR} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const maxInput = screen.getByRole("spinbutton", { name: "レンジ2 最大値" }) as HTMLInputElement;
+    expect(maxInput.value).toBe("60");
   });
 });
 
@@ -215,52 +220,79 @@ describe("SatelliteDetailPanel — two ranges [[-60, -15], [15, 60]] (TERRASAR-X
 // オフナディア角セクション — ゼロ幅レンジ [[-5, 5]]
 // ---------------------------------------------------------------------------
 
-describe("SatelliteDetailPanel — zero-width range [[-5, 5]] (SENTINEL-2A)", () => {
+describe("SatelliteDetailPanel — range [[-5, 5]] (SENTINEL-2A)", () => {
   it("renders exactly one range row with index '#1'", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} />);
+    render(<SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
     expect(screen.getByText("#1")).toBeInTheDocument();
     expect(screen.queryByText("#2")).toBeNull();
   });
 
-  it("renders the range '-5° — +5°' where the min is negative and max is positive", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} />);
-    expect(screen.getByText("-5° — +5°")).toBeInTheDocument();
+  it("renders min input with value '-5'", () => {
+    render(<SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" }) as HTMLInputElement;
+    expect(minInput.value).toBe("-5");
   });
 
-  it("renders min value '-5°' without '+' prefix (negative number)", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} />);
-    const rangeSpan = screen.getByText("-5° — +5°");
-    expect(rangeSpan.textContent).toContain("-5°");
-    expect(rangeSpan.textContent).not.toContain("+-5°");
-  });
-
-  it("renders max value '+5°' with '+' prefix (zero-or-positive number)", () => {
-    render(<SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} />);
-    const rangeSpan = screen.getByText("-5° — +5°");
-    expect(rangeSpan.textContent).toContain("+5°");
+  it("renders max input with value '5'", () => {
+    render(<SatelliteDetailPanel satellite={SENTINEL2A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const maxInput = screen.getByRole("spinbutton", { name: "レンジ1 最大値" }) as HTMLInputElement;
+    expect(maxInput.value).toBe("5");
   });
 });
 
 // ---------------------------------------------------------------------------
-// formatDeg の境界値: ゼロの扱い
+// 入力値の境界値テスト
 // ---------------------------------------------------------------------------
 
-describe("SatelliteDetailPanel — formatDeg boundary: zero value gets '+' prefix", () => {
-  it("renders zero degree value as '+0°' (zero is treated as non-negative)", () => {
+describe("SatelliteDetailPanel — input boundary values", () => {
+  it("renders zero min value as '0' in the input", () => {
     const satWithZero: Satellite = {
       ...SENTINEL1A,
       offnadirRanges: [[0, 30]],
     };
-    render(<SatelliteDetailPanel satellite={satWithZero} onClose={vi.fn()} />);
-    expect(screen.getByText("+0° — +30°")).toBeInTheDocument();
+    render(<SatelliteDetailPanel satellite={satWithZero} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" }) as HTMLInputElement;
+    expect(minInput.value).toBe("0");
   });
 
-  it("renders a range [-90, 90] spanning the full offnadir domain correctly", () => {
+  it("renders full-domain range [-90, 90] with correct input values", () => {
     const satFullRange: Satellite = {
       ...SENTINEL1A,
       offnadirRanges: [[-90, 90]],
     };
-    render(<SatelliteDetailPanel satellite={satFullRange} onClose={vi.fn()} />);
-    expect(screen.getByText("-90° — +90°")).toBeInTheDocument();
+    render(<SatelliteDetailPanel satellite={satFullRange} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" }) as HTMLInputElement;
+    const maxInput = screen.getByRole("spinbutton", { name: "レンジ1 最大値" }) as HTMLInputElement;
+    expect(minInput.value).toBe("-90");
+    expect(maxInput.value).toBe("90");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// onUpdateOffnadirRanges の呼び出し
+// ---------------------------------------------------------------------------
+
+describe("SatelliteDetailPanel — onUpdateOffnadirRanges callback", () => {
+  it("calls onUpdateOffnadirRanges when a valid min value is changed", () => {
+    const onUpdate = vi.fn();
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={onUpdate} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" });
+    fireEvent.change(minInput, { target: { value: "10" } });
+    expect(onUpdate).toHaveBeenCalledWith([[10, 44.5]]);
+  });
+
+  it("does not call onUpdateOffnadirRanges when min exceeds max (invalid range)", () => {
+    const onUpdate = vi.fn();
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={onUpdate} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" });
+    fireEvent.change(minInput, { target: { value: "80" } }); // 80 > 44.5
+    expect(onUpdate).not.toHaveBeenCalled();
+  });
+
+  it("shows an error message when min exceeds max", () => {
+    render(<SatelliteDetailPanel satellite={SENTINEL1A} onClose={vi.fn()} onUpdateOffnadirRanges={vi.fn()} />);
+    const minInput = screen.getByRole("spinbutton", { name: "レンジ1 最小値" });
+    fireEvent.change(minInput, { target: { value: "80" } });
+    expect(screen.getByText(/minDeg <= maxDeg|無効な値/)).toBeInTheDocument();
   });
 });
