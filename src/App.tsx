@@ -10,6 +10,7 @@ import { SatelliteList } from "./components/SatelliteList/SatelliteList";
 import { SatelliteDetailPanel } from "./components/SatelliteList/SatelliteDetailPanel";
 import { InfoPanel } from "./components/HUD/InfoPanel";
 import { PerfOverlay } from "./components/HUD/PerfOverlay";
+import { ScreenshotButton } from "./components/HUD/ScreenshotButton";
 import { AoiPanel } from "./components/AOI/AoiPanel";
 import { useSatellites } from "./hooks/useSatellites";
 import { useAoi } from "./hooks/useAoi";
@@ -97,6 +98,7 @@ function App() {
           onClear={clearAoi}
           onLoadGeoJSON={loadFromGeoJSON}
         />
+        <ScreenshotButton />
       </div>
       <PerfOverlay />
       <div className="satellite-panel-stack">
