@@ -23,6 +23,7 @@ vi.mock("resium", () => ({
       clock: {
         currentTime: {},
       },
+      isDestroyed: vi.fn().mockReturnValue(false),
     },
   }),
 }));
