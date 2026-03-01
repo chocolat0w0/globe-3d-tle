@@ -58,6 +58,7 @@ interface UseSatellitesResult {
   deselectAll: () => void;
   toggleFootprint: (id: string) => void;
   toggleSwath: (id: string) => void;
+  updateOffnadirRanges: (id: string, ranges: OffnadirRange[]) => void;
 }
 
 /**
@@ -104,5 +105,11 @@ export function useSatellites(): UseSatellitesResult {
     setSatellites((prev) => prev.map((s) => (s.id === id ? { ...s, showSwath: !s.showSwath } : s)));
   }, []);
 
-  return { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath };
+  const updateOffnadirRanges = useCallback((id: string, ranges: OffnadirRange[]) => {
+    setSatellites((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, offnadirRanges: ranges } : s)),
+    );
+  }, []);
+
+  return { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath, updateOffnadirRanges };
 }

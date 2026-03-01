@@ -451,6 +451,94 @@ body {
   letter-spacing: 0.04em;
 }
 
+.satellite-detail-offnadir-input {
+  width: 56px;
+  background: rgba(6, 13, 23, 0.6);
+  border: 1px solid rgba(177, 211, 245, 0.18);
+  border-radius: 5px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 2px 5px;
+  text-align: right;
+  outline: none;
+  transition: border-color 140ms ease;
+  -moz-appearance: textfield;
+}
+
+.satellite-detail-offnadir-input::-webkit-inner-spin-button,
+.satellite-detail-offnadir-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.satellite-detail-offnadir-input:focus {
+  border-color: rgba(163, 214, 255, 0.5);
+}
+
+.satellite-detail-offnadir-sep {
+  color: var(--text-subtle);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.satellite-detail-offnadir-unit {
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.satellite-detail-offnadir-remove {
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid rgba(159, 203, 239, 0.16);
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 140ms ease;
+}
+
+.satellite-detail-offnadir-remove:hover {
+  border-color: rgba(255, 100, 100, 0.5);
+  color: #ff7070;
+  background: rgba(255, 100, 100, 0.08);
+}
+
+.satellite-detail-offnadir-add {
+  width: 100%;
+  padding: 5px 0;
+  border-radius: 7px;
+  border: 1px dashed rgba(177, 211, 245, 0.2);
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  transition: all 140ms ease;
+  margin-top: 2px;
+}
+
+.satellite-detail-offnadir-add:hover {
+  border-color: rgba(163, 214, 255, 0.4);
+  color: var(--text-main);
+  background: rgba(163, 214, 255, 0.05);
+}
+
+.satellite-detail-offnadir-error {
+  color: #ff7070;
+  font-size: 0.68rem;
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
 .satellite-detail-kv-list {
   display: flex;
   flex-direction: column;
