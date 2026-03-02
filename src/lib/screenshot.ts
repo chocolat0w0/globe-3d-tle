@@ -28,19 +28,6 @@ export function captureGlobeScreenshot(viewer: Viewer): void {
     const width = canvas.width;
     const height = canvas.height;
 
-    // フレームバッファからピクセルを読み取り（WebGL は左下原点）
-    const pixels = new Uint8Array(width * height * 4);
-    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-    // 上下反転
-    const rowBytes = width * 4;
-    const flipped = new Uint8Array(width * height * 4);
-    for (let row = 0; row < height; row++) {
-      const srcOffset = row * rowBytes;
-      const dstOffset = (height - 1 - row) * rowBytes;
-      flipped.set(pixels.subarray(srcOffset, srcOffset + rowBytes), dstOffset);
-    }
-
     // オフスクリーン Canvas に描画して PNG 化
     const offscreen = document.createElement("canvas");
     offscreen.width = width;
@@ -48,7 +35,18 @@ export function captureGlobeScreenshot(viewer: Viewer): void {
     const ctx = offscreen.getContext("2d");
     if (!ctx) return;
 
-    const imageData = new ImageData(new Uint8ClampedArray(flipped.buffer), width, height);
+    // フレームバッファからピクセルを読み取り（WebGL は左下原点）
+    const pixels = new Uint8Array(width * height * 4);
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+    // 上下反転しながら ImageData に直接書き込み（中間バッファを省略）
+    const rowBytes = width * 4;
+    const imageData = ctx.createImageData(width, height);
+    for (let row = 0; row < height; row++) {
+      const srcOffset = row * rowBytes;
+      const dstOffset = (height - 1 - row) * rowBytes;
+      imageData.data.set(pixels.subarray(srcOffset, srcOffset + rowBytes), dstOffset);
+    }
     ctx.putImageData(imageData, 0, 0);
 
     offscreen.toBlob((blob) => {
@@ -58,7 +56,8 @@ export function captureGlobeScreenshot(viewer: Viewer): void {
       a.href = url;
       a.download = `globe-${formatTimestamp(new Date())}.png`;
       a.click();
-      URL.revokeObjectURL(url);
+      // ダウンロード開始は非同期キュー経由のため、同一コールスタック内での即時解放を避ける
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, "image/png");
   });
 

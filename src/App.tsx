@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { GlobeRenderer } from "./components/Globe/GlobeRenderer";
 import { BaseMapLayer } from "./components/Globe/BaseMapLayer";
 import { SatelliteLayer } from "./components/Globe/SatelliteLayer";
@@ -24,8 +24,15 @@ function getWindowStartMs(now: number): number {
 }
 
 function App() {
-  const { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath, updateOffnadirRanges } =
-    useSatellites();
+  const {
+    satellites,
+    toggleVisible,
+    selectSatellite,
+    deselectAll,
+    toggleFootprint,
+    toggleSwath,
+    updateOffnadirRanges,
+  } = useSatellites();
   const selectedSatellite = satellites.find((s) => s.selected) ?? null;
   const [detailSatelliteId, setDetailSatelliteId] = useState<string | null>(null);
   const detailSatellite = satellites.find((s) => s.id === detailSatelliteId) ?? null;
@@ -35,11 +42,11 @@ function App() {
   const [stepSec, setStepSec] = useState(5);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
 
-  const handleScreenshot = useCallback(() => {
+  const handleScreenshot = () => {
     const viewer = window.__CESIUM_VIEWER__;
     if (!viewer || viewer.isDestroyed()) return;
     captureGlobeScreenshot(viewer);
-  }, []);
+  };
 
   return (
     <GlobeRenderer showNightShade={showNightShade} onStepSecChange={setStepSec}>
