@@ -4,16 +4,7 @@ import type { FootprintData } from "../types/orbit";
 import type { ComputeDayRequest, MainMessage } from "../types/worker-messages";
 import type { FootprintParams } from "../lib/tle/footprint";
 import { LRUCache } from "../lib/cache/lru-cache";
-
-const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
-
-function getWindowStartMs(now: number): number {
-  return Math.floor(now / WINDOW_MS) * WINDOW_MS;
-}
-
-function generateRequestId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
+import { WINDOW_MS, getWindowStartMs, generateRequestId } from "../lib/time-window";
 
 function estimateFootprintBytes(value: FootprintData): number {
   return (

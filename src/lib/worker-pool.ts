@@ -3,8 +3,7 @@ import type { WorkerMessage, MainMessage } from "../types/worker-messages";
 import { perfLogger } from "./perf/perf-logger";
 import { perfMetricsStore } from "./perf/perf-metrics-store";
 
-const rttLabel = (satId: string, reqId: string) =>
-  `worker-rtt:${satId}:${reqId.slice(0, 8)}`;
+const rttLabel = (satId: string, reqId: string) => `worker-rtt:${satId}:${reqId.slice(0, 8)}`;
 
 interface PendingRequest {
   msg: WorkerMessage;
@@ -23,16 +22,17 @@ export class WorkerPool {
   private readonly idle: Worker[];
   private readonly callbacks = new Map<string, (msg: MainMessage) => void>();
   private readonly queue: PendingRequest[] = [];
+  /** 各Workerが現在処理中のrequestId（アイドル時はundefined） */
+  private readonly activeRequestId = new Map<Worker, string>();
 
   constructor(size: number) {
     this.workers = [];
     this.idle = [];
 
     for (let i = 0; i < size; i++) {
-      const worker = new Worker(
-        new URL("../workers/orbit-calculator.worker.ts", import.meta.url),
-        { type: "module" }
-      );
+      const worker = new Worker(new URL("../workers/orbit-calculator.worker.ts", import.meta.url), {
+        type: "module",
+      });
 
       worker.onmessage = (e: MessageEvent<MainMessage>) => {
         const msg = e.data;
@@ -40,6 +40,8 @@ export class WorkerPool {
         const label = rttLabel(satelliteId, requestId);
         const entry = perfLogger.end(label);
         if (entry) perfMetricsStore.push(entry);
+
+        this.activeRequestId.delete(worker);
 
         const cb = this.callbacks.get(requestId);
         if (cb) {
@@ -53,6 +55,21 @@ export class WorkerPool {
 
       worker.onerror = (e) => {
         console.error("[WorkerPool] uncaught error:", e.message);
+        // 実行中のリクエストへエラーを通知してハングを防ぐ
+        const requestId = this.activeRequestId.get(worker);
+        this.activeRequestId.delete(worker);
+        if (requestId) {
+          const cb = this.callbacks.get(requestId);
+          if (cb) {
+            this.callbacks.delete(requestId);
+            cb({
+              type: "error",
+              requestId,
+              satelliteId: "",
+              message: e.message ?? "Worker crashed",
+            });
+          }
+        }
         this.releaseWorker(worker);
       };
 
@@ -70,14 +87,11 @@ export class WorkerPool {
     }
   }
 
-  private dispatch(
-    worker: Worker,
-    msg: WorkerMessage,
-    callback: (msg: MainMessage) => void
-  ): void {
+  private dispatch(worker: Worker, msg: WorkerMessage, callback: (msg: MainMessage) => void): void {
     const label = rttLabel(msg.satelliteId, msg.requestId);
     perfLogger.start(label);
     this.callbacks.set(msg.requestId, callback);
+    this.activeRequestId.set(worker, msg.requestId);
     worker.postMessage(msg);
   }
 
@@ -97,7 +111,7 @@ export class WorkerPool {
 
 const POOL_SIZE = Math.min(
   typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 4 : 4,
-  6
+  6,
 );
 
 /**

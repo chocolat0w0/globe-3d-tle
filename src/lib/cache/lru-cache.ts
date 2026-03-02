@@ -66,14 +66,11 @@ export class LRUCache<V> {
    * @returns 削除したエントリ数
    */
   deleteByPrefix(prefix: string): number {
-    let count = 0;
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(prefix)) {
-        this.delete(key);
-        count++;
-      }
+    const keys = [...this.cache.keys()].filter((k) => k.startsWith(prefix));
+    for (const key of keys) {
+      this.delete(key);
     }
-    return count;
+    return keys.length;
   }
 
   clear(): void {

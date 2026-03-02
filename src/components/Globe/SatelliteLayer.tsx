@@ -13,8 +13,8 @@ import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
 import type { OrbitData, OrbitRenderMode } from "../../types/orbit";
 import { toCesiumArcType } from "./orbit-render-mode";
-import { PerfLogger } from "../../lib/perf/perf-logger";
-import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
+import { bisectLeft } from "../../lib/footprint/footprint-interpolator";
+import { usePerfLogger } from "../../hooks/usePerfLogger";
 
 interface Props {
   id: string;
@@ -28,21 +28,6 @@ interface Props {
   orbitRenderMode: OrbitRenderMode;
   /** 軌道サンプリング間隔（秒）。デフォルト 30。 */
   stepSec?: number;
-}
-
-/**
- * timesMs を二分探索して targetMs 以下の最大インデックスを返す。
- * targetMs が範囲外の場合はクランプする。
- */
-function bisectLeft(timesMs: Float64Array, targetMs: number): number {
-  let lo = 0;
-  let hi = timesMs.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
-    if (timesMs[mid] <= targetMs) lo = mid;
-    else hi = mid - 1;
-  }
-  return lo;
 }
 
 /**
@@ -93,14 +78,7 @@ export function SatelliteLayer({
   const { viewer } = useCesium();
   const entityRef = useRef<CesiumEntity | null>(null);
   const trackedByThisLayerRef = useRef<CesiumEntity | null>(null);
-  const perfLogger = useMemo(
-    () =>
-      new PerfLogger({
-        enabled: import.meta.env.VITE_PERF_LOG === "true",
-        onEntry: (entry) => perfMetricsStore.push(entry),
-      }),
-    [],
-  );
+  const perfLogger = usePerfLogger();
 
   const { orbitData, error } = useOrbitData({
     satelliteId: id,
