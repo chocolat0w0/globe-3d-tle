@@ -106,7 +106,6 @@ describe("SatelliteLayer trackedEntity sync", () => {
       visible: true,
       selected: true,
       dayStartMs: Date.now(),
-      orbitRenderMode: "geodesic" as const,
     };
 
     const { rerender } = render(<SatelliteLayer {...baseProps} />);
@@ -139,7 +138,6 @@ describe("SatelliteLayer trackedEntity sync", () => {
       visible: true,
       selected: true,
       dayStartMs: Date.now(),
-      orbitRenderMode: "geodesic" as const,
     };
 
     const { rerender } = render(<SatelliteLayer {...baseProps} />);
@@ -171,7 +169,6 @@ describe("SatelliteLayer trackedEntity sync", () => {
       color: "#ffffff",
       visible: true,
       dayStartMs: Date.now(),
-      orbitRenderMode: "geodesic" as const,
     };
 
     const { rerender } = render(<SatelliteLayer {...baseProps} selected={true} />);
@@ -198,7 +195,6 @@ describe("SatelliteLayer trackedEntity sync", () => {
         visible={true}
         selected={true}
         dayStartMs={Date.now()}
-        orbitRenderMode="geodesic"
       />,
     );
 

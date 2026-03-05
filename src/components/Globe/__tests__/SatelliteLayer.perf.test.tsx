@@ -47,7 +47,6 @@ describe("SatelliteLayer performance measurement", () => {
         visible={false}
         selected={false}
         dayStartMs={Date.now()}
-        orbitRenderMode="geodesic"
       />,
     );
 
@@ -76,7 +75,6 @@ describe("SatelliteLayer performance measurement", () => {
         visible={false}
         selected={false}
         dayStartMs={Date.now()}
-        orbitRenderMode="geodesic"
       />,
     );
 
@@ -101,7 +99,6 @@ describe("SatelliteLayer performance measurement", () => {
         visible={false}
         selected={false}
         dayStartMs={Date.now()}
-        orbitRenderMode="geodesic"
       />,
     );
 

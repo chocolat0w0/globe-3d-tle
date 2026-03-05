@@ -7,12 +7,12 @@ import {
   Cartesian2,
   Color,
   DistanceDisplayCondition,
+  ArcType,
   type Entity as CesiumEntity,
 } from "cesium";
 import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
-import type { OrbitData, OrbitRenderMode } from "../../types/orbit";
-import { toCesiumArcType } from "./orbit-render-mode";
+import type { OrbitData } from "../../types/orbit";
 import { bisectLeft } from "../../lib/footprint/footprint-interpolator";
 import { usePerfLogger } from "../../hooks/usePerfLogger";
 
@@ -25,7 +25,6 @@ interface Props {
   selected?: boolean;
   /** 表示する日の開始時刻（UTC epoch ms）。未指定時は当日0時を使用。 */
   dayStartMs?: number;
-  orbitRenderMode: OrbitRenderMode;
   /** 軌道サンプリング間隔（秒）。デフォルト 30。 */
   stepSec?: number;
 }
@@ -72,7 +71,6 @@ export function SatelliteLayer({
   visible = true,
   selected = false,
   dayStartMs,
-  orbitRenderMode,
   stepSec = 30,
 }: Props) {
   const { viewer } = useCesium();
@@ -170,7 +168,7 @@ export function SatelliteLayer({
           positions: orbitPositions,
           width: 2,
           material: cesiumColor.withAlpha(0.7),
-          arcType: toCesiumArcType(orbitRenderMode),
+          arcType: ArcType.NONE,
           clampToGround: false,
         }}
       />
