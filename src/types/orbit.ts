@@ -3,7 +3,7 @@ export interface OrbitData {
   ecef: Float32Array; // [x,y,z,...] meters
 }
 
-export type OrbitRenderMode = "geodesic" | "cartesian";
+export type OrbitRenderMode = "cartesian";
 
 export interface ECEFPosition {
   x: number;

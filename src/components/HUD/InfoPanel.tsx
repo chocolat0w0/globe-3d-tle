@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import * as Cesium from "cesium";
 import * as satellite from "satellite.js";
-import type { OrbitRenderMode } from "../../types/orbit";
 
 const HOME_DESTINATION = Cesium.Cartesian3.fromDegrees(0, 20, 20_000_000);
 const HOME_FLIGHT_DURATION_SECONDS = 1.5;
@@ -17,8 +16,6 @@ interface CameraPos {
 }
 
 interface InfoPanelProps {
-  orbitRenderMode: OrbitRenderMode;
-  onOrbitRenderModeChange: (mode: OrbitRenderMode) => void;
   showNightShade: boolean;
   onNightShadeToggle: () => void;
   onGoHome: () => void;
@@ -28,8 +25,6 @@ interface InfoPanelProps {
 }
 
 export function InfoPanel({
-  orbitRenderMode,
-  onOrbitRenderModeChange,
   showNightShade,
   onNightShadeToggle,
   onGoHome,
@@ -121,28 +116,6 @@ export function InfoPanel({
       <div className="info-panel-header">
         <div className="ui-panel-title">Flight View</div>
         <div className="ui-panel-subtitle">Orbital Display</div>
-      </div>
-
-      <div className="info-section">
-        <div className="ui-section-label">軌道表示</div>
-        <div className="ui-segment-group">
-          <button
-            type="button"
-            onClick={() => onOrbitRenderModeChange("geodesic")}
-            aria-pressed={orbitRenderMode === "geodesic"}
-            className={`ui-button ${orbitRenderMode === "geodesic" ? "is-active" : ""}`.trim()}
-          >
-            Geodesic
-          </button>
-          <button
-            type="button"
-            onClick={() => onOrbitRenderModeChange("cartesian")}
-            aria-pressed={orbitRenderMode === "cartesian"}
-            className={`ui-button ${orbitRenderMode === "cartesian" ? "is-active" : ""}`.trim()}
-          >
-            Cartesian
-          </button>
-        </div>
       </div>
 
       <div className="info-section">

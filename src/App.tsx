@@ -14,7 +14,6 @@ import { AoiPanel } from "./components/AOI/AoiPanel";
 import { useSatellites } from "./hooks/useSatellites";
 import { useAoi } from "./hooks/useAoi";
 import { captureGlobeScreenshot } from "./lib/screenshot";
-import type { OrbitRenderMode } from "./types/orbit";
 import { getWindowStartMs } from "./lib/time-window";
 import "./App.css";
 
@@ -33,7 +32,6 @@ function App() {
   const [detailSatelliteId, setDetailSatelliteId] = useState<string | null>(null);
   const detailSatellite = satellites.find((s) => s.id === detailSatelliteId) ?? null;
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
-  const [orbitRenderMode, setOrbitRenderMode] = useState<OrbitRenderMode>("cartesian");
   const [showNightShade, setShowNightShade] = useState(false);
   const [stepSec, setStepSec] = useState(5);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
@@ -60,7 +58,6 @@ function App() {
           visible={sat.visible}
           selected={sat.selected}
           dayStartMs={windowStartMs}
-          orbitRenderMode={orbitRenderMode}
           stepSec={stepSec}
         />
       ))}
@@ -94,8 +91,6 @@ function App() {
       <TimeController onDayChange={setWindowStartMs} aoiDrawing={aoiMode !== "none"} />
       <div className="right-panel-stack">
         <InfoPanel
-          orbitRenderMode={orbitRenderMode}
-          onOrbitRenderModeChange={setOrbitRenderMode}
           showNightShade={showNightShade}
           onNightShadeToggle={() => setShowNightShade((prev) => !prev)}
           onGoHome={deselectAll}
