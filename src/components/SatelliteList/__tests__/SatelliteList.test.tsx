@@ -33,6 +33,7 @@ function makeSatellite(overrides: Partial<Satellite> = {}): Satellite {
     },
     color: "#6A8DFF",
     offnadirRanges: [[22.3, 44.5]],
+    crossTrackFovDeg: 10,
     visible: true,
     selected: false,
     showFootprint: false,
