@@ -35,7 +35,7 @@ interface Props {
 }
 
 const DEFAULT_FOOTPRINT_PARAMS: FootprintParams = {
-  fov: [30, 30],
+  fov: [10, 10],
   offnadirRanges: [[-30, 30]],
 };
 
