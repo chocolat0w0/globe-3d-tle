@@ -3,18 +3,9 @@ import { useOrbitWorker } from "./useWorker";
 import type { OrbitData } from "../types/orbit";
 import type { ComputeDayRequest, MainMessage } from "../types/worker-messages";
 import { LRUCache } from "../lib/cache/lru-cache";
+import { WINDOW_MS, getWindowStartMs, generateRequestId } from "../lib/time-window";
 
-const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
 const ORBIT_CACHE_CAPACITY = 30;
-
-/** 4時間単位に丸めた窓開始時刻を返す */
-function getWindowStartMs(now: number): number {
-  return Math.floor(now / WINDOW_MS) * WINDOW_MS;
-}
-
-function generateRequestId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
 /**
  * モジュールレベルのLRUキャッシュ（10機 × 7日 = 70エントリを保持）

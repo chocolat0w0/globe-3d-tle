@@ -15,13 +15,8 @@ import { useSatellites } from "./hooks/useSatellites";
 import { useAoi } from "./hooks/useAoi";
 import { captureGlobeScreenshot } from "./lib/screenshot";
 import type { OrbitRenderMode } from "./types/orbit";
+import { getWindowStartMs } from "./lib/time-window";
 import "./App.css";
-
-const WINDOW_MS = 4 * 3600 * 1000; // 4時間窓
-
-function getWindowStartMs(now: number): number {
-  return Math.floor(now / WINDOW_MS) * WINDOW_MS;
-}
 
 function App() {
   const {

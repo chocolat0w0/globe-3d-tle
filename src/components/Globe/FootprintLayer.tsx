@@ -14,8 +14,7 @@ import { useFootprintData } from "../../hooks/useFootprintData";
 import type { FootprintParams } from "../../lib/tle/footprint";
 import type { OffnadirRange } from "../../lib/tle/offnadir-ranges";
 import type { TLEData } from "../../types/satellite";
-import { PerfLogger } from "../../lib/perf/perf-logger";
-import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
+import { usePerfLogger } from "../../hooks/usePerfLogger";
 import {
   buildFootprintLookup,
   getPolygonCountAtTime,
@@ -53,14 +52,7 @@ export function FootprintLayer({
 }: Props) {
   const { viewer } = useCesium();
 
-  const perfLogger = useMemo(
-    () =>
-      new PerfLogger({
-        enabled: import.meta.env.VITE_PERF_LOG === "true",
-        onEntry: (entry) => perfMetricsStore.push(entry),
-      }),
-    [],
-  );
+  const perfLogger = usePerfLogger();
 
   const resolvedFootprintParams = useMemo<FootprintParams>(() => {
     if (!offnadirRanges) return footprintParams;
@@ -109,40 +101,29 @@ export function FootprintLayer({
       }, false);
 
     const c = colorRef.current;
-    const primaryEntity = viewer.entities.add({
-      show: visible && showFootprint,
-      polygon: {
-        hierarchy: makeHierarchyCallback(0),
-        material: new ColorMaterialProperty(c.withAlpha(0.25)),
-        outline: true,
-        outlineColor: new ConstantProperty(c.withAlpha(0.8)),
-        outlineWidth: new ConstantProperty(1),
-        height: new ConstantProperty(0),
-      },
-    });
-
-    const secondaryEntity = viewer.entities.add({
-      show: visible && showFootprint,
-      polygon: {
-        hierarchy: makeHierarchyCallback(1),
-        material: new ColorMaterialProperty(c.withAlpha(0.25)),
-        outline: true,
-        outlineColor: new ConstantProperty(c.withAlpha(0.8)),
-        outlineWidth: new ConstantProperty(1),
-        height: new ConstantProperty(0),
-      },
-    });
-
-    entitiesRef.current = [primaryEntity, secondaryEntity];
+    entitiesRef.current = [0, 1].map((polyIndex) =>
+      viewer.entities.add({
+        show: visible && showFootprint,
+        polygon: {
+          hierarchy: makeHierarchyCallback(polyIndex),
+          material: new ColorMaterialProperty(c.withAlpha(0.25)),
+          outline: true,
+          outlineColor: new ConstantProperty(c.withAlpha(0.8)),
+          outlineWidth: new ConstantProperty(1),
+          height: new ConstantProperty(0),
+        },
+      }),
+    );
 
     return () => {
       if (!viewer.isDestroyed()) {
-        viewer.entities.remove(primaryEntity);
-        viewer.entities.remove(secondaryEntity);
+        for (const entity of entitiesRef.current) {
+          viewer.entities.remove(entity);
+        }
       }
       entitiesRef.current = [];
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewer]);
 
   // ─── footprintData 変化時にルックアップを更新 ─────────────────────────
