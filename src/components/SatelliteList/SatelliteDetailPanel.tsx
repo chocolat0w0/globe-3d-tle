@@ -51,7 +51,7 @@ function FovSection({
       <div className="satellite-detail-section-label">FOV（視野角）</div>
       <div className="satellite-detail-offnadir-list">
         <div className="satellite-detail-offnadir-row">
-          <span className="satellite-detail-offnadir-index">CT</span>
+          <span className="satellite-detail-offnadir-index">Cross Track</span>
           <input
             type="number"
             className="satellite-detail-offnadir-input"
@@ -63,10 +63,6 @@ function FovSection({
             onChange={(e) => handleChange(e.target.value)}
           />
           <span className="satellite-detail-offnadir-unit">°</span>
-        </div>
-        <div className="satellite-detail-offnadir-row">
-          <span className="satellite-detail-offnadir-index">AT</span>
-          <span className="satellite-detail-kv-value">10 °</span>
         </div>
         {error && <div className="satellite-detail-offnadir-error">{error}</div>}
       </div>
