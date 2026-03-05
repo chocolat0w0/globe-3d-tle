@@ -144,8 +144,12 @@ export function useFootprintData({
       return;
     }
 
+    // paramsKey が変化した際に古い先読みレスポンスが新キーでキャッシュされるのを防ぐ
+    prefetchIds.current.clear();
+
     const requestId = generateRequestId();
     pendingRequestId.current = requestId;
+    setFootprintData(null);
     setLoading(true);
     setError(null);
 

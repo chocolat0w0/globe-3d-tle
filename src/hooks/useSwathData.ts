@@ -131,8 +131,12 @@ export function useSwathData({
       return;
     }
 
+    // paramsKey が変化した際に古い先読みレスポンスが新キーでキャッシュされるのを防ぐ
+    prefetchIds.current.clear();
+
     const requestId = generateRequestId();
     pendingRequestId.current = requestId;
+    setSwathData(null);
     setLoading(true);
     setError(null);
 

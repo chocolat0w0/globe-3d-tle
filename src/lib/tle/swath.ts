@@ -14,6 +14,25 @@ export interface ComputeSwathResult {
 }
 
 /**
+ * geo4326 が出力するリングの各点の経度を独立に [-180, 180] へ正規化する。
+ *
+ * geo4326 の accessArea は連続性保持のために ±180° を超える経度（例: -720°, 200°）
+ * を出力することがある。特に同符号 roll（片側スワス）では極越え時に reference が
+ * 不連続になり、座標が ±360°・±720° ずれた値になることがある。
+ *
+ * 各点を独立に [-180, 180] へ写すことで:
+ * - cutRingAtAntimeridian が正しく dateline 越えを検出できる
+ * - リングの閉合（先頭 == 末尾）が維持される（同じ raw 値は同じ結果になる）
+ */
+function normalizeRingToStandard(ring: number[][]): number[][] {
+  return ring.map(([lon, lat]) => {
+    while (lon > 180) lon -= 360;
+    while (lon < -180) lon += 360;
+    return [lon, lat];
+  });
+}
+
+/**
  * TLEと時刻範囲から1日窓のスワス（掃引範囲）を計算する
  *
  * - geo4326.satellite.accessArea() で帯状ポリゴンを生成
@@ -61,10 +80,16 @@ export function computeSwath(
     const areaRings = geo4326Satellite.accessArea(tle1, tle2, start, end, accessAreaOptions);
 
     for (const ring of areaRings) {
+      // geo4326 は連続性保持のために ±180° を超える座標を出力することがある。
+      // 同符号 roll（片側スワス）では極越え時に座標が ±360°・±720° ずれた値になることがある。
+      // 各点を独立に [-180, 180] へ正規化してから dateline 分割する。
+      const normalizedRing = normalizeRingToStandard(ring);
       // dateline 跨ぎを分割
-      const cut = flatten.cutRingAtAntimeridian(ring);
+      const cut = flatten.cutRingAtAntimeridian(normalizedRing);
       const polys =
-        cut.within.length > 0 || cut.outside.length > 0 ? [...cut.within, ...cut.outside] : [ring];
+        cut.within.length > 0 || cut.outside.length > 0
+          ? [...cut.within, ...cut.outside]
+          : [normalizedRing];
 
       for (const poly of polys) {
         const startPairIdx = ringsArr.length / 2;
