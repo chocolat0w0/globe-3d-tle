@@ -16,6 +16,64 @@ function KVRow({ label, value }: { label: string; value: string }) {
 
 type RangeInput = { min: string; max: string };
 
+function FovSection({
+  crossTrackFovDeg,
+  onChange,
+}: {
+  crossTrackFovDeg: number;
+  onChange: (deg: number) => void;
+}) {
+  const [input, setInput] = useState(String(crossTrackFovDeg));
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setInput(String(crossTrackFovDeg));
+    setError(null);
+  }, [crossTrackFovDeg]);
+
+  const handleChange = (value: string) => {
+    setInput(value);
+    const parsed = parseFloat(value);
+    if (!Number.isFinite(parsed)) {
+      setError("有効な数値を入力してください");
+      return;
+    }
+    if (parsed <= 0 || parsed > 180) {
+      setError("0°より大きく180°以下の値を入力してください");
+      return;
+    }
+    setError(null);
+    onChange(parsed);
+  };
+
+  return (
+    <div className="satellite-detail-section">
+      <div className="satellite-detail-section-label">FOV（視野角）</div>
+      <div className="satellite-detail-offnadir-list">
+        <div className="satellite-detail-offnadir-row">
+          <span className="satellite-detail-offnadir-index">CT</span>
+          <input
+            type="number"
+            className="satellite-detail-offnadir-input"
+            value={input}
+            step="0.1"
+            min="0.1"
+            max="180"
+            aria-label="Cross-track FOV"
+            onChange={(e) => handleChange(e.target.value)}
+          />
+          <span className="satellite-detail-offnadir-unit">°</span>
+        </div>
+        <div className="satellite-detail-offnadir-row">
+          <span className="satellite-detail-offnadir-index">AT</span>
+          <span className="satellite-detail-kv-value">10 °</span>
+        </div>
+        {error && <div className="satellite-detail-offnadir-error">{error}</div>}
+      </div>
+    </div>
+  );
+}
+
 function OffnadirSection({
   ranges,
   onChange,
@@ -172,9 +230,10 @@ interface Props {
   satellite: Satellite;
   onClose: () => void;
   onUpdateOffnadirRanges: (ranges: OffnadirRange[]) => void;
+  onUpdateCrossTrackFov: (deg: number) => void;
 }
 
-export function SatelliteDetailPanel({ satellite, onClose, onUpdateOffnadirRanges }: Props) {
+export function SatelliteDetailPanel({ satellite, onClose, onUpdateOffnadirRanges, onUpdateCrossTrackFov }: Props) {
   return (
     <div className="ui-panel satellite-detail-panel">
       <div className="satellite-detail-header">
@@ -195,6 +254,7 @@ export function SatelliteDetailPanel({ satellite, onClose, onUpdateOffnadirRange
         </button>
       </div>
       <div className="satellite-detail-body">
+        <FovSection crossTrackFovDeg={satellite.crossTrackFovDeg} onChange={onUpdateCrossTrackFov} />
         <OffnadirSection ranges={satellite.offnadirRanges} onChange={onUpdateOffnadirRanges} />
         <OrbitalElementsSection tle1={satellite.tle.line1} tle2={satellite.tle.line2} />
         <RealtimeSection tle1={satellite.tle.line1} tle2={satellite.tle.line2} />

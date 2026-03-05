@@ -43,6 +43,7 @@ function buildInitialSatellites(): Satellite[] {
     catalogNumber: s.catalogNumber,
     tle: s.tle,
     offnadirRanges: s.offnadirRanges.map(([minDeg, maxDeg]) => [minDeg, maxDeg] as OffnadirRange),
+    crossTrackFovDeg: 10,
     color: s.color,
     visible: visibleIndices.has(i),
     selected: false,
@@ -59,6 +60,7 @@ interface UseSatellitesResult {
   toggleFootprint: (id: string) => void;
   toggleSwath: (id: string) => void;
   updateOffnadirRanges: (id: string, ranges: OffnadirRange[]) => void;
+  updateCrossTrackFov: (id: string, deg: number) => void;
 }
 
 /**
@@ -111,5 +113,11 @@ export function useSatellites(): UseSatellitesResult {
     );
   }, []);
 
-  return { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath, updateOffnadirRanges };
+  const updateCrossTrackFov = useCallback((id: string, deg: number) => {
+    setSatellites((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, crossTrackFovDeg: deg } : s)),
+    );
+  }, []);
+
+  return { satellites, toggleVisible, selectSatellite, deselectAll, toggleFootprint, toggleSwath, updateOffnadirRanges, updateCrossTrackFov };
 }

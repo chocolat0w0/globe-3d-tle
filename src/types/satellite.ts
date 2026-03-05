@@ -11,6 +11,7 @@ export interface Satellite {
   catalogNumber?: number;
   tle: TLEData;
   offnadirRanges: OffnadirRange[];
+  crossTrackFovDeg: number;
   color: string;
   visible: boolean;
   selected: boolean;

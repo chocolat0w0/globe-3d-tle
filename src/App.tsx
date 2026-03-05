@@ -27,6 +27,7 @@ function App() {
     toggleFootprint,
     toggleSwath,
     updateOffnadirRanges,
+    updateCrossTrackFov,
   } = useSatellites();
   const selectedSatellite = satellites.find((s) => s.selected) ?? null;
   const [detailSatelliteId, setDetailSatelliteId] = useState<string | null>(null);
@@ -73,6 +74,7 @@ function App() {
           showFootprint={sat.showFootprint}
           dayStartMs={windowStartMs}
           offnadirRanges={sat.offnadirRanges}
+          fov={[sat.crossTrackFovDeg, 10]}
           stepSec={stepSec}
         />
       ))}
@@ -123,6 +125,7 @@ function App() {
             satellite={detailSatellite}
             onClose={() => setDetailSatelliteId(null)}
             onUpdateOffnadirRanges={(ranges) => updateOffnadirRanges(detailSatellite.id, ranges)}
+            onUpdateCrossTrackFov={(deg) => updateCrossTrackFov(detailSatellite.id, deg)}
           />
         )}
       </div>

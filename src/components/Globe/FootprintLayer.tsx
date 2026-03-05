@@ -30,6 +30,7 @@ interface Props {
   showFootprint: boolean;
   dayStartMs: number;
   offnadirRanges?: OffnadirRange[];
+  fov?: [number, number];
   footprintParams?: FootprintParams;
   stepSec?: number;
 }
@@ -47,6 +48,7 @@ export function FootprintLayer({
   showFootprint,
   dayStartMs,
   offnadirRanges,
+  fov,
   footprintParams = DEFAULT_FOOTPRINT_PARAMS,
   stepSec = 30,
 }: Props) {
@@ -55,12 +57,12 @@ export function FootprintLayer({
   const perfLogger = usePerfLogger();
 
   const resolvedFootprintParams = useMemo<FootprintParams>(() => {
-    if (!offnadirRanges) return footprintParams;
     return {
       ...footprintParams,
-      offnadirRanges,
+      ...(offnadirRanges && { offnadirRanges }),
+      ...(fov && { fov }),
     };
-  }, [footprintParams, offnadirRanges]);
+  }, [footprintParams, offnadirRanges, fov]);
 
   const { footprintData } = useFootprintData({
     satelliteId: id,
