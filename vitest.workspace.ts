@@ -29,6 +29,7 @@ export default defineWorkspace([
       include: [
         "src/components/**/__tests__/**/*.{test.ts,test.tsx}",
         "src/hooks/**/__tests__/**/*.test.ts",
+        "src/edu/**/__tests__/**/*.{test.ts,test.tsx}",
       ],
       setupFiles: ["src/test-setup.ts"],
     },

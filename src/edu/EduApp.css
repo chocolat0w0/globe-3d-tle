@@ -1,0 +1,171 @@
+@import url("https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap");
+
+:root {
+  --edu-sea-ink: #12364e;
+  --edu-cloud: #f2fbff;
+  --edu-aqua: #2d8cb9;
+  --edu-aqua-strong: #0f6f9a;
+  --edu-sun: #ffae4f;
+  --edu-line: rgba(20, 90, 126, 0.25);
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: "M PLUS Rounded 1c", "Hiragino Sans", sans-serif;
+  color: var(--edu-sea-ink);
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 210, 127, 0.44), transparent 36%),
+    radial-gradient(circle at 88% 18%, rgba(104, 199, 238, 0.36), transparent 32%),
+    radial-gradient(circle at 55% 86%, rgba(96, 185, 228, 0.28), transparent 38%),
+    linear-gradient(180deg, #e9f8ff 0%, #dff4ff 38%, #f8fcff 100%);
+}
+
+#root {
+  position: relative;
+}
+
+.edu-layout {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.edu-header {
+  pointer-events: auto;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 252, 255, 0.85));
+  border-bottom: 1px solid var(--edu-line);
+  box-shadow: 0 8px 20px rgba(26, 97, 129, 0.12);
+}
+
+.edu-header h1 {
+  margin: 0;
+  font-family: "Kiwi Maru", serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.04em;
+  color: #0f4464;
+}
+
+.edu-header button {
+  min-width: 108px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 95, 133, 0.35);
+  background: linear-gradient(180deg, #fffdf5, #ffe9bf);
+  color: #74410d;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edu-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.edu-main-spacer {
+  flex: 1 1 auto;
+  min-height: 180px;
+}
+
+.edu-card-region {
+  flex: 0 0 auto;
+  pointer-events: auto;
+  min-height: 0;
+  padding: 10px 14px 14px;
+  border-top: 2px solid rgba(17, 88, 124, 0.2);
+  background:
+    linear-gradient(160deg, rgba(250, 255, 255, 0.95), rgba(239, 250, 255, 0.93)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(24, 93, 126, 0.05) 0,
+      rgba(24, 93, 126, 0.05) 1px,
+      transparent 1px,
+      transparent 10px
+    );
+  backdrop-filter: blur(4px);
+}
+
+.edu-time-controller-shell {
+  position: absolute;
+  left: 50%;
+  top: clamp(66px, 8vh, 88px);
+  transform: translateX(-50%);
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.edu-help-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 95;
+  background: rgba(9, 38, 56, 0.35);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.edu-help-panel {
+  width: min(560px, calc(100vw - 32px));
+  border-radius: 18px;
+  border: 2px solid rgba(25, 106, 145, 0.3);
+  padding: 18px 18px 16px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(239, 250, 255, 0.96));
+  box-shadow: 0 20px 40px rgba(8, 58, 82, 0.3);
+}
+
+.edu-help-panel h2 {
+  margin: 0;
+  color: #0f3f5c;
+}
+
+.edu-help-panel ol {
+  margin: 12px 0 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+  color: #24536d;
+  line-height: 1.55;
+  font-size: 1rem;
+}
+
+.edu-help-panel button {
+  margin-top: 14px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(180deg, var(--edu-aqua), var(--edu-aqua-strong));
+  color: #f2fbff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 960px) {
+  .edu-main-spacer {
+    min-height: 140px;
+  }
+
+  .edu-card-region {
+    padding: 8px 10px 10px;
+  }
+
+}

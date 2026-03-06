@@ -1,0 +1,66 @@
+.edu-carousel {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edu-carousel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 12px;
+}
+
+.edu-carousel-header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #16435f;
+}
+
+.edu-carousel-header p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2b617f;
+}
+
+.edu-carousel-track {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 6px;
+}
+
+.edu-carousel-track::-webkit-scrollbar {
+  height: 10px;
+}
+
+.edu-carousel-track::-webkit-scrollbar-track {
+  background: rgba(14, 78, 109, 0.08);
+  border-radius: 999px;
+}
+
+.edu-carousel-track::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(13, 109, 144, 0.5);
+}
+
+@media (max-width: 960px) {
+  .edu-carousel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .edu-carousel-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .edu-carousel-header p {
+    font-size: 0.85rem;
+  }
+}
