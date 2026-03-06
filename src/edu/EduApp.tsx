@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Cartesian3, JulianDate, Matrix4, type Entity as CesiumEntity } from "cesium";
 import { getWindowStartMs } from "../lib/time-window";
 import { CustomSatelliteInfoModal } from "./components/CustomSatelliteInfoModal";
@@ -8,7 +8,10 @@ import { SatelliteCardCarousel } from "./components/SatelliteCardCarousel";
 import { SatelliteInfoModal } from "./components/SatelliteInfoModal";
 import { getEduSatelliteEntityId } from "./components/edu-entity-id";
 import { useEduSatellites } from "./hooks/useEduSatellites";
+import type { EduMode } from "./types/phase3";
 import "./EduApp.css";
+
+const ResolutionSensorLab = lazy(() => import("./components/ResolutionSensorLab"));
 
 const EARTH_RADIUS_M = 6_371_000;
 const FOLLOW_DISTANCE_MIN_M = 4_200_000;
@@ -63,9 +66,9 @@ function EduHelpModal({ onClose }: { onClose: () => void }) {
       <div className="edu-help-panel">
         <h2>つかいかた</h2>
         <ol>
-          <li>左上のパネルで衛星を設計し、「打ち上げる」を押します。</li>
-          <li>下のカードを選ぶと、その衛星を地球儀で追いかけます。</li>
-          <li>時間コントロールで、衛星の動く速さを変えられます。</li>
+          <li>上のモードで「衛星観察 / 打ち上げ / 解像度比較」を切り替えます。</li>
+          <li>衛星観察では、下のカードを選ぶとその衛星を地球儀で追いかけます。</li>
+          <li>解像度比較では、光学とSARの見え方の違いを比べられます。</li>
         </ol>
         <button type="button" onClick={onClose}>
           とじる
@@ -78,6 +81,9 @@ function EduHelpModal({ onClose }: { onClose: () => void }) {
 function EduApp() {
   const {
     satellites,
+    allEduSatellites,
+    opticalSatellites,
+    sarSatellites,
     customSatellite,
     customDraft,
     launchedCustomSatellite,
@@ -92,12 +98,13 @@ function EduApp() {
     launchCustomSatellite,
   } = useEduSatellites();
   const [showHelp, setShowHelp] = useState(false);
-  const [showLaunchPanel, setShowLaunchPanel] = useState(false);
+  const [mode, setMode] = useState<EduMode>("observe");
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
   const selectedIdRef = useRef<string | null>(selectedSatelliteId);
   selectedIdRef.current = selectedSatelliteId;
 
   useEffect(() => {
+    if (mode === "compare") return;
     const viewer = window.__CESIUM_VIEWER__;
     if (!viewer || viewer.isDestroyed()) return;
 
@@ -173,55 +180,111 @@ function EduApp() {
         removeFollowListener();
       }
     };
-  }, [selectedSatelliteId, selectionNonce]);
+  }, [mode, selectedSatelliteId, selectionNonce]);
+
+  useEffect(() => {
+    if (mode !== "compare") return;
+    closeDetails();
+  }, [closeDetails, mode]);
 
   return (
     <>
-      <EduGlobe
-        satellites={satellites}
-        selectedSatelliteId={selectedSatelliteId}
-        launchedCustomSatellite={launchedCustomSatellite}
-        dayStartMs={windowStartMs}
-        onWindowStartChange={setWindowStartMs}
-      />
+      {mode !== "compare" && (
+        <EduGlobe
+          satellites={satellites}
+          selectedSatelliteId={selectedSatelliteId}
+          launchedCustomSatellite={launchedCustomSatellite}
+          dayStartMs={windowStartMs}
+          onWindowStartChange={setWindowStartMs}
+        />
+      )}
 
       <div className="edu-layout">
         <header className="edu-header">
-          <h1>宇宙からの目</h1>
-          <button type="button" onClick={() => setShowHelp(true)}>
+          <div className="edu-header-title">
+            <h1>宇宙からの目</h1>
+            <nav className="edu-mode-tabs" role="tablist" aria-label="学習モード">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "observe"}
+                className={mode === "observe" ? "is-active" : ""}
+                onClick={() => setMode("observe")}
+              >
+                衛星観察
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "launch"}
+                className={mode === "launch" ? "is-active" : ""}
+                onClick={() => setMode("launch")}
+              >
+                打ち上げ
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "compare"}
+                className={mode === "compare" ? "is-active" : ""}
+                onClick={() => setMode("compare")}
+              >
+                解像度比較
+              </button>
+            </nav>
+          </div>
+          <button type="button" className="edu-help-button" onClick={() => setShowHelp(true)}>
             ? ヘルプ
           </button>
         </header>
 
         <main className="edu-main">
-          {showLaunchPanel && (
+          {mode === "launch" && (
             <section className="edu-launch-region">
               <LaunchSimulationPanel
                 draft={customDraft}
                 launched={launchedCustomSatellite}
                 onDraftChange={updateDraft}
                 onLaunch={launchCustomSatellite}
-                onClose={() => setShowLaunchPanel(false)}
+                onClose={() => setMode("observe")}
               />
             </section>
           )}
 
-          <div className="edu-main-spacer" />
-          <section className="edu-card-region">
-            <SatelliteCardCarousel
-              customSatellite={customSatellite}
-              satellites={satellites}
-              selectedSatelliteId={selectedSatelliteId}
-              onSelectSatellite={selectSatellite}
-              onOpenDetails={openDetails}
-              onOpenLaunchPanel={() => setShowLaunchPanel(true)}
-            />
-          </section>
+          {mode === "compare" ? (
+            <section className="edu-compare-region">
+              <Suspense
+                fallback={<div className="edu-compare-loading">比較ラボを準備しています…</div>}
+              >
+                <ResolutionSensorLab
+                  allSatellites={allEduSatellites}
+                  opticalSatellites={opticalSatellites}
+                  sarSatellites={sarSatellites}
+                />
+              </Suspense>
+            </section>
+          ) : (
+            <>
+              <div className="edu-main-spacer" />
+              <section className="edu-card-region">
+                <SatelliteCardCarousel
+                  customSatellite={customSatellite}
+                  satellites={satellites}
+                  selectedSatelliteId={selectedSatelliteId}
+                  onSelectSatellite={selectSatellite}
+                  onOpenDetails={openDetails}
+                  onOpenLaunchPanel={() => setMode("launch")}
+                />
+              </section>
+            </>
+          )}
         </main>
       </div>
 
-      {detailSatellite && <SatelliteInfoModal satellite={detailSatellite} onClose={closeDetails} />}
-      {customDetailOpen && (
+      {mode !== "compare" && detailSatellite && (
+        <SatelliteInfoModal satellite={detailSatellite} onClose={closeDetails} />
+      )}
+      {mode !== "compare" && customDetailOpen && (
         <CustomSatelliteInfoModal
           draft={customDraft}
           launched={launchedCustomSatellite}
