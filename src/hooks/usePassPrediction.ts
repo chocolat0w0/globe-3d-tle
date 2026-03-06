@@ -102,12 +102,14 @@ export function usePassPrediction({
     pendingRequestsRef.current.clear();
     collectedDataRef.current.clear();
 
-    const visibleSats = satellites.filter((s) => s.visible && s.showFootprint);
+    // showFootprint のON/OFF に関わらず、visible な全衛星を対象とする。
+    // 通過予測はフットプリント描画の表示設定とは独立した機能。
+    const visibleSats = satellites.filter((s) => s.visible);
     if (visibleSats.length === 0) {
       setPasses([]);
       setLoading(false);
       setProgress(null);
-      setError(null);
+      setError("表示中の衛星がありません");
       return;
     }
 

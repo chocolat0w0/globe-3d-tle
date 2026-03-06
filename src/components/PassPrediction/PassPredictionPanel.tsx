@@ -33,7 +33,7 @@ export function PassPredictionPanel({
   trigger,
   onJumpToTime,
 }: Props) {
-  const { passes, loading, progress } = usePassPrediction({
+  const { passes, loading, progress, error } = usePassPrediction({
     satellites,
     aoi,
     windowStartMs,
@@ -95,8 +95,15 @@ export function PassPredictionPanel({
         </div>
       )}
 
+      {/* エラー表示 */}
+      {!loading && error && trigger > 0 && (
+        <div className="pass-prediction-section pass-prediction-error">
+          {error}
+        </div>
+      )}
+
       {/* 結果表示 */}
-      {!loading && trigger > 0 && (
+      {!loading && !error && trigger > 0 && (
         <div className="pass-prediction-section pass-prediction-results">
           {passes.length === 0 ? (
             <div className="pass-prediction-empty">

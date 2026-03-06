@@ -102,6 +102,14 @@
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
+.pass-prediction-error {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: rgba(255, 140, 140, 0.85);
+  text-align: center;
+  padding: 8px 0;
+}
+
 .pass-prediction-empty {
   font-family: var(--font-mono);
   font-size: 0.75rem;
