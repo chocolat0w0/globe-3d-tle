@@ -116,6 +116,9 @@ function buildCustomCardView(
 
 interface UseEduSatellitesResult {
   satellites: EduSatellite[];
+  allEduSatellites: EduSatellite[];
+  opticalSatellites: EduSatellite[];
+  sarSatellites: EduSatellite[];
   customSatellite: CustomSatelliteCardView;
   customDraft: CustomSatelliteDraft;
   launchedCustomSatellite: LaunchedCustomSatellite | null;
@@ -138,6 +141,18 @@ export function useEduSatellites(): UseEduSatellitesResult {
   const [customDraft, setCustomDraft] = useState<CustomSatelliteDraft>(DEFAULT_CUSTOM_DRAFT);
   const [launchedCustomSatellite, setLaunchedCustomSatellite] =
     useState<LaunchedCustomSatellite | null>(null);
+
+  const allEduSatellites = EDU_SATELLITES;
+
+  const opticalSatellites = useMemo(
+    () => EDU_SATELLITES.filter((satellite) => satellite.iconType === "optical"),
+    [],
+  );
+
+  const sarSatellites = useMemo(
+    () => EDU_SATELLITES.filter((satellite) => satellite.iconType === "sar"),
+    [],
+  );
 
   const selectedSatellite = useMemo(
     () => EDU_SATELLITES.find((satellite) => satellite.id === selectedSatelliteId) ?? null,
@@ -190,6 +205,9 @@ export function useEduSatellites(): UseEduSatellitesResult {
 
   return {
     satellites: EDU_SATELLITES,
+    allEduSatellites,
+    opticalSatellites,
+    sarSatellites,
     customSatellite,
     customDraft,
     launchedCustomSatellite,

@@ -27,6 +27,25 @@ describe("useEduSatellites", () => {
     expect(result.current.satellites.map((satellite) => satellite.id)).toEqual(ALL_IDS);
   });
 
+  it("Phase3 向けの衛星グループ配列を返す", () => {
+    const { result } = renderHook(() => useEduSatellites());
+
+    expect(result.current.allEduSatellites).toHaveLength(10);
+    expect(result.current.opticalSatellites.map((satellite) => satellite.id)).toEqual([
+      "sentinel2a",
+      "sentinel2b",
+      "worldview3",
+    ]);
+    expect(result.current.sarSatellites.map((satellite) => satellite.id)).toEqual([
+      "sentinel1a",
+      "sentinel1b",
+      "terrasar",
+      "tandemx",
+      "capella",
+      "iceye",
+    ]);
+  });
+
   it("衛星選択を切り替える", () => {
     const { result } = renderHook(() => useEduSatellites());
 

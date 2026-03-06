@@ -43,25 +43,57 @@ body {
 
 .edu-header {
   pointer-events: auto;
-  height: 56px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  gap: 12px;
+  padding: 8px 14px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 252, 255, 0.85));
   border-bottom: 1px solid var(--edu-line);
   box-shadow: 0 8px 20px rgba(26, 97, 129, 0.12);
 }
 
+.edu-header-title {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
 .edu-header h1 {
   margin: 0;
   font-family: "Kiwi Maru", serif;
-  font-size: 1.45rem;
+  font-size: 1.3rem;
   letter-spacing: 0.04em;
   color: #0f4464;
 }
 
-.edu-header button {
+.edu-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.edu-mode-tabs button {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(18, 88, 122, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(232, 247, 255, 0.86));
+  color: #20526e;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.edu-mode-tabs button.is-active {
+  border-color: rgba(13, 103, 146, 0.5);
+  background: linear-gradient(180deg, rgba(160, 225, 255, 0.65), rgba(128, 205, 240, 0.82));
+  color: #0f3d58;
+  box-shadow: 0 7px 14px rgba(20, 97, 132, 0.22);
+}
+
+.edu-help-button {
   min-width: 108px;
   min-height: 44px;
   border-radius: 12px;
@@ -106,6 +138,24 @@ body {
       transparent 10px
     );
   backdrop-filter: blur(4px);
+}
+
+.edu-compare-region {
+  flex: 1 1 auto;
+  min-height: 0;
+  pointer-events: auto;
+  padding: 10px 12px 12px;
+}
+
+.edu-compare-loading {
+  min-height: 220px;
+  border-radius: 16px;
+  border: 1px dashed rgba(19, 89, 122, 0.34);
+  display: grid;
+  place-items: center;
+  color: #1f526d;
+  font-weight: 700;
+  background: rgba(239, 250, 255, 0.86);
 }
 
 .edu-time-controller-shell {
@@ -165,6 +215,29 @@ body {
 }
 
 @media (max-width: 960px) {
+  .edu-header {
+    align-items: flex-start;
+    padding: 8px 10px;
+  }
+
+  .edu-header-title {
+    gap: 4px;
+  }
+
+  .edu-header h1 {
+    font-size: 1.15rem;
+  }
+
+  .edu-mode-tabs button {
+    font-size: 0.8rem;
+    padding: 0 8px;
+  }
+
+  .edu-help-button {
+    min-width: 88px;
+    font-size: 0.86rem;
+  }
+
   .edu-launch-region {
     padding: 8px 10px;
   }
@@ -177,4 +250,7 @@ body {
     padding: 8px 10px 10px;
   }
 
+  .edu-compare-region {
+    padding: 8px 8px 10px;
+  }
 }
