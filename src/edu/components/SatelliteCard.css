@@ -25,6 +25,10 @@
   overflow: hidden;
 }
 
+.edu-satellite-card--custom {
+  border-style: dashed;
+}
+
 .edu-satellite-card:hover {
   transform: translateY(-3px);
   box-shadow:
