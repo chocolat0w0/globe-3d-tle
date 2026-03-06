@@ -3,16 +3,26 @@ import { Cartesian3 } from "cesium";
 import { useCesium } from "resium";
 import { BaseMapLayer } from "../../components/Globe/BaseMapLayer";
 import { GlobeRenderer } from "../../components/Globe/GlobeRenderer";
+import {
+  CUSTOM_SATELLITE_ID,
+  computeCustomOrbitData,
+  type LaunchedCustomSatellite,
+} from "../../lib/edu/custom-orbit";
+import { WINDOW_MS } from "../../lib/time-window";
 import type { EduSatellite } from "../hooks/useEduSatellites";
+import { EduCustomFootprintLayer } from "./EduCustomFootprintLayer";
+import { EduCustomSatelliteLayer } from "./EduCustomSatelliteLayer";
 import { EduFootprintLayer } from "./EduFootprintLayer";
 import { EduSatelliteLayer } from "./EduSatelliteLayer";
 import { EduTimeController } from "./EduTimeController";
 
 const INITIAL_DESTINATION = Cartesian3.fromDegrees(137, 35, 15_000_000);
+const CUSTOM_ORBIT_COLOR = "#ff7a3d";
 
 interface EduGlobeProps {
   satellites: EduSatellite[];
   selectedSatelliteId: string | null;
+  launchedCustomSatellite: LaunchedCustomSatellite | null;
   dayStartMs: number;
   onWindowStartChange: (windowStartMs: number) => void;
 }
@@ -48,18 +58,34 @@ function EduInitialCamera() {
 export function EduGlobe({
   satellites,
   selectedSatelliteId,
+  launchedCustomSatellite,
   dayStartMs,
   onWindowStartChange,
 }: EduGlobeProps) {
-  const selectedSatellite = useMemo(
+  const selectedExistingSatellite = useMemo(
     () => satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null,
     [satellites, selectedSatelliteId],
   );
+
+  const customOrbitData = useMemo(() => {
+    if (!launchedCustomSatellite) return null;
+    return computeCustomOrbitData({
+      altitudeKm: launchedCustomSatellite.altitudeKm,
+      inclinationDeg: launchedCustomSatellite.inclinationDeg,
+      launchEpochMs: launchedCustomSatellite.launchEpochMs,
+      startMs: dayStartMs,
+      durationMs: WINDOW_MS,
+      stepSec: 30,
+    });
+  }, [dayStartMs, launchedCustomSatellite]);
+
+  const customSelected = selectedSatelliteId === CUSTOM_SATELLITE_ID;
 
   return (
     <GlobeRenderer showNightShade={false} homeButton>
       <BaseMapLayer />
       <EduInitialCamera />
+
       {satellites.map((satellite) => (
         <EduSatelliteLayer
           key={satellite.id}
@@ -72,17 +98,38 @@ export function EduGlobe({
           stepSec={30}
         />
       ))}
-      {selectedSatellite && (
+
+      {launchedCustomSatellite && customOrbitData && (
+        <EduCustomSatelliteLayer
+          id={CUSTOM_SATELLITE_ID}
+          displayName="あなたの衛星"
+          orbitData={customOrbitData}
+          color={CUSTOM_ORBIT_COLOR}
+          selected={customSelected}
+        />
+      )}
+
+      {selectedExistingSatellite && (
         <EduFootprintLayer
-          satelliteId={selectedSatellite.id}
-          tle1={selectedSatellite.tle.line1}
-          tle2={selectedSatellite.tle.line2}
-          color={selectedSatellite.orbitColor}
+          satelliteId={selectedExistingSatellite.id}
+          tle1={selectedExistingSatellite.tle.line1}
+          tle2={selectedExistingSatellite.tle.line2}
+          color={selectedExistingSatellite.orbitColor}
           dayStartMs={dayStartMs}
-          offnadirRanges={selectedSatellite.offnadirRanges}
+          offnadirRanges={selectedExistingSatellite.offnadirRanges}
           stepSec={30}
         />
       )}
+
+      {customSelected && launchedCustomSatellite && customOrbitData && (
+        <EduCustomFootprintLayer
+          orbitData={customOrbitData}
+          color={CUSTOM_ORBIT_COLOR}
+          altitudeKm={launchedCustomSatellite.altitudeKm}
+          footprintFovDeg={launchedCustomSatellite.footprintFovDeg}
+        />
+      )}
+
       <div className="edu-time-controller-shell">
         <EduTimeController onWindowStartChange={onWindowStartChange} />
       </div>

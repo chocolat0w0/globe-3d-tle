@@ -1,0 +1,146 @@
+.edu-custom-modal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  background: rgba(8, 27, 38, 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 14px;
+}
+
+.edu-custom-modal-panel {
+  position: relative;
+  width: min(1020px, calc(100vw - 28px));
+  min-height: min(560px, calc(100vh - 28px));
+  max-height: calc(100vh - 28px);
+  border-radius: 24px;
+  border: 2px solid rgba(20, 93, 129, 0.3);
+  background: linear-gradient(160deg, rgba(250, 255, 255, 0.98), rgba(238, 250, 255, 0.96));
+  box-shadow: 0 28px 70px rgba(5, 42, 66, 0.32);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: auto;
+}
+
+.edu-custom-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(17, 93, 127, 0.1);
+  color: #134364;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.edu-custom-modal-left,
+.edu-custom-modal-right {
+  padding: 24px 24px 20px;
+}
+
+.edu-custom-modal-left h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #0e3750;
+}
+
+.edu-custom-modal-mission {
+  margin: 10px 0 0;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: #204f69;
+}
+
+.edu-custom-modal-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.edu-custom-modal-grid .key {
+  color: #3c6882;
+  font-size: 0.84rem;
+}
+
+.edu-custom-modal-grid .value {
+  margin-top: 4px;
+  color: #143a53;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.edu-custom-modal-note {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(25, 107, 147, 0.34);
+  background: rgba(232, 247, 255, 0.78);
+  color: #214f69;
+  line-height: 1.5;
+}
+
+.edu-custom-modal-right {
+  border-left: 1px solid rgba(20, 82, 113, 0.14);
+  background: linear-gradient(180deg, rgba(232, 247, 255, 0.7), rgba(228, 245, 255, 0.82));
+}
+
+.edu-custom-modal-right h3 {
+  margin: 0;
+  color: #15415d;
+  font-size: 1.2rem;
+}
+
+.edu-custom-modal-right h4 {
+  margin: 16px 0 0;
+  color: #1a4a64;
+  font-size: 1.05rem;
+}
+
+.edu-custom-modal-result-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.edu-custom-modal-result-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(32, 95, 129, 0.24);
+}
+
+.edu-custom-modal-result-list .key {
+  color: #2f607c;
+}
+
+.edu-custom-modal-result-list .value {
+  color: #123f59;
+  font-weight: 700;
+  text-align: right;
+}
+
+.edu-custom-modal-empty {
+  margin-top: 16px;
+  color: #28556f;
+  line-height: 1.6;
+}
+
+@media (max-width: 1000px) {
+  .edu-custom-modal-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .edu-custom-modal-right {
+    border-left: 0;
+    border-top: 1px solid rgba(20, 82, 113, 0.14);
+  }
+}

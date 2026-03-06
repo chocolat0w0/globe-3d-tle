@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Cartesian3, JulianDate, Matrix4, type Entity as CesiumEntity } from "cesium";
 import { getWindowStartMs } from "../lib/time-window";
+import { CustomSatelliteInfoModal } from "./components/CustomSatelliteInfoModal";
 import { EduGlobe } from "./components/EduGlobe";
+import { LaunchSimulationPanel } from "./components/LaunchSimulationPanel";
 import { SatelliteCardCarousel } from "./components/SatelliteCardCarousel";
 import { SatelliteInfoModal } from "./components/SatelliteInfoModal";
 import { getEduSatelliteEntityId } from "./components/edu-entity-id";
@@ -61,8 +63,8 @@ function EduHelpModal({ onClose }: { onClose: () => void }) {
       <div className="edu-help-panel">
         <h2>つかいかた</h2>
         <ol>
-          <li>下のカードをえらぶと、その衛星を地球儀で追いかけます。</li>
-          <li>「くわしく」を押すと、図鑑のページを開けます。</li>
+          <li>左上のパネルで衛星を設計し、「打ち上げる」を押します。</li>
+          <li>下のカードを選ぶと、その衛星を地球儀で追いかけます。</li>
           <li>時間コントロールで、衛星の動く速さを変えられます。</li>
         </ol>
         <button type="button" onClick={onClose}>
@@ -76,13 +78,21 @@ function EduHelpModal({ onClose }: { onClose: () => void }) {
 function EduApp() {
   const {
     satellites,
+    customSatellite,
+    customDraft,
+    launchedCustomSatellite,
     selectedSatelliteId,
+    selectionNonce,
     detailSatellite,
+    customDetailOpen,
     selectSatellite,
     openDetails,
     closeDetails,
+    updateDraft,
+    launchCustomSatellite,
   } = useEduSatellites();
   const [showHelp, setShowHelp] = useState(false);
+  const [showLaunchPanel, setShowLaunchPanel] = useState(false);
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
   const selectedIdRef = useRef<string | null>(selectedSatelliteId);
   selectedIdRef.current = selectedSatelliteId;
@@ -163,13 +173,14 @@ function EduApp() {
         removeFollowListener();
       }
     };
-  }, [selectedSatelliteId]);
+  }, [selectedSatelliteId, selectionNonce]);
 
   return (
     <>
       <EduGlobe
         satellites={satellites}
         selectedSatelliteId={selectedSatelliteId}
+        launchedCustomSatellite={launchedCustomSatellite}
         dayStartMs={windowStartMs}
         onWindowStartChange={setWindowStartMs}
       />
@@ -183,19 +194,40 @@ function EduApp() {
         </header>
 
         <main className="edu-main">
+          {showLaunchPanel && (
+            <section className="edu-launch-region">
+              <LaunchSimulationPanel
+                draft={customDraft}
+                launched={launchedCustomSatellite}
+                onDraftChange={updateDraft}
+                onLaunch={launchCustomSatellite}
+                onClose={() => setShowLaunchPanel(false)}
+              />
+            </section>
+          )}
+
           <div className="edu-main-spacer" />
           <section className="edu-card-region">
             <SatelliteCardCarousel
+              customSatellite={customSatellite}
               satellites={satellites}
               selectedSatelliteId={selectedSatelliteId}
               onSelectSatellite={selectSatellite}
               onOpenDetails={openDetails}
+              onOpenLaunchPanel={() => setShowLaunchPanel(true)}
             />
           </section>
         </main>
       </div>
 
       {detailSatellite && <SatelliteInfoModal satellite={detailSatellite} onClose={closeDetails} />}
+      {customDetailOpen && (
+        <CustomSatelliteInfoModal
+          draft={customDraft}
+          launched={launchedCustomSatellite}
+          onClose={closeDetails}
+        />
+      )}
       {showHelp && <EduHelpModal onClose={() => setShowHelp(false)} />}
     </>
   );

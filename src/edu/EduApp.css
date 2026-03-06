@@ -80,6 +80,11 @@ body {
   min-height: 0;
 }
 
+.edu-launch-region {
+  pointer-events: auto;
+  padding: 10px 12px;
+}
+
 .edu-main-spacer {
   flex: 1 1 auto;
   min-height: 180px;
@@ -160,8 +165,12 @@ body {
 }
 
 @media (max-width: 960px) {
+  .edu-launch-region {
+    padding: 8px 10px;
+  }
+
   .edu-main-spacer {
-    min-height: 140px;
+    min-height: 80px;
   }
 
   .edu-card-region {
