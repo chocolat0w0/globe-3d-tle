@@ -1,0 +1,208 @@
+/* --- Pass Prediction Panel --- */
+
+.pass-prediction-panel {
+  padding: 12px 14px;
+  animation: panel-rise 340ms ease-out;
+}
+
+.pass-prediction-section + .pass-prediction-section {
+  margin-top: 8px;
+}
+
+/* --- Controls --- */
+
+.pass-prediction-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pass-prediction-scan-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pass-prediction-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.pass-prediction-scan-buttons {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.pass-prediction-scan-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  min-height: 30px;
+  font-size: 0.78rem;
+}
+
+.pass-prediction-run-btn {
+  width: 100%;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+}
+
+/* --- Progress --- */
+
+.pass-prediction-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pass-prediction-progress-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.pass-prediction-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(90, 180, 255, 0.7), rgba(140, 220, 255, 0.9));
+  transition: width 150ms ease-out;
+}
+
+.pass-prediction-progress-text {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-soft);
+  flex-shrink: 0;
+}
+
+/* --- Results --- */
+
+.pass-prediction-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.pass-prediction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.pass-prediction-empty {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  text-align: center;
+  padding: 12px 0;
+  opacity: 0.7;
+}
+
+/* --- Pass Row --- */
+
+.pass-prediction-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  transition: background 120ms, transform 120ms;
+}
+
+.pass-prediction-row:hover {
+  background: rgba(100, 180, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.pass-prediction-row:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(144, 219, 255, 0.35);
+}
+
+.pass-prediction-row-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.pass-prediction-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pass-prediction-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pass-prediction-row-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #edf5ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pass-prediction-row-time {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: rgba(180, 220, 255, 0.85);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pass-prediction-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.pass-prediction-row-date {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-soft);
+}
+
+.pass-prediction-row-duration {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-soft);
+}
+
+/* --- Hint --- */
+
+.pass-prediction-hint {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-soft);
+  text-align: center;
+  padding-top: 6px;
+  opacity: 0.6;
+}

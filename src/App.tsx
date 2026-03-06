@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { JulianDate } from "cesium";
 import { GlobeRenderer } from "./components/Globe/GlobeRenderer";
 import { BaseMapLayer } from "./components/Globe/BaseMapLayer";
 import { SatelliteLayer } from "./components/Globe/SatelliteLayer";
@@ -11,6 +12,7 @@ import { SatelliteDetailPanel } from "./components/SatelliteList/SatelliteDetail
 import { InfoPanel } from "./components/HUD/InfoPanel";
 import { PerfOverlay } from "./components/HUD/PerfOverlay";
 import { AoiPanel } from "./components/AOI/AoiPanel";
+import { PassPredictionPanel } from "./components/PassPrediction/PassPredictionPanel";
 import { useSatellites } from "./hooks/useSatellites";
 import { useAoi } from "./hooks/useAoi";
 import { captureGlobeScreenshot } from "./lib/screenshot";
@@ -35,12 +37,21 @@ function App() {
   const [showNightShade, setShowNightShade] = useState(false);
   const [stepSec, setStepSec] = useState(5);
   const { aoi, mode: aoiMode, setMode: setAoiMode, setAoi, clearAoi, loadFromGeoJSON } = useAoi();
+  const [scanWindowCount, setScanWindowCount] = useState(6); // 24h
+  const [passTrigger, setPassTrigger] = useState(0);
 
   const handleScreenshot = () => {
     const viewer = window.__CESIUM_VIEWER__;
     if (!viewer || viewer.isDestroyed()) return;
     captureGlobeScreenshot(viewer);
   };
+
+  const handleJumpToTime = useCallback((ms: number) => {
+    const viewer = window.__CESIUM_VIEWER__;
+    if (!viewer || viewer.isDestroyed()) return;
+    viewer.clock.currentTime = JulianDate.fromDate(new Date(ms));
+    setWindowStartMs(getWindowStartMs(ms));
+  }, []);
 
   return (
     <GlobeRenderer showNightShade={showNightShade} onStepSecChange={setStepSec}>
@@ -104,6 +115,19 @@ function App() {
           onClear={clearAoi}
           onLoadGeoJSON={loadFromGeoJSON}
         />
+        {aoi && (
+          <PassPredictionPanel
+            satellites={satellites}
+            aoi={aoi}
+            windowStartMs={windowStartMs}
+            stepSec={stepSec}
+            scanWindowCount={scanWindowCount}
+            onScanWindowCountChange={setScanWindowCount}
+            onRunPrediction={() => setPassTrigger((n) => n + 1)}
+            trigger={passTrigger}
+            onJumpToTime={handleJumpToTime}
+          />
+        )}
       </div>
       <PerfOverlay />
       <div className="satellite-panel-stack">
