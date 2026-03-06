@@ -9,6 +9,7 @@ const STEP_SEC_DEBOUNCE_MS = 1000;
 interface Props {
   showNightShade: boolean;
   onStepSecChange?: (stepSec: number) => void;
+  homeButton?: boolean;
   children?: ReactNode;
 }
 
@@ -117,7 +118,12 @@ function NightShadeController({ showNightShade }: { showNightShade: boolean }) {
   return null;
 }
 
-export function GlobeRenderer({ showNightShade, onStepSecChange, children }: Props) {
+export function GlobeRenderer({
+  showNightShade,
+  onStepSecChange,
+  homeButton = false,
+  children,
+}: Props) {
   return (
     <Viewer
       full
@@ -126,7 +132,7 @@ export function GlobeRenderer({ showNightShade, onStepSecChange, children }: Pro
       baseLayer={false as unknown as ImageryLayer}
       fullscreenButton={false}
       geocoder={false}
-      homeButton={false}
+      homeButton={homeButton}
       infoBox={false}
       sceneModePicker={false}
       selectionIndicator={false}

@@ -1,0 +1,184 @@
+.edu-modal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  background: rgba(8, 27, 38, 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 14px;
+}
+
+.edu-modal-panel {
+  position: relative;
+  width: min(1160px, calc(100vw - 28px));
+  min-height: min(680px, calc(100vh - 28px));
+  max-height: calc(100vh - 28px);
+  border-radius: 24px;
+  border: 2px solid rgba(20, 93, 129, 0.3);
+  background: linear-gradient(160deg, rgba(250, 255, 255, 0.98), rgba(238, 250, 255, 0.96));
+  box-shadow: 0 28px 70px rgba(5, 42, 66, 0.32);
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  overflow: auto;
+}
+
+.edu-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(17, 93, 127, 0.1);
+  color: #134364;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.edu-modal-left,
+.edu-modal-right {
+  padding: 24px 24px 20px;
+}
+
+.edu-modal-left h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #0e3750;
+}
+
+.edu-modal-mission {
+  margin: 10px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #204f69;
+}
+
+.edu-modal-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.edu-modal-grid .key {
+  color: #3c6882;
+  font-size: 0.86rem;
+}
+
+.edu-modal-grid .value {
+  margin-top: 3px;
+  color: #143a53;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.edu-modal-grid .value span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2f617d;
+}
+
+.edu-modal-capabilities {
+  margin-top: 18px;
+}
+
+.edu-modal-capabilities h3 {
+  margin: 0;
+  color: #16445f;
+  font-size: 1.05rem;
+}
+
+.edu-modal-capabilities ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  color: #2d5b75;
+  font-size: 0.96rem;
+}
+
+.edu-modal-fact {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(25, 107, 147, 0.34);
+  background: rgba(232, 247, 255, 0.78);
+  color: #214f69;
+  line-height: 1.5;
+}
+
+.edu-modal-right {
+  border-left: 1px solid rgba(20, 82, 113, 0.14);
+  background: linear-gradient(180deg, rgba(232, 247, 255, 0.7), rgba(228, 245, 255, 0.82));
+}
+
+.edu-modal-right h3 {
+  margin: 0;
+  color: #15415d;
+  font-size: 1.2rem;
+}
+
+.edu-modal-realtime-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.edu-modal-realtime-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(32, 95, 129, 0.24);
+}
+
+.edu-modal-realtime-list .key {
+  color: #2f607c;
+}
+
+.edu-modal-realtime-list .value {
+  color: #123f59;
+  font-weight: 700;
+  text-align: right;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.edu-modal-realtime-list .value small {
+  font-size: 0.78rem;
+  color: #37647f;
+}
+
+.edu-modal-right-note {
+  margin-top: 20px;
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(254, 255, 255, 0.8);
+  border: 1px solid rgba(33, 96, 129, 0.22);
+}
+
+.edu-modal-right-note h4 {
+  margin: 0 0 8px;
+  color: #1a4a64;
+}
+
+.edu-modal-right-note p {
+  margin: 6px 0 0;
+  color: #2d5e79;
+}
+
+@media (max-width: 1000px) {
+  .edu-modal-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .edu-modal-right {
+    border-left: 0;
+    border-top: 1px solid rgba(20, 82, 113, 0.14);
+  }
+}

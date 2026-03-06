@@ -1,0 +1,91 @@
+import { useEffect, useMemo } from "react";
+import { Cartesian3 } from "cesium";
+import { useCesium } from "resium";
+import { BaseMapLayer } from "../../components/Globe/BaseMapLayer";
+import { GlobeRenderer } from "../../components/Globe/GlobeRenderer";
+import type { EduSatellite } from "../hooks/useEduSatellites";
+import { EduFootprintLayer } from "./EduFootprintLayer";
+import { EduSatelliteLayer } from "./EduSatelliteLayer";
+import { EduTimeController } from "./EduTimeController";
+
+const INITIAL_DESTINATION = Cartesian3.fromDegrees(137, 35, 15_000_000);
+
+interface EduGlobeProps {
+  satellites: EduSatellite[];
+  selectedSatelliteId: string | null;
+  dayStartMs: number;
+  onWindowStartChange: (windowStartMs: number) => void;
+}
+
+function EduInitialCamera() {
+  const { viewer } = useCesium();
+
+  useEffect(() => {
+    if (!viewer || viewer.isDestroyed()) return;
+    viewer.camera.setView({ destination: INITIAL_DESTINATION });
+
+    const homeButton = viewer.homeButton?.viewModel;
+    if (!homeButton) return;
+
+    const removeListener = homeButton.command.beforeExecute.addEventListener(
+      (commandInfo: { cancel: boolean }) => {
+        commandInfo.cancel = true;
+        viewer.camera.flyTo({
+          destination: INITIAL_DESTINATION,
+          duration: 1.1,
+        });
+      },
+    );
+
+    return () => {
+      removeListener();
+    };
+  }, [viewer]);
+
+  return null;
+}
+
+export function EduGlobe({
+  satellites,
+  selectedSatelliteId,
+  dayStartMs,
+  onWindowStartChange,
+}: EduGlobeProps) {
+  const selectedSatellite = useMemo(
+    () => satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null,
+    [satellites, selectedSatelliteId],
+  );
+
+  return (
+    <GlobeRenderer showNightShade={false} homeButton>
+      <BaseMapLayer />
+      <EduInitialCamera />
+      {satellites.map((satellite) => (
+        <EduSatelliteLayer
+          key={satellite.id}
+          id={satellite.id}
+          displayName={satellite.displayName}
+          tle={satellite.tle}
+          color={satellite.orbitColor}
+          selected={satellite.id === selectedSatelliteId}
+          dayStartMs={dayStartMs}
+          stepSec={30}
+        />
+      ))}
+      {selectedSatellite && (
+        <EduFootprintLayer
+          satelliteId={selectedSatellite.id}
+          tle1={selectedSatellite.tle.line1}
+          tle2={selectedSatellite.tle.line2}
+          color={selectedSatellite.orbitColor}
+          dayStartMs={dayStartMs}
+          offnadirRanges={selectedSatellite.offnadirRanges}
+          stepSec={30}
+        />
+      )}
+      <div className="edu-time-controller-shell">
+        <EduTimeController onWindowStartChange={onWindowStartChange} />
+      </div>
+    </GlobeRenderer>
+  );
+}
