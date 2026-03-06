@@ -3,6 +3,10 @@
     {
       "source": "/tiles/:path*",
       "destination": "https://osm.tellusxdp.com/osm/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
