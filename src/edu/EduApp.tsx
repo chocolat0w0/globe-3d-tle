@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Cartesian3, JulianDate, Matrix4, type Entity as CesiumEntity } from "cesium";
 import { getWindowStartMs } from "../lib/time-window";
+import { CUSTOM_SATELLITE_ID } from "../lib/edu/custom-orbit";
 import { CustomSatelliteInfoModal } from "./components/CustomSatelliteInfoModal";
 import { EduGlobe } from "./components/EduGlobe";
 import { LaunchSimulationPanel } from "./components/LaunchSimulationPanel";
@@ -113,6 +114,10 @@ function EduApp() {
   } = useMissionChallenge();
   const selectedIdRef = useRef<string | null>(selectedSatelliteId);
   selectedIdRef.current = selectedSatelliteId;
+  const suppressCustomMissionFollow =
+    mode === "mission" &&
+    activeMissionId === "cover-japan-day" &&
+    selectedSatelliteId === CUSTOM_SATELLITE_ID;
 
   useEffect(() => {
     if (mode === "compare") return;
@@ -121,6 +126,8 @@ function EduApp() {
 
     viewer.trackedEntity = undefined;
     viewer.camera.lookAtTransform(Matrix4.IDENTITY);
+    if (!selectedSatelliteId || suppressCustomMissionFollow) return;
+
     let cancelled = false;
     let attempt = 0;
     let removeFollowListener: (() => void) | null = null;
@@ -191,7 +198,7 @@ function EduApp() {
         removeFollowListener();
       }
     };
-  }, [mode, selectedSatelliteId, selectionNonce]);
+  }, [mode, selectedSatelliteId, selectionNonce, suppressCustomMissionFollow]);
 
   useEffect(() => {
     if (mode !== "compare" && mode !== "mission") return;
