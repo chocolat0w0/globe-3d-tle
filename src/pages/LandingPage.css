@@ -1,0 +1,391 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Sans+JP:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* ─── Landing Variables ─────────────────────── */
+.landing {
+  --space-base: #050911;
+  --space-mid: #0d1826;
+  --space-surface: rgba(9, 17, 30, 0.78);
+  --space-border: rgba(150, 198, 255, 0.24);
+  --text-main: #d8e6ff;
+  --text-subtle: #8fa8c8;
+  --accent: #66beff;
+  --accent-strong: #90dbff;
+  --accent-mint: #7bd7cf;
+  --pro-glow: rgba(102, 190, 255, 0.35);
+  --edu-glow: rgba(123, 215, 207, 0.35);
+  --font-display: "Barlow Condensed", "Helvetica Neue", sans-serif;
+  --font-body: "IBM Plex Sans JP", "Hiragino Sans", sans-serif;
+}
+
+/* ─── Layout ────────────────────────────────── */
+.landing {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 60% 20%, rgba(32, 89, 150, 0.18), transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(56, 123, 170, 0.12), transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(80, 140, 180, 0.08), transparent 40%),
+    linear-gradient(180deg, #020509 0%, #060c16 40%, #030710 100%);
+  color: var(--text-main);
+  font-family: var(--font-body);
+}
+
+/* ─── Stars ─────────────────────────────────── */
+.landing-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--text-main);
+  animation: twinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite;
+}
+
+/* 星のランダム配置（CSS custom properties で制御） */
+.star:nth-child(1)  { top: 5%;  left: 12%; --dur: 2.8s; --delay: 0.2s; }
+.star:nth-child(2)  { top: 8%;  left: 45%; --dur: 3.4s; --delay: 0.8s; }
+.star:nth-child(3)  { top: 3%;  left: 72%; --dur: 2.5s; --delay: 1.5s; }
+.star:nth-child(4)  { top: 12%; left: 88%; --dur: 4.0s; --delay: 0.0s; }
+.star:nth-child(5)  { top: 15%; left: 28%; --dur: 3.2s; --delay: 1.2s; }
+.star:nth-child(6)  { top: 18%; left: 55%; --dur: 2.9s; --delay: 0.5s; }
+.star:nth-child(7)  { top: 22%; left: 8%;  --dur: 3.7s; --delay: 1.8s; }
+.star:nth-child(8)  { top: 25%; left: 35%; --dur: 2.6s; --delay: 0.3s; }
+.star:nth-child(9)  { top: 20%; left: 68%; --dur: 3.1s; --delay: 1.0s; }
+.star:nth-child(10) { top: 28%; left: 92%; --dur: 3.8s; --delay: 0.7s; }
+.star:nth-child(11) { top: 32%; left: 18%; --dur: 2.7s; --delay: 1.4s; }
+.star:nth-child(12) { top: 35%; left: 50%; --dur: 3.5s; --delay: 0.1s; }
+.star:nth-child(13) { top: 38%; left: 78%; --dur: 2.4s; --delay: 1.6s; }
+.star:nth-child(14) { top: 42%; left: 5%;  --dur: 3.3s; --delay: 0.9s; }
+.star:nth-child(15) { top: 45%; left: 62%; --dur: 2.8s; --delay: 0.4s; }
+.star:nth-child(16) { top: 48%; left: 22%; --dur: 3.6s; --delay: 1.1s; }
+.star:nth-child(17) { top: 52%; left: 40%; --dur: 3.0s; --delay: 1.7s; }
+.star:nth-child(18) { top: 55%; left: 85%; --dur: 2.5s; --delay: 0.6s; }
+.star:nth-child(19) { top: 58%; left: 15%; --dur: 3.4s; --delay: 1.3s; }
+.star:nth-child(20) { top: 62%; left: 73%; --dur: 2.9s; --delay: 0.2s; }
+.star:nth-child(21) { top: 65%; left: 32%; --dur: 3.7s; --delay: 0.8s; }
+.star:nth-child(22) { top: 68%; left: 58%; --dur: 2.6s; --delay: 1.5s; }
+.star:nth-child(23) { top: 72%; left: 90%; --dur: 3.2s; --delay: 0.0s; }
+.star:nth-child(24) { top: 75%; left: 10%; --dur: 3.8s; --delay: 1.2s; }
+.star:nth-child(25) { top: 78%; left: 42%; --dur: 2.7s; --delay: 0.5s; }
+.star:nth-child(26) { top: 82%; left: 66%; --dur: 3.1s; --delay: 1.8s; }
+.star:nth-child(27) { top: 85%; left: 25%; --dur: 3.5s; --delay: 0.3s; }
+.star:nth-child(28) { top: 88%; left: 80%; --dur: 2.4s; --delay: 1.0s; }
+.star:nth-child(29) { top: 92%; left: 48%; --dur: 3.3s; --delay: 0.7s; }
+.star:nth-child(30) { top: 95%; left: 14%; --dur: 2.8s; --delay: 1.4s; }
+
+/* 残りの星はやや小さく */
+.star:nth-child(n+31) {
+  width: 1.5px;
+  height: 1.5px;
+  opacity: 0.5;
+}
+.star:nth-child(31) { top: 7%;  left: 30%; --dur: 4.1s; --delay: 0.3s; }
+.star:nth-child(32) { top: 10%; left: 60%; --dur: 3.9s; --delay: 1.1s; }
+.star:nth-child(33) { top: 14%; left: 82%; --dur: 4.3s; --delay: 0.6s; }
+.star:nth-child(34) { top: 17%; left: 42%; --dur: 3.6s; --delay: 1.9s; }
+.star:nth-child(35) { top: 24%; left: 52%; --dur: 4.0s; --delay: 0.4s; }
+.star:nth-child(36) { top: 30%; left: 75%; --dur: 3.8s; --delay: 1.3s; }
+.star:nth-child(37) { top: 34%; left: 3%;  --dur: 4.2s; --delay: 0.8s; }
+.star:nth-child(38) { top: 40%; left: 95%; --dur: 3.5s; --delay: 1.6s; }
+.star:nth-child(39) { top: 44%; left: 38%; --dur: 4.4s; --delay: 0.1s; }
+.star:nth-child(40) { top: 50%; left: 70%; --dur: 3.7s; --delay: 1.0s; }
+.star:nth-child(41) { top: 54%; left: 8%;  --dur: 4.1s; --delay: 0.5s; }
+.star:nth-child(42) { top: 60%; left: 48%; --dur: 3.9s; --delay: 1.8s; }
+.star:nth-child(43) { top: 64%; left: 88%; --dur: 4.3s; --delay: 0.3s; }
+.star:nth-child(44) { top: 70%; left: 20%; --dur: 3.6s; --delay: 1.2s; }
+.star:nth-child(45) { top: 74%; left: 55%; --dur: 4.0s; --delay: 0.7s; }
+.star:nth-child(46) { top: 80%; left: 35%; --dur: 3.8s; --delay: 1.5s; }
+.star:nth-child(47) { top: 84%; left: 72%; --dur: 4.2s; --delay: 0.0s; }
+.star:nth-child(48) { top: 90%; left: 6%;  --dur: 3.5s; --delay: 1.4s; }
+.star:nth-child(49) { top: 93%; left: 62%; --dur: 4.4s; --delay: 0.9s; }
+.star:nth-child(50) { top: 96%; left: 38%; --dur: 3.7s; --delay: 1.7s; }
+
+/* さらに小さい星 */
+.star:nth-child(n+51) {
+  width: 1px;
+  height: 1px;
+  opacity: 0.35;
+}
+.star:nth-child(51) { top: 4%;  left: 55%; --dur: 5.0s; --delay: 0.2s; }
+.star:nth-child(52) { top: 11%; left: 20%; --dur: 4.6s; --delay: 1.1s; }
+.star:nth-child(53) { top: 23%; left: 85%; --dur: 5.2s; --delay: 0.6s; }
+.star:nth-child(54) { top: 33%; left: 60%; --dur: 4.8s; --delay: 1.4s; }
+.star:nth-child(55) { top: 43%; left: 15%; --dur: 5.1s; --delay: 0.3s; }
+.star:nth-child(56) { top: 53%; left: 30%; --dur: 4.7s; --delay: 1.0s; }
+.star:nth-child(57) { top: 63%; left: 82%; --dur: 5.3s; --delay: 0.8s; }
+.star:nth-child(58) { top: 73%; left: 45%; --dur: 4.9s; --delay: 1.6s; }
+.star:nth-child(59) { top: 83%; left: 92%; --dur: 5.0s; --delay: 0.5s; }
+.star:nth-child(60) { top: 91%; left: 28%; --dur: 4.5s; --delay: 1.3s; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.4); }
+}
+
+/* ─── Orbit Ring Decoration ─────────────────── */
+.landing-orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  border: 1px solid rgba(102, 190, 255, 0.08);
+  transform: translate(-50%, -50%) rotateX(65deg) rotateZ(-20deg);
+  pointer-events: none;
+  animation: orbit-spin 30s linear infinite;
+}
+
+.landing-orbit-ring--2 {
+  width: 480px;
+  height: 480px;
+  border-color: rgba(123, 215, 207, 0.06);
+  transform: translate(-50%, -50%) rotateX(70deg) rotateZ(25deg);
+  animation-duration: 40s;
+  animation-direction: reverse;
+}
+
+@keyframes orbit-spin {
+  from { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(-20deg); }
+  to   { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(340deg); }
+}
+
+.landing-orbit-ring--2 {
+  animation-name: orbit-spin-2;
+}
+
+@keyframes orbit-spin-2 {
+  from { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(25deg); }
+  to   { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(-335deg); }
+}
+
+/* ─── Header ────────────────────────────────── */
+.landing-header {
+  text-align: center;
+  z-index: 1;
+  animation: fade-up 0.8s ease-out both;
+}
+
+.landing-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.landing-logo-icon {
+  width: 52px;
+  height: 52px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 12px rgba(102, 190, 255, 0.4));
+}
+
+.landing-title {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--text-main);
+}
+
+.landing-title-accent {
+  color: var(--accent);
+  text-shadow: 0 0 24px rgba(102, 190, 255, 0.5);
+}
+
+.landing-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-subtle);
+  letter-spacing: 0.06em;
+}
+
+/* ─── Cards ─────────────────────────────────── */
+.landing-cards {
+  display: flex;
+  gap: 32px;
+  z-index: 1;
+  animation: fade-up 0.8s ease-out 0.2s both;
+}
+
+.landing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 280px;
+  padding: 36px 28px 32px;
+  border-radius: 20px;
+  border: 1px solid var(--space-border);
+  background: var(--space-surface);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  text-decoration: none;
+  color: var(--text-main);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0, 0, 1),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.landing-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(150, 198, 255, 0.45);
+}
+
+.landing-card--pro:hover {
+  box-shadow:
+    0 12px 40px rgba(102, 190, 255, 0.18),
+    0 0 60px rgba(102, 190, 255, 0.08);
+}
+
+.landing-card--edu:hover {
+  box-shadow:
+    0 12px 40px rgba(123, 215, 207, 0.18),
+    0 0 60px rgba(123, 215, 207, 0.08);
+}
+
+/* カード背面のグロー */
+.landing-card-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.landing-card--pro .landing-card-glow {
+  background: radial-gradient(circle at 50% 30%, var(--pro-glow), transparent 70%);
+}
+
+.landing-card--edu .landing-card-glow {
+  background: radial-gradient(circle at 50% 30%, var(--edu-glow), transparent 70%);
+}
+
+.landing-card:hover .landing-card-glow {
+  opacity: 1;
+}
+
+/* カードアイコン */
+.landing-card-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-card--pro .landing-card-icon {
+  color: var(--accent);
+}
+
+.landing-card--edu .landing-card-icon {
+  color: var(--accent-mint);
+}
+
+.landing-card-icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 8px currentColor);
+  transition: filter 0.3s ease;
+}
+
+.landing-card:hover .landing-card-icon svg {
+  filter: drop-shadow(0 0 16px currentColor);
+}
+
+/* カードテキスト */
+.landing-card-body {
+  text-align: center;
+}
+
+.landing-card-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.landing-card-desc {
+  font-size: 0.82rem;
+  color: var(--text-subtle);
+  line-height: 1.7;
+}
+
+/* 矢印 */
+.landing-card-arrow {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--text-subtle);
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
+}
+
+.landing-card:hover .landing-card-arrow {
+  transform: translateX(4px);
+}
+
+.landing-card--pro:hover .landing-card-arrow {
+  color: var(--accent);
+}
+
+.landing-card--edu:hover .landing-card-arrow {
+  color: var(--accent-mint);
+}
+
+/* ─── Animations ────────────────────────────── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Responsive ────────────────────────────── */
+@media (max-width: 680px) {
+  .landing {
+    gap: 36px;
+    padding: 24px;
+  }
+
+  .landing-cards {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .landing-card {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .landing-title {
+    font-size: 2.2rem;
+  }
+
+  .landing-orbit-ring,
+  .landing-orbit-ring--2 {
+    display: none;
+  }
+}
