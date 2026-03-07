@@ -23,11 +23,11 @@ const MIN_BLOCK_SIZE = 1;
 const MAX_BLOCK_SIZE = 42;
 const imageUrlCache = new Map<string, string>();
 
-function clamp(value: number, min: number, max: number): number {
+export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function lerp(a: number, b: number, t: number): number {
+export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
@@ -42,17 +42,17 @@ function toKey(options: Required<Phase3ImageOptions>): string {
   ].join(":");
 }
 
-function hashInt(x: number, y: number, seed: number): number {
+export function hashInt(x: number, y: number, seed: number): number {
   let n = (x | 0) * 374761393 + (y | 0) * 668265263 + (seed | 0) * 982451653;
   n = (n ^ (n >>> 13)) * 1274126177;
   return n ^ (n >>> 16);
 }
 
-function hash01(x: number, y: number, seed: number): number {
+export function hash01(x: number, y: number, seed: number): number {
   return (hashInt(x, y, seed) >>> 0) / 0xffffffff;
 }
 
-function smoothNoise(x: number, y: number, seed: number): number {
+export function smoothNoise(x: number, y: number, seed: number): number {
   const x0 = Math.floor(x);
   const y0 = Math.floor(y);
   const x1 = x0 + 1;
@@ -153,7 +153,7 @@ function baseRgbAt(
   return [r | 0, g | 0, b | 0];
 }
 
-function createBaseImage(width: number, height: number, seed: number): Uint8ClampedArray {
+export function createBaseImage(width: number, height: number, seed: number): Uint8ClampedArray {
   const data = new Uint8ClampedArray(width * height * 4);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -168,14 +168,14 @@ function createBaseImage(width: number, height: number, seed: number): Uint8Clam
   return data;
 }
 
-function toResolutionBlockSize(resolutionMeters: number): number {
+export function toResolutionBlockSize(resolutionMeters: number): number {
   const normalized = clamp(resolutionMeters, 0.3, 500);
   const ratio = normalized / 0.3;
   const scaled = Math.pow(ratio, 0.5);
   return clamp(Math.round(scaled), MIN_BLOCK_SIZE, MAX_BLOCK_SIZE);
 }
 
-function pixelate(
+export function pixelate(
   source: Uint8ClampedArray,
   width: number,
   height: number,

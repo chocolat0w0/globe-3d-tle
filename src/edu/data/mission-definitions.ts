@@ -31,16 +31,17 @@ export const PHASE4_MISSION_DEFINITIONS: MissionDefinition[] = [
     },
   },
   {
-    id: "night-ocean-observation",
+    id: "target-discovery",
     shortLabel: "ミッション3",
-    title: "夜の海を観察せよ！",
+    title: "謎の生き物を発見せよ！",
     description:
-      "夜や雲の多い場面でも観測できる衛星を選ぼう。既存の衛星から最適な種類を見つける問題です。",
-    hint: "夜や雲でも強いのは、電波を使うSAR衛星です。",
-    successMessage: "正解！ 夜の海にはSAR衛星がぴったりです。",
-    kind: "satellite-selection",
+      "世界のどこかで不思議な生き物が目撃されました！まずは広い範囲を見渡せる衛星でスキャンして、次に高解像度の衛星で正体を確かめよう。",
+    hint: "ステップ1では広く見える衛星（解像度5m以上）、ステップ2ではくわしく見える衛星（解像度1m以下）を選ぼう。",
+    successMessage: "すごい！衛星の使い分けで生き物を発見できたね！",
+    kind: "target-discovery",
     criteria: {
-      requiredIconType: "sar",
+      wideMinResolutionMeters: 5,
+      detailMaxResolutionMeters: 1,
     },
   },
 ];

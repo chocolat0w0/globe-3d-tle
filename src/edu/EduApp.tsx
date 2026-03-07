@@ -1,14 +1,16 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Cartesian3, JulianDate, Matrix4, type Entity as CesiumEntity } from "cesium";
 import { getWindowStartMs } from "../lib/time-window";
+import { evaluateMission } from "../lib/edu/mission-evaluator";
 import { CUSTOM_SATELLITE_ID } from "../lib/edu/custom-orbit";
 import { CustomSatelliteInfoModal } from "./components/CustomSatelliteInfoModal";
-import { EduGlobe } from "./components/EduGlobe";
+import { EduGlobe, type EduSearchArea } from "./components/EduGlobe";
 import { LaunchSimulationPanel } from "./components/LaunchSimulationPanel";
 import { MissionChallengePanel } from "./components/MissionChallengePanel";
 import { SatelliteCardCarousel } from "./components/SatelliteCardCarousel";
 import { SatelliteInfoModal } from "./components/SatelliteInfoModal";
 import { getEduSatelliteEntityId } from "./components/edu-entity-id";
+import { useDiscoveryGame } from "./hooks/useDiscoveryGame";
 import { useMissionChallenge } from "./hooks/useMissionChallenge";
 import { useEduSatellites } from "./hooks/useEduSatellites";
 import type { EduMode } from "./types/phase3";
@@ -107,17 +109,71 @@ function EduApp() {
   const {
     missions,
     activeMissionId,
+    activeMission,
     progress: missionProgress,
     setActiveMission,
     evaluate: evaluateMissionResult,
     reset: resetMissionProgress,
   } = useMissionChallenge();
+  const discoveryGame = useDiscoveryGame();
   const selectedIdRef = useRef<string | null>(selectedSatelliteId);
   selectedIdRef.current = selectedSatelliteId;
   const suppressCustomMissionFollow =
     mode === "mission" &&
     activeMissionId === "cover-japan-day" &&
     selectedSatelliteId === CUSTOM_SATELLITE_ID;
+
+  // Discovery mission: search area for globe + auto-evaluate on complete
+  const isDiscoveryActive = mode === "mission" && activeMissionId === "target-discovery";
+  const discoveryState = discoveryGame.gameState;
+
+  const searchArea = useMemo<EduSearchArea | null>(() => {
+    if (!isDiscoveryActive) return null;
+    const loc = discoveryState.scenario.location;
+    return {
+      lonDeg: loc.lonDeg,
+      latDeg: loc.latDeg,
+      radiusKm: loc.radiusKm,
+      locationName: loc.nameJa,
+    };
+  }, [isDiscoveryActive, discoveryState.scenario.location]);
+
+  // Auto-evaluate when discovery game completes
+  useEffect(() => {
+    if (!isDiscoveryActive || discoveryState.step !== "complete") return;
+    if (missionProgress.clearedMissionIds.includes("target-discovery")) return;
+
+    const evaluation = evaluateMission(activeMission, {
+      selectedSatelliteId: null,
+      selectedSatelliteIconType: null,
+      customDraft,
+      launchedCustomSatellite,
+      discoveryState,
+    });
+    evaluateMissionResult(evaluation);
+  }, [
+    isDiscoveryActive,
+    discoveryState.step,
+    discoveryState,
+    activeMission,
+    customDraft,
+    launchedCustomSatellite,
+    evaluateMissionResult,
+    missionProgress.clearedMissionIds,
+  ]);
+
+  // Camera fly-to when discovery game enters wide-scan
+  useEffect(() => {
+    if (!isDiscoveryActive || discoveryState.step !== "wide-scan") return;
+    const viewer = window.__CESIUM_VIEWER__;
+    if (!viewer || viewer.isDestroyed()) return;
+    const loc = discoveryState.scenario.location;
+    const altitude = Math.max(loc.radiusKm * 6000, 2_000_000);
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(loc.lonDeg, loc.latDeg, altitude),
+      duration: 1.5,
+    });
+  }, [isDiscoveryActive, discoveryState.step, discoveryState.scenario.location]);
 
   useEffect(() => {
     if (mode === "compare") return;
@@ -218,6 +274,7 @@ function EduApp() {
           customCameraMode={customDraft.cameraMode}
           dayStartMs={windowStartMs}
           onWindowStartChange={setWindowStartMs}
+          searchArea={searchArea}
         />
       )}
 
@@ -298,6 +355,8 @@ function EduApp() {
                 onLaunch={launchCustomSatellite}
                 onEvaluateMission={evaluateMissionResult}
                 onResetProgress={resetMissionProgress}
+                discoveryGame={isDiscoveryActive ? discoveryGame : null}
+                discoveryState={isDiscoveryActive ? discoveryState : null}
               />
             </section>
           )}

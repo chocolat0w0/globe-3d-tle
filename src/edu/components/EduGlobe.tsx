@@ -16,9 +16,17 @@ import { EduCustomSatelliteLayer } from "./EduCustomSatelliteLayer";
 import { EduFootprintLayer } from "./EduFootprintLayer";
 import { EduSatelliteLayer } from "./EduSatelliteLayer";
 import { EduTimeController } from "./EduTimeController";
+import { SearchAreaLayer } from "./SearchAreaLayer";
 
 const INITIAL_DESTINATION = Cartesian3.fromDegrees(137, 35, 15_000_000);
 const CUSTOM_ORBIT_COLOR = "#ff7a3d";
+
+export interface EduSearchArea {
+  lonDeg: number;
+  latDeg: number;
+  radiusKm: number;
+  locationName: string;
+}
 
 interface EduGlobeProps {
   satellites: EduSatellite[];
@@ -27,6 +35,7 @@ interface EduGlobeProps {
   customCameraMode: "detail" | "wide";
   dayStartMs: number;
   onWindowStartChange: (windowStartMs: number) => void;
+  searchArea?: EduSearchArea | null;
 }
 
 function EduInitialCamera() {
@@ -64,6 +73,7 @@ export function EduGlobe({
   customCameraMode,
   dayStartMs,
   onWindowStartChange,
+  searchArea,
 }: EduGlobeProps) {
   const selectedExistingSatellite = useMemo(
     () => satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null,
@@ -131,6 +141,15 @@ export function EduGlobe({
           color={CUSTOM_ORBIT_COLOR}
           altitudeKm={launchedCustomSatellite.altitudeKm}
           footprintFovDeg={customPreviewFootprintFovDeg}
+        />
+      )}
+
+      {searchArea && (
+        <SearchAreaLayer
+          lonDeg={searchArea.lonDeg}
+          latDeg={searchArea.latDeg}
+          radiusKm={searchArea.radiusKm}
+          locationName={searchArea.locationName}
         />
       )}
 

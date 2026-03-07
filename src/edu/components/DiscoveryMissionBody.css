@@ -1,0 +1,324 @@
+.edu-discovery {
+  display: grid;
+  gap: 12px;
+}
+
+/* ── Step indicator ────────────────────────── */
+
+.edu-discovery-steps {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.edu-discovery-step-chip {
+  flex: 1;
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(22, 89, 122, 0.2);
+  background: rgba(255, 255, 255, 0.7);
+  color: #6a8fa5;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 6px;
+}
+
+.edu-discovery-step-chip.is-active {
+  border-color: rgba(15, 103, 145, 0.5);
+  background: linear-gradient(180deg, #ddeef7, #c3e0f0);
+  color: #0e4a68;
+}
+
+.edu-discovery-step-chip.is-done {
+  background: linear-gradient(180deg, rgba(221, 250, 228, 0.9), rgba(236, 255, 241, 0.85));
+  border-color: rgba(44, 140, 93, 0.5);
+  color: #2b7a51;
+}
+
+.edu-discovery-step-arrow {
+  color: #9ab8c9;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* ── Location banner ───────────────────────── */
+
+.edu-discovery-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 243, 200, 0.9), rgba(255, 230, 160, 0.8));
+  border: 1px solid rgba(200, 170, 70, 0.4);
+  padding: 8px 10px;
+  color: #6a4a0e;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.edu-discovery-location-icon {
+  font-size: 1.3rem;
+}
+
+/* ── Instruction text ──────────────────────── */
+
+.edu-discovery-instruction {
+  margin: 0;
+  color: #24536c;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ── Satellite selector ────────────────────── */
+
+.edu-discovery-satellite-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.edu-discovery-sat-btn {
+  min-height: 54px;
+  border-radius: 12px;
+  border: 1px solid rgba(22, 89, 122, 0.22);
+  background: rgba(255, 255, 255, 0.88);
+  color: #19475f;
+  text-align: left;
+  padding: 7px 9px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+}
+
+.edu-discovery-sat-btn .name {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.edu-discovery-sat-btn .meta {
+  font-size: 0.76rem;
+  color: #3d6a82;
+}
+
+.edu-discovery-sat-btn.is-selected {
+  border-color: rgba(255, 132, 54, 0.62);
+  background: linear-gradient(180deg, #ffe6c2, #ffd29b);
+  color: #6a3b0f;
+}
+
+.edu-discovery-sat-btn.is-recommended {
+  border-color: rgba(44, 160, 120, 0.45);
+  background: rgba(230, 255, 240, 0.6);
+}
+
+.edu-discovery-sat-btn.is-recommended.is-selected {
+  border-color: rgba(255, 132, 54, 0.62);
+  background: linear-gradient(180deg, #ffe6c2, #ffd29b);
+}
+
+/* ── Scan button ───────────────────────────── */
+
+.edu-discovery-action-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.edu-discovery-action-btn {
+  min-height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2f9bd0, #0f6f9a);
+  color: #f2fbff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.edu-discovery-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.edu-discovery-start-btn {
+  min-height: 48px;
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f7a44c, #e68a28);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+
+/* ── Scan result image ─────────────────────── */
+
+.edu-discovery-image-frame {
+  border-radius: 12px;
+  border: 2px solid rgba(22, 89, 122, 0.22);
+  overflow: hidden;
+  background: #1a2b34;
+  text-align: center;
+}
+
+.edu-discovery-image-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.edu-discovery-scan-message {
+  margin: 0;
+  padding: 8px;
+  color: #24536c;
+  font-size: 0.88rem;
+  font-weight: 700;
+  background: rgba(248, 253, 255, 0.9);
+}
+
+/* ── Error message ─────────────────────────── */
+
+.edu-discovery-error {
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(204, 114, 67, 0.42);
+  background: rgba(255, 238, 225, 0.9);
+  padding: 8px 10px;
+  color: #7a3a18;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+/* ── Wide-scan reference thumbnail ─────────── */
+
+.edu-discovery-ref-image {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  background: rgba(240, 248, 255, 0.8);
+  border: 1px solid rgba(22, 89, 122, 0.15);
+  padding: 6px;
+}
+
+.edu-discovery-ref-image img {
+  width: 80px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.edu-discovery-ref-image span {
+  color: #3d6a82;
+  font-size: 0.8rem;
+}
+
+/* ── Creature choice grid ──────────────────── */
+
+.edu-discovery-creature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.edu-discovery-creature-btn {
+  min-height: 60px;
+  border-radius: 12px;
+  border: 2px solid rgba(22, 89, 122, 0.22);
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.edu-discovery-creature-btn.is-selected {
+  border-color: rgba(255, 132, 54, 0.7);
+  background: linear-gradient(180deg, #ffe6c2, #ffd29b);
+}
+
+.edu-discovery-creature-emoji {
+  font-size: 1.8rem;
+}
+
+.edu-discovery-creature-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #19475f;
+}
+
+/* ── Complete state ────────────────────────── */
+
+.edu-discovery-complete {
+  text-align: center;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(221, 250, 228, 0.95), rgba(236, 255, 241, 0.9));
+  border: 1px solid rgba(44, 140, 93, 0.4);
+}
+
+.edu-discovery-complete-emoji {
+  font-size: 3rem;
+}
+
+.edu-discovery-complete-title {
+  margin: 0;
+  color: #1a5c3a;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.edu-discovery-complete-desc {
+  margin: 0;
+  color: #2b7a51;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.edu-discovery-complete-lesson {
+  margin: 8px 0 0;
+  color: #1a5c3a;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.edu-discovery-retry-btn {
+  min-height: 42px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f7a44c, #e68a28);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0 16px;
+}
+
+@media (max-width: 960px) {
+  .edu-discovery-satellite-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edu-discovery-creature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edu-discovery-action-row {
+    justify-content: stretch;
+  }
+
+  .edu-discovery-action-btn {
+    width: 100%;
+  }
+}
