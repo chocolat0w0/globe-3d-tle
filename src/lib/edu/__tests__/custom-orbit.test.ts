@@ -6,6 +6,7 @@ import {
   computeOrbitSpeedKmS,
   countRegionEntriesPerDay,
   ecefToGeodeticApprox,
+  estimateGroundRadiusKm,
 } from "../custom-orbit";
 
 const EARTH_RADIUS_KM = 6371;
@@ -90,5 +91,12 @@ describe("custom-orbit", () => {
 
     const entries = countRegionEntriesPerDay(orbitData, [square]);
     expect(entries).toBe(2);
+  });
+
+  it("低高度でもカメラモードの違いでFP半径が変わる", () => {
+    const detailRadius = estimateGroundRadiusKm(200, 6);
+    const wideRadius = estimateGroundRadiusKm(200, 18);
+
+    expect(wideRadius).toBeGreaterThan(detailRadius);
   });
 });

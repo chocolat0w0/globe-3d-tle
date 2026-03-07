@@ -6,6 +6,7 @@ import { GlobeRenderer } from "../../components/Globe/GlobeRenderer";
 import {
   CUSTOM_SATELLITE_ID,
   computeCustomOrbitData,
+  getFootprintFovDeg,
   type LaunchedCustomSatellite,
 } from "../../lib/edu/custom-orbit";
 import { WINDOW_MS } from "../../lib/time-window";
@@ -23,6 +24,7 @@ interface EduGlobeProps {
   satellites: EduSatellite[];
   selectedSatelliteId: string | null;
   launchedCustomSatellite: LaunchedCustomSatellite | null;
+  customCameraMode: "detail" | "wide";
   dayStartMs: number;
   onWindowStartChange: (windowStartMs: number) => void;
 }
@@ -59,6 +61,7 @@ export function EduGlobe({
   satellites,
   selectedSatelliteId,
   launchedCustomSatellite,
+  customCameraMode,
   dayStartMs,
   onWindowStartChange,
 }: EduGlobeProps) {
@@ -80,6 +83,7 @@ export function EduGlobe({
   }, [dayStartMs, launchedCustomSatellite]);
 
   const customSelected = selectedSatelliteId === CUSTOM_SATELLITE_ID;
+  const customPreviewFootprintFovDeg = getFootprintFovDeg(customCameraMode);
 
   return (
     <GlobeRenderer showNightShade={false} homeButton>
@@ -126,7 +130,7 @@ export function EduGlobe({
           orbitData={customOrbitData}
           color={CUSTOM_ORBIT_COLOR}
           altitudeKm={launchedCustomSatellite.altitudeKm}
-          footprintFovDeg={launchedCustomSatellite.footprintFovDeg}
+          footprintFovDeg={customPreviewFootprintFovDeg}
         />
       )}
 

@@ -208,6 +208,7 @@ function EduApp() {
           satellites={satellites}
           selectedSatelliteId={selectedSatelliteId}
           launchedCustomSatellite={launchedCustomSatellite}
+          customCameraMode={customDraft.cameraMode}
           dayStartMs={windowStartMs}
           onWindowStartChange={setWindowStartMs}
         />

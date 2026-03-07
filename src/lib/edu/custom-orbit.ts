@@ -293,5 +293,5 @@ export function buildGroundCircle(
 export function estimateGroundRadiusKm(altitudeKm: number, fovDeg: number): number {
   const halfAngleRad = ((fovDeg / 2) * Math.PI) / 180;
   const radius = altitudeKm * Math.tan(halfAngleRad);
-  return clamp(radius, 40, 4500);
+  return clamp(radius, 5, 4500);
 }
