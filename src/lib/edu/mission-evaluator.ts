@@ -1,4 +1,5 @@
-import { CUSTOM_SATELLITE_ID } from "./custom-orbit";
+import { JAPAN_POLYGONS } from "../../data/japan-polygon";
+import { canCoverRegionWithinDay, CUSTOM_SATELLITE_ID } from "./custom-orbit";
 import type {
   CustomDesignMissionDefinition,
   MissionDefinition,
@@ -60,6 +61,13 @@ function evaluateCustomDesignMission(
     reasons.push({
       code: "insufficient-passes",
       message: `日本上空の通過回数を 1日 ${criteria.minJapanPassesPerDay} 回以上にしよう。`,
+    });
+  }
+
+  if (criteria.requiresFullJapanCoverage && !canCoverRegionWithinDay(launched, JAPAN_POLYGONS)) {
+    reasons.push({
+      code: "insufficient-coverage",
+      message: "日本列島と沖縄まで、1回で見渡せる広さが必要です。",
     });
   }
 

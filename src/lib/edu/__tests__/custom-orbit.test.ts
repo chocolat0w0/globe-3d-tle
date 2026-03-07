@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { JAPAN_POLYGONS } from "../../../data/japan-polygon";
 import type { OrbitData } from "../../../types/orbit";
 import {
+  canCoverRegionWithinDay,
   computeCustomOrbitData,
   computeOrbitPeriodMin,
   computeOrbitSpeedKmS,
@@ -98,5 +100,43 @@ describe("custom-orbit", () => {
     const wideRadius = estimateGroundRadiusKm(200, 18);
 
     expect(wideRadius).toBeGreaterThan(detailRadius);
+  });
+
+  it("高高度の広視野なら1日内に日本全体をカバーできる", () => {
+    const canCover = canCoverRegionWithinDay(
+      {
+        altitudeKm: 35786,
+        inclinationDeg: 0,
+        cameraMode: "wide",
+        launchEpochMs: Date.UTC(2026, 2, 7, 4, 0, 0),
+        orbitPeriodMin: 1436,
+        speedKmS: 3.1,
+        orbitsPerDay: 1,
+        japanPassesPerDay: 1,
+        footprintFovDeg: 18,
+      },
+      JAPAN_POLYGONS,
+    );
+
+    expect(canCover).toBe(true);
+  });
+
+  it("低高度の広視野では日本全体を同時にカバーできない", () => {
+    const canCover = canCoverRegionWithinDay(
+      {
+        altitudeKm: 700,
+        inclinationDeg: 60,
+        cameraMode: "wide",
+        launchEpochMs: Date.UTC(2026, 2, 7, 4, 0, 0),
+        orbitPeriodMin: 98,
+        speedKmS: 7.5,
+        orbitsPerDay: 14,
+        japanPassesPerDay: 6,
+        footprintFovDeg: 18,
+      },
+      JAPAN_POLYGONS,
+    );
+
+    expect(canCover).toBe(false);
   });
 });

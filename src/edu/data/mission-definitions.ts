@@ -6,14 +6,13 @@ export const PHASE4_MISSION_DEFINITIONS: MissionDefinition[] = [
     shortLabel: "ミッション1",
     title: "日本全体を1日で撮影せよ！",
     description:
-      "1日のうちに日本上空をできるだけ多く通る衛星を設計しよう。広い範囲を見られるカメラと高めの傾きがカギです。",
-    hint: "広く見えるカメラにして、傾きを60°以上にすると成功しやすいよ。",
+      "日本列島から沖縄まで、1日のどこかでまとめて見渡せる衛星を設計しよう。大事なのは通る回数ではなく、日本全体がちゃんと視野に入ることです。",
+    hint: "広く見えるカメラにして、日本全体が1回で入るくらい高いところから見てみよう。",
     successMessage: "成功！ 日本全体をすばやく観測できる設計になりました。",
     kind: "custom-design",
     criteria: {
       requiredCameraMode: "wide",
-      minInclinationDeg: 60,
-      minJapanPassesPerDay: 6,
+      requiresFullJapanCoverage: true,
     },
   },
   {
@@ -21,7 +20,7 @@ export const PHASE4_MISSION_DEFINITIONS: MissionDefinition[] = [
     shortLabel: "ミッション2",
     title: "災害が起きた場所をすぐに撮影せよ！",
     description:
-      "細かく見えるカメラで、被災地を早く確認できる設計を目指そう。低めの高度と通過回数がポイントです。",
+      "細かく見えるカメラで、被災地を何度も見直せる設計を目指そう。低めの高度と通過回数がポイントです。",
     hint: "よく見えるカメラ、高度900km以下、日本上空5回以上が目安です。",
     successMessage: "成功！ 災害対応向けのすばやい観測設計になりました。",
     kind: "custom-design",

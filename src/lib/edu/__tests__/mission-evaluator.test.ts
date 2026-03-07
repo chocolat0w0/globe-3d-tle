@@ -11,22 +11,22 @@ function getMission(missionId: (typeof PHASE4_MISSION_DEFINITIONS)[number]["id"]
 }
 
 describe("mission-evaluator", () => {
-  it("ミッション1: wide + inclination>=60 + passes>=6 で成功", () => {
+  it("ミッション1: 日本全体を同時にカバーできる設計で成功", () => {
     const mission = getMission("cover-japan-day");
 
     const result = evaluateMission(mission, {
       selectedSatelliteId: null,
       selectedSatelliteIconType: null,
-      customDraft: { altitudeKm: 700, inclinationDeg: 65, cameraMode: "wide" },
+      customDraft: { altitudeKm: 35786, inclinationDeg: 0, cameraMode: "wide" },
       launchedCustomSatellite: {
-        altitudeKm: 700,
-        inclinationDeg: 65,
+        altitudeKm: 35786,
+        inclinationDeg: 0,
         cameraMode: "wide",
-        launchEpochMs: 0,
-        orbitPeriodMin: 98,
-        speedKmS: 7.5,
-        orbitsPerDay: 14,
-        japanPassesPerDay: 6,
+        launchEpochMs: Date.UTC(2026, 2, 7, 4, 0, 0),
+        orbitPeriodMin: 1436,
+        speedKmS: 3.1,
+        orbitsPerDay: 1,
+        japanPassesPerDay: 1,
         footprintFovDeg: 18,
       },
     });
@@ -35,7 +35,7 @@ describe("mission-evaluator", () => {
     expect(result.reasons).toHaveLength(0);
   });
 
-  it("ミッション1: 各条件不足で理由コードを返す", () => {
+  it("ミッション1: 日本全体を覆えない設計では失敗理由を返す", () => {
     const mission = getMission("cover-japan-day");
 
     const result = evaluateMission(mission, {
@@ -46,7 +46,7 @@ describe("mission-evaluator", () => {
         altitudeKm: 700,
         inclinationDeg: 40,
         cameraMode: "detail",
-        launchEpochMs: 0,
+        launchEpochMs: Date.UTC(2026, 2, 7, 4, 0, 0),
         orbitPeriodMin: 98,
         speedKmS: 7.5,
         orbitsPerDay: 14,
@@ -58,8 +58,7 @@ describe("mission-evaluator", () => {
     expect(result.passed).toBe(false);
     expect(result.reasons.map((reason) => reason.code)).toEqual([
       "camera-mode",
-      "inclination-too-low",
-      "insufficient-passes",
+      "insufficient-coverage",
     ]);
   });
 

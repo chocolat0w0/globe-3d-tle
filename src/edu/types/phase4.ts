@@ -21,6 +21,7 @@ export interface MissionCustomDesignCriteria {
   minInclinationDeg?: number;
   maxAltitudeKm?: number;
   minJapanPassesPerDay?: number;
+  requiresFullJapanCoverage?: boolean;
 }
 
 export interface MissionSatelliteSelectionCriteria {
@@ -52,6 +53,7 @@ export type MissionFailureCode =
   | "inclination-too-low"
   | "altitude-too-high"
   | "insufficient-passes"
+  | "insufficient-coverage"
   | "select-existing-satellite"
   | "satellite-type-mismatch";
 
