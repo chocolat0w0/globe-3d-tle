@@ -1,5 +1,11 @@
 import { useMemo } from "react";
-import { Cartesian3, Color, ConstantProperty, PolygonHierarchy } from "cesium";
+import {
+  Cartesian3,
+  Color,
+  ConstantProperty,
+  ColorMaterialProperty,
+  PolygonHierarchy,
+} from "cesium";
 import { Entity } from "resium";
 import { buildGroundCircle } from "../../lib/edu/custom-orbit";
 
@@ -21,10 +27,7 @@ export function SearchAreaLayer({ lonDeg, latDeg, radiusKm, locationName }: Sear
     return new PolygonHierarchy(positions);
   }, [lonDeg, latDeg, radiusKm]);
 
-  const labelPosition = useMemo(
-    () => Cartesian3.fromDegrees(lonDeg, latDeg),
-    [lonDeg, latDeg],
-  );
+  const labelPosition = useMemo(() => Cartesian3.fromDegrees(lonDeg, latDeg), [lonDeg, latDeg]);
 
   if (!hierarchy) return null;
 
@@ -33,7 +36,7 @@ export function SearchAreaLayer({ lonDeg, latDeg, radiusKm, locationName }: Sear
       <Entity
         polygon={{
           hierarchy: new ConstantProperty(hierarchy),
-          material: new ConstantProperty(FILL_COLOR),
+          material: new ColorMaterialProperty(FILL_COLOR),
           outline: true,
           outlineColor: new ConstantProperty(OUTLINE_COLOR),
           outlineWidth: new ConstantProperty(2),

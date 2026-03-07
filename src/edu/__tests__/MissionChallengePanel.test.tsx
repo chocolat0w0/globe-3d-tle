@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PHASE4_MISSION_DEFINITIONS } from "../data/mission-definitions";
@@ -23,15 +23,9 @@ describe("MissionChallengePanel", () => {
       <MissionChallengePanel
         missions={PHASE4_MISSION_DEFINITIONS}
         activeMissionId="cover-japan-day"
-        progress={
-          buildProgress({
-            unlockedMissionIds: [
-              "cover-japan-day",
-              "rapid-disaster-response",
-              "target-discovery",
-            ],
-          })
-        }
+        progress={buildProgress({
+          unlockedMissionIds: ["cover-japan-day", "rapid-disaster-response", "target-discovery"],
+        })}
         satellites={result.current.satellites}
         selectedSatelliteId={result.current.selectedSatelliteId}
         customDraft={result.current.customDraft}
@@ -59,15 +53,9 @@ describe("MissionChallengePanel", () => {
       <MissionChallengePanel
         missions={PHASE4_MISSION_DEFINITIONS}
         activeMissionId="target-discovery"
-        progress={
-          buildProgress({
-            unlockedMissionIds: [
-              "cover-japan-day",
-              "rapid-disaster-response",
-              "target-discovery",
-            ],
-          })
-        }
+        progress={buildProgress({
+          unlockedMissionIds: ["cover-japan-day", "rapid-disaster-response", "target-discovery"],
+        })}
         satellites={result.current.satellites}
         selectedSatelliteId={null}
         customDraft={result.current.customDraft}
@@ -93,23 +81,22 @@ describe("MissionChallengePanel", () => {
       <MissionChallengePanel
         missions={PHASE4_MISSION_DEFINITIONS}
         activeMissionId="cover-japan-day"
-        progress={
-          buildProgress({
-            unlockedMissionIds: [
-              "cover-japan-day",
-              "rapid-disaster-response",
-              "target-discovery",
-            ],
-            evaluations: {
-              "cover-japan-day": {
-                missionId: "cover-japan-day",
-                passed: false,
-                successMessage: "",
-                reasons: [{ code: "not-launched", message: "先に「衛星を打ち上げる」を押して、結果を計算しよう。" }],
-              },
+        progress={buildProgress({
+          unlockedMissionIds: ["cover-japan-day", "rapid-disaster-response", "target-discovery"],
+          evaluations: {
+            "cover-japan-day": {
+              missionId: "cover-japan-day",
+              passed: false,
+              successMessage: "",
+              reasons: [
+                {
+                  code: "not-launched",
+                  message: "先に「衛星を打ち上げる」を押して、結果を計算しよう。",
+                },
+              ],
             },
-          })
-        }
+          },
+        })}
         satellites={result.current.satellites}
         selectedSatelliteId={null}
         customDraft={result.current.customDraft}
@@ -126,6 +113,8 @@ describe("MissionChallengePanel", () => {
     );
 
     expect(screen.getByText("条件をもう少し調整しよう。")).toBeInTheDocument();
-    expect(screen.getByText("先に「衛星を打ち上げる」を押して、結果を計算しよう。")).toBeInTheDocument();
+    expect(
+      screen.getByText("先に「衛星を打ち上げる」を押して、結果を計算しよう。"),
+    ).toBeInTheDocument();
   });
 });

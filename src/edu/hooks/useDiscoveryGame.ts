@@ -5,9 +5,7 @@ import { generateDiscoveryImageUrl } from "../lib/discovery-image-pipeline";
 import type {
   DiscoveryCreature,
   DiscoveryGameState,
-  DiscoveryLocation,
   DiscoveryScenario,
-  DiscoveryStep,
 } from "../types/target-discovery";
 
 export interface DiscoveryScanResult {
