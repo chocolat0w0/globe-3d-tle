@@ -44,9 +44,11 @@ export function DiscoveryMissionBody({
     startGame,
     confirmWideSatellite,
     captureWideScan,
+    backToWideScanSelect,
     proceedToDetailSelect,
     confirmDetailSatellite,
     captureDetailScan,
+    backToDetailScanSelect,
     proceedToIdentify,
     submitIdentification,
     resetGame,
@@ -191,6 +193,9 @@ export function DiscoveryMissionBody({
             </span>
           </div>
           <div className="edu-discovery-action-row">
+            <button type="button" className="edu-discovery-back-btn" onClick={backToWideScanSelect}>
+              衛星を選び直す
+            </button>
             <button
               type="button"
               className="edu-discovery-capture-btn"
@@ -276,6 +281,13 @@ export function DiscoveryMissionBody({
             </span>
           </div>
           <div className="edu-discovery-action-row">
+            <button
+              type="button"
+              className="edu-discovery-back-btn"
+              onClick={backToDetailScanSelect}
+            >
+              衛星を選び直す
+            </button>
             <button
               type="button"
               className="edu-discovery-capture-btn"

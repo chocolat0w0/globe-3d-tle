@@ -122,6 +122,7 @@
 .edu-discovery-action-row {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 .edu-discovery-action-btn {
@@ -335,6 +336,19 @@
   color: #24536c;
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.edu-discovery-back-btn {
+  min-height: 42px;
+  border: 1px solid rgba(22, 89, 122, 0.3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #3d6a82;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 0 14px;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .edu-discovery-capture-btn {

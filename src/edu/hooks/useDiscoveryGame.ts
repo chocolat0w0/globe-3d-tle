@@ -27,6 +27,10 @@ export interface UseDiscoveryGameResult {
   ) => { success: boolean; error: string | null };
   /** Capture detail-scan image (call when FP overlaps search area). */
   captureDetailScan: (resolutionMeters: number) => void;
+  /** Go back from wide-scan-fly to wide-scan-select (re-pick satellite). */
+  backToWideScanSelect: () => void;
+  /** Go back from detail-scan-fly to detail-scan-select (re-pick satellite). */
+  backToDetailScanSelect: () => void;
   /** Proceed from detail-scan-captured to identify. */
   proceedToIdentify: () => void;
   /** Submit creature identification. Returns true if correct. */
@@ -124,6 +128,10 @@ export function useDiscoveryGame(): UseDiscoveryGameResult {
     [gameState.scenario],
   );
 
+  const backToWideScanSelect = useCallback(() => {
+    setGameState((prev) => ({ ...prev, step: "wide-scan-select", wideScanSatelliteId: null }));
+  }, []);
+
   const proceedToDetailSelect = useCallback(() => {
     setGameState((prev) => ({ ...prev, step: "detail-scan-select" }));
   }, []);
@@ -145,6 +153,10 @@ export function useDiscoveryGame(): UseDiscoveryGameResult {
     },
     [],
   );
+
+  const backToDetailScanSelect = useCallback(() => {
+    setGameState((prev) => ({ ...prev, step: "detail-scan-select", detailScanSatelliteId: null }));
+  }, []);
 
   const captureDetailScan = useCallback(
     (resolutionMeters: number) => {
@@ -202,9 +214,11 @@ export function useDiscoveryGame(): UseDiscoveryGameResult {
     startGame,
     confirmWideSatellite,
     captureWideScan,
+    backToWideScanSelect,
     proceedToDetailSelect,
     confirmDetailSatellite,
     captureDetailScan,
+    backToDetailScanSelect,
     proceedToIdentify,
     submitIdentification,
     resetGame,
