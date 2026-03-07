@@ -48,6 +48,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(255, 243, 200, 0.9), rgba(255, 230, 160, 0.8));
   border: 1px solid rgba(200, 170, 70, 0.4);
@@ -55,10 +56,29 @@
   color: #6a4a0e;
   font-weight: 700;
   font-size: 0.9rem;
+  cursor: default;
+  text-align: left;
+}
+
+.edu-discovery-location.is-clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.edu-discovery-location.is-clickable:hover {
+  background: linear-gradient(135deg, rgba(255, 237, 170, 0.95), rgba(255, 220, 120, 0.9));
 }
 
 .edu-discovery-location-icon {
   font-size: 1.3rem;
+}
+
+.edu-discovery-location-hint {
+  margin-left: auto;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #9a6a20;
+  opacity: 0.8;
 }
 
 /* ── Instruction text ──────────────────────── */

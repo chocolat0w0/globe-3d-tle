@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Cartesian3, JulianDate, Matrix4, type Entity as CesiumEntity } from "cesium";
 import { getWindowStartMs } from "../lib/time-window";
 import { evaluateMission } from "../lib/edu/mission-evaluator";
@@ -131,6 +131,23 @@ function EduApp() {
   // Satellite whose FP should be shown on the globe during fly steps
   const discoverySatelliteId = isDiscoveryActive ? discoveryGame.activeScanSatelliteId : null;
 
+  // Suppress camera follow while the user needs to look at the search area
+  const suppressDiscoveryFlyFollow =
+    isDiscoveryActive &&
+    (discoveryState.step === "wide-scan-fly" || discoveryState.step === "detail-scan-fly");
+
+  // Callback to manually fly back to the search area (passed down to UI)
+  const flyToDiscoveryArea = useCallback(() => {
+    const viewer = window.__CESIUM_VIEWER__;
+    if (!viewer || viewer.isDestroyed()) return;
+    const loc = discoveryState.scenario.location;
+    const altitude = Math.max(loc.radiusKm * 6000, 2_000_000);
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(loc.lonDeg, loc.latDeg, altitude),
+      duration: 1.2,
+    });
+  }, [discoveryState.scenario.location]);
+
   const searchArea = useMemo<EduSearchArea | null>(() => {
     if (!isDiscoveryActive) return null;
     const loc = discoveryState.scenario.location;
@@ -170,7 +187,13 @@ function EduApp() {
   useEffect(() => {
     if (!isDiscoveryActive) return;
     const { step } = discoveryState;
-    if (step !== "wide-scan-select" && step !== "detail-scan-select") return;
+    if (
+      step !== "wide-scan-select" &&
+      step !== "detail-scan-select" &&
+      step !== "wide-scan-fly" &&
+      step !== "detail-scan-fly"
+    )
+      return;
     const viewer = window.__CESIUM_VIEWER__;
     if (!viewer || viewer.isDestroyed()) return;
     const loc = discoveryState.scenario.location;
@@ -193,7 +216,7 @@ function EduApp() {
 
     viewer.trackedEntity = undefined;
     viewer.camera.lookAtTransform(Matrix4.IDENTITY);
-    if (!selectedSatelliteId || suppressCustomMissionFollow) return;
+    if (!selectedSatelliteId || suppressCustomMissionFollow || suppressDiscoveryFlyFollow) return;
 
     let cancelled = false;
     let attempt = 0;
@@ -265,7 +288,13 @@ function EduApp() {
         removeFollowListener();
       }
     };
-  }, [mode, selectedSatelliteId, selectionNonce, suppressCustomMissionFollow]);
+  }, [
+    mode,
+    selectedSatelliteId,
+    selectionNonce,
+    suppressCustomMissionFollow,
+    suppressDiscoveryFlyFollow,
+  ]);
 
   useEffect(() => {
     if (mode !== "compare" && mode !== "mission") return;
@@ -371,6 +400,7 @@ function EduApp() {
                 discoveryGame={isDiscoveryActive ? discoveryGame : null}
                 discoveryState={isDiscoveryActive ? discoveryState : null}
                 isDiscoveryOverlapping={discoveryOverlapping}
+                onFlyToDiscoveryArea={isDiscoveryActive ? flyToDiscoveryArea : undefined}
               />
             </section>
           )}

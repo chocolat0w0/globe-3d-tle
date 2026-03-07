@@ -30,6 +30,8 @@ interface DiscoveryMissionBodyProps {
   discovery: UseDiscoveryGameResult;
   /** Whether the satellite's FP currently overlaps the search area. */
   isOverlapping: boolean;
+  /** Fly camera to the search area. */
+  onFlyToArea?: () => void;
 }
 
 export function DiscoveryMissionBody({
@@ -38,6 +40,7 @@ export function DiscoveryMissionBody({
   onSelectSatellite,
   discovery,
   isOverlapping,
+  onFlyToArea,
 }: DiscoveryMissionBodyProps) {
   const {
     gameState,
@@ -134,11 +137,18 @@ export function DiscoveryMissionBody({
         })}
       </div>
 
-      {/* Location banner */}
-      <div className="edu-discovery-location">
+      {/* Location banner — click to fly camera to the search area */}
+      <button
+        type="button"
+        className={`edu-discovery-location ${onFlyToArea ? "is-clickable" : ""}`}
+        onClick={onFlyToArea}
+        disabled={!onFlyToArea}
+        title={onFlyToArea ? "クリックしてエリアに移動" : undefined}
+      >
         <span className="edu-discovery-location-icon">📍</span>
         <span>{scenario.location.nameJa}</span>
-      </div>
+        {onFlyToArea && <span className="edu-discovery-location-hint">↗ 移動</span>}
+      </button>
 
       {/* === INTRO step === */}
       {step === "intro" && (

@@ -31,6 +31,8 @@ interface MissionChallengePanelProps {
   discoveryState: DiscoveryGameState | null;
   /** Whether the discovery satellite's FP currently overlaps the search area. */
   isDiscoveryOverlapping?: boolean;
+  /** Fly the camera to the discovery search area. */
+  onFlyToDiscoveryArea?: () => void;
 }
 
 const SENSOR_LABEL: Record<EduSatellite["iconType"], string> = {
@@ -56,6 +58,7 @@ export function MissionChallengePanel({
   discoveryGame,
   discoveryState,
   isDiscoveryOverlapping,
+  onFlyToDiscoveryArea,
 }: MissionChallengePanelProps) {
   const activeMission =
     missions.find((mission) => mission.id === activeMissionId) ?? missions[0] ?? null;
@@ -132,6 +135,7 @@ export function MissionChallengePanel({
             onSelectSatellite={onSelectSatellite}
             discovery={discoveryGame}
             isOverlapping={isDiscoveryOverlapping ?? false}
+            onFlyToArea={onFlyToDiscoveryArea}
           />
         ) : activeMission.kind === "custom-design" ? (
           <>
