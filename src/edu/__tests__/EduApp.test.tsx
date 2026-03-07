@@ -63,6 +63,14 @@ vi.mock("../components/LaunchSimulationPanel", () => ({
   ),
 }));
 
+vi.mock("../components/MissionChallengePanel", () => ({
+  MissionChallengePanel: ({ selectedSatelliteId }: { selectedSatelliteId: string | null }) => (
+    <section data-testid="mission-panel">
+      <div data-testid="mission-selected-satellite">{selectedSatelliteId ?? "none"}</div>
+    </section>
+  ),
+}));
+
 describe("EduApp mode switch", () => {
   it("compare モードで地球儀とカードを非表示にする", async () => {
     render(<EduApp />);
@@ -95,5 +103,22 @@ describe("EduApp mode switch", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "打ち上げ" }));
     expect(screen.getByTestId("launch-draft-altitude")).toHaveTextContent("1800");
+  });
+
+  it("mission モードでミッションパネルを表示し、地球儀は維持する", () => {
+    render(<EduApp />);
+
+    fireEvent.click(screen.getByRole("button", { name: "select-worldview3" }));
+    expect(screen.getByTestId("selected-satellite")).toHaveTextContent("worldview3");
+
+    fireEvent.click(screen.getByRole("tab", { name: "ミッション" }));
+
+    expect(screen.getByTestId("edu-globe")).toBeInTheDocument();
+    expect(screen.getByTestId("mission-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("mission-selected-satellite")).toHaveTextContent("worldview3");
+    expect(screen.queryByTestId("edu-carousel")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "衛星観察" }));
+    expect(screen.getByTestId("edu-carousel")).toBeInTheDocument();
   });
 });

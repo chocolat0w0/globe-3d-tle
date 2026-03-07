@@ -1,0 +1,241 @@
+.edu-mission-panel {
+  width: min(720px, calc(100vw - 24px));
+  border-radius: 20px;
+  border: 2px solid rgba(32, 104, 141, 0.35);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(242, 251, 255, 0.96)),
+    radial-gradient(circle at 88% 8%, rgba(140, 207, 255, 0.22), transparent 42%);
+  box-shadow: 0 20px 46px rgba(9, 58, 84, 0.28);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.edu-mission-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.edu-mission-header h2 {
+  margin: 0;
+  color: #0f3d57;
+  font-size: 1.2rem;
+}
+
+.edu-mission-header p {
+  margin: 5px 0 0;
+  color: #295973;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.edu-mission-header-actions {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.edu-mission-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd89f, #ffbe72);
+  color: #6a3b0f;
+  font-weight: 800;
+  font-size: 0.78rem;
+}
+
+.edu-mission-reset {
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(26, 96, 131, 0.34);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a4b64;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.edu-mission-stepper {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.edu-mission-step {
+  width: 100%;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid rgba(24, 89, 122, 0.24);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 9px 10px;
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.edu-mission-step span {
+  color: #34637c;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.edu-mission-step strong {
+  color: #123f59;
+  font-size: 0.92rem;
+}
+
+.edu-mission-step.is-active {
+  border-color: rgba(15, 103, 145, 0.5);
+  box-shadow: 0 8px 14px rgba(18, 95, 132, 0.18);
+}
+
+.edu-mission-step.is-cleared {
+  background: linear-gradient(180deg, rgba(221, 250, 228, 0.9), rgba(236, 255, 241, 0.85));
+  border-color: rgba(44, 140, 93, 0.5);
+}
+
+.edu-mission-step:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.edu-mission-body {
+  border-radius: 14px;
+  border: 1px solid rgba(23, 94, 129, 0.2);
+  background: rgba(248, 253, 255, 0.84);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.edu-mission-description,
+.edu-mission-hint {
+  margin: 0;
+  color: #24536c;
+  line-height: 1.5;
+}
+
+.edu-mission-hint {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.edu-mission-design-block {
+  display: grid;
+  gap: 10px;
+}
+
+.edu-mission-satellite-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.edu-mission-satellite-option {
+  min-height: 54px;
+  border-radius: 12px;
+  border: 1px solid rgba(22, 89, 122, 0.22);
+  background: rgba(255, 255, 255, 0.88);
+  color: #19475f;
+  text-align: left;
+  padding: 7px 9px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+}
+
+.edu-mission-satellite-option .name {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.edu-mission-satellite-option .meta {
+  font-size: 0.76rem;
+  color: #3d6a82;
+}
+
+.edu-mission-satellite-option.is-selected {
+  border-color: rgba(255, 132, 54, 0.62);
+  background: linear-gradient(180deg, #ffe6c2, #ffd29b);
+  color: #6a3b0f;
+}
+
+.edu-mission-evaluate-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.edu-mission-evaluate {
+  min-height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2f9bd0, #0f6f9a);
+  color: #f2fbff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.edu-mission-result {
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.edu-mission-result p {
+  margin: 0;
+  color: #1a4f69;
+  font-weight: 700;
+}
+
+.edu-mission-result ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #285973;
+  display: grid;
+  gap: 4px;
+}
+
+.edu-mission-result.is-success {
+  border: 1px solid rgba(44, 140, 93, 0.46);
+  background: rgba(225, 251, 234, 0.92);
+}
+
+.edu-mission-result.is-failure {
+  border: 1px solid rgba(204, 114, 67, 0.42);
+  background: rgba(255, 238, 225, 0.9);
+}
+
+@media (max-width: 960px) {
+  .edu-mission-panel {
+    width: calc(100vw - 20px);
+  }
+
+  .edu-mission-header {
+    flex-direction: column;
+  }
+
+  .edu-mission-header-actions {
+    justify-items: start;
+  }
+
+  .edu-mission-satellite-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .edu-mission-evaluate-row {
+    justify-content: stretch;
+  }
+
+  .edu-mission-evaluate {
+    width: 100%;
+  }
+}

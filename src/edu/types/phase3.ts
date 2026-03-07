@@ -1,4 +1,4 @@
-export type EduMode = "observe" | "launch" | "compare";
+export type EduMode = "observe" | "launch" | "compare" | "mission";
 
 export type Phase3Weather = "clear" | "cloudy";
 

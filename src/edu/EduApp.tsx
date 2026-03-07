@@ -4,9 +4,11 @@ import { getWindowStartMs } from "../lib/time-window";
 import { CustomSatelliteInfoModal } from "./components/CustomSatelliteInfoModal";
 import { EduGlobe } from "./components/EduGlobe";
 import { LaunchSimulationPanel } from "./components/LaunchSimulationPanel";
+import { MissionChallengePanel } from "./components/MissionChallengePanel";
 import { SatelliteCardCarousel } from "./components/SatelliteCardCarousel";
 import { SatelliteInfoModal } from "./components/SatelliteInfoModal";
 import { getEduSatelliteEntityId } from "./components/edu-entity-id";
+import { useMissionChallenge } from "./hooks/useMissionChallenge";
 import { useEduSatellites } from "./hooks/useEduSatellites";
 import type { EduMode } from "./types/phase3";
 import "./EduApp.css";
@@ -66,9 +68,10 @@ function EduHelpModal({ onClose }: { onClose: () => void }) {
       <div className="edu-help-panel">
         <h2>つかいかた</h2>
         <ol>
-          <li>上のモードで「衛星観察 / 打ち上げ / 解像度比較」を切り替えます。</li>
+          <li>上のモードで「衛星観察 / 打ち上げ / 解像度比較 / ミッション」を切り替えます。</li>
           <li>衛星観察では、下のカードを選ぶとその衛星を地球儀で追いかけます。</li>
           <li>解像度比較では、光学とSARの見え方の違いを比べられます。</li>
+          <li>ミッションでは条件を満たす設計や衛星選択に挑戦できます。</li>
         </ol>
         <button type="button" onClick={onClose}>
           とじる
@@ -100,6 +103,14 @@ function EduApp() {
   const [showHelp, setShowHelp] = useState(false);
   const [mode, setMode] = useState<EduMode>("observe");
   const [windowStartMs, setWindowStartMs] = useState(() => getWindowStartMs(Date.now()));
+  const {
+    missions,
+    activeMissionId,
+    progress: missionProgress,
+    setActiveMission,
+    evaluate: evaluateMissionResult,
+    reset: resetMissionProgress,
+  } = useMissionChallenge();
   const selectedIdRef = useRef<string | null>(selectedSatelliteId);
   selectedIdRef.current = selectedSatelliteId;
 
@@ -183,9 +194,12 @@ function EduApp() {
   }, [mode, selectedSatelliteId, selectionNonce]);
 
   useEffect(() => {
-    if (mode !== "compare") return;
+    if (mode !== "compare" && mode !== "mission") return;
     closeDetails();
   }, [closeDetails, mode]);
+
+  const showCatalogCards = mode === "observe" || mode === "launch";
+  const showInfoModal = mode === "observe" || mode === "launch";
 
   return (
     <>
@@ -225,6 +239,15 @@ function EduApp() {
               <button
                 type="button"
                 role="tab"
+                aria-selected={mode === "mission"}
+                className={mode === "mission" ? "is-active" : ""}
+                onClick={() => setMode("mission")}
+              >
+                ミッション
+              </button>
+              <button
+                type="button"
+                role="tab"
                 aria-selected={mode === "compare"}
                 className={mode === "compare" ? "is-active" : ""}
                 onClick={() => setMode("compare")}
@@ -251,6 +274,26 @@ function EduApp() {
             </section>
           )}
 
+          {mode === "mission" && (
+            <section className="edu-mission-region">
+              <MissionChallengePanel
+                missions={missions}
+                activeMissionId={activeMissionId}
+                progress={missionProgress}
+                satellites={satellites}
+                selectedSatelliteId={selectedSatelliteId}
+                customDraft={customDraft}
+                launchedCustomSatellite={launchedCustomSatellite}
+                onSelectMission={setActiveMission}
+                onSelectSatellite={selectSatellite}
+                onDraftChange={updateDraft}
+                onLaunch={launchCustomSatellite}
+                onEvaluateMission={evaluateMissionResult}
+                onResetProgress={resetMissionProgress}
+              />
+            </section>
+          )}
+
           {mode === "compare" ? (
             <section className="edu-compare-region">
               <Suspense
@@ -263,7 +306,7 @@ function EduApp() {
                 />
               </Suspense>
             </section>
-          ) : (
+          ) : showCatalogCards ? (
             <>
               <div className="edu-main-spacer" />
               <section className="edu-card-region">
@@ -277,14 +320,16 @@ function EduApp() {
                 />
               </section>
             </>
+          ) : (
+            <div className="edu-main-spacer" />
           )}
         </main>
       </div>
 
-      {mode !== "compare" && detailSatellite && (
+      {showInfoModal && detailSatellite && (
         <SatelliteInfoModal satellite={detailSatellite} onClose={closeDetails} />
       )}
-      {mode !== "compare" && customDetailOpen && (
+      {showInfoModal && customDetailOpen && (
         <CustomSatelliteInfoModal
           draft={customDraft}
           launched={launchedCustomSatellite}
