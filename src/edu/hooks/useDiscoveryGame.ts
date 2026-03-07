@@ -8,21 +8,34 @@ import type {
   DiscoveryScenario,
 } from "../types/target-discovery";
 
-export interface DiscoveryScanResult {
-  success: boolean;
-  failureMessage: string | null;
-  imageUrl: string | null;
-}
-
 export interface UseDiscoveryGameResult {
   gameState: DiscoveryGameState;
   startGame: () => void;
-  submitWideScan: (satelliteId: string, resolutionMeters: number) => DiscoveryScanResult;
-  submitDetailScan: (satelliteId: string, resolutionMeters: number) => DiscoveryScanResult;
+  /** Select a satellite for wide scan. Returns error message if resolution is too fine. */
+  confirmWideSatellite: (
+    satelliteId: string,
+    resolutionMeters: number,
+  ) => { success: boolean; error: string | null };
+  /** Capture wide-scan image (call when FP overlaps search area). */
+  captureWideScan: (resolutionMeters: number) => void;
+  /** Proceed from wide-scan-captured to detail-scan-select. */
+  proceedToDetailSelect: () => void;
+  /** Select a satellite for detail scan. Returns error message if resolution is too coarse. */
+  confirmDetailSatellite: (
+    satelliteId: string,
+    resolutionMeters: number,
+  ) => { success: boolean; error: string | null };
+  /** Capture detail-scan image (call when FP overlaps search area). */
+  captureDetailScan: (resolutionMeters: number) => void;
+  /** Proceed from detail-scan-captured to identify. */
+  proceedToIdentify: () => void;
+  /** Submit creature identification. Returns true if correct. */
   submitIdentification: (creatureId: string) => boolean;
   resetGame: () => void;
   /** Ordered creature choices for the identify step (correct + 3 decoys, shuffled). */
   identifyChoices: DiscoveryCreature[];
+  /** Satellite whose FP should be shown on the globe during fly steps. null otherwise. */
+  activeScanSatelliteId: string | null;
 }
 
 const WIDE_MIN_RESOLUTION = 5;
@@ -48,7 +61,12 @@ function createRandomScenario(): DiscoveryScenario {
   const otherCreatures = DISCOVERY_CREATURES.filter((c) => c.id !== creature.id);
   const decoyCreatures = shuffle(otherCreatures).slice(0, 3);
 
-  return { creature, location, decoyCreatures };
+  const creatureOffset = {
+    x: (Math.random() - 0.5) * 1.6, // -0.8 to 0.8
+    y: (Math.random() - 0.5) * 1.6,
+  };
+
+  return { creature, location, decoyCreatures, creatureOffset };
 }
 
 function createInitialState(): DiscoveryGameState {
@@ -67,66 +85,87 @@ export function useDiscoveryGame(): UseDiscoveryGameResult {
   const [gameState, setGameState] = useState<DiscoveryGameState>(createInitialState);
 
   const startGame = useCallback(() => {
-    setGameState((prev) => ({ ...prev, step: "wide-scan" }));
+    setGameState((prev) => ({ ...prev, step: "wide-scan-select" }));
   }, []);
 
-  const submitWideScan = useCallback(
-    (satelliteId: string, resolutionMeters: number): DiscoveryScanResult => {
+  const confirmWideSatellite = useCallback(
+    (satelliteId: string, resolutionMeters: number): { success: boolean; error: string | null } => {
       if (resolutionMeters < WIDE_MIN_RESOLUTION) {
         return {
           success: false,
-          failureMessage:
+          error:
             "この衛星は視野がせまいよ。まずは広い範囲を見わたせる衛星（解像度5m以上）を選ぼう！",
-          imageUrl: null,
         };
       }
+      setGameState((prev) => ({
+        ...prev,
+        step: "wide-scan-fly",
+        wideScanSatelliteId: satelliteId,
+      }));
+      return { success: true, error: null };
+    },
+    [],
+  );
 
+  const captureWideScan = useCallback(
+    (resolutionMeters: number) => {
       const imageUrl = generateDiscoveryImageUrl({
         location: gameState.scenario.location,
         creature: gameState.scenario.creature,
         resolutionMeters,
+        creatureOffset: gameState.scenario.creatureOffset,
       });
-
       setGameState((prev) => ({
         ...prev,
-        step: "detail-scan",
-        wideScanSatelliteId: satelliteId,
+        step: "wide-scan-captured",
         wideScanImageUrl: imageUrl,
       }));
-
-      return { success: true, failureMessage: null, imageUrl };
     },
     [gameState.scenario],
   );
 
-  const submitDetailScan = useCallback(
-    (satelliteId: string, resolutionMeters: number): DiscoveryScanResult => {
+  const proceedToDetailSelect = useCallback(() => {
+    setGameState((prev) => ({ ...prev, step: "detail-scan-select" }));
+  }, []);
+
+  const confirmDetailSatellite = useCallback(
+    (satelliteId: string, resolutionMeters: number): { success: boolean; error: string | null } => {
       if (resolutionMeters > DETAIL_MAX_RESOLUTION) {
         return {
           success: false,
-          failureMessage:
-            "この衛星では細かいところが見えないよ。もっと解像度の高い衛星（1m以下）を選ぼう！",
-          imageUrl: null,
+          error: "この衛星では細かいところが見えないよ。もっと解像度の高い衛星（1m以下）を選ぼう！",
         };
       }
+      setGameState((prev) => ({
+        ...prev,
+        step: "detail-scan-fly",
+        detailScanSatelliteId: satelliteId,
+      }));
+      return { success: true, error: null };
+    },
+    [],
+  );
 
+  const captureDetailScan = useCallback(
+    (resolutionMeters: number) => {
       const imageUrl = generateDiscoveryImageUrl({
         location: gameState.scenario.location,
         creature: gameState.scenario.creature,
         resolutionMeters,
+        creatureOffset: gameState.scenario.creatureOffset,
       });
-
       setGameState((prev) => ({
         ...prev,
-        step: "identify",
-        detailScanSatelliteId: satelliteId,
+        step: "detail-scan-captured",
         detailScanImageUrl: imageUrl,
       }));
-
-      return { success: true, failureMessage: null, imageUrl };
     },
     [gameState.scenario],
   );
+
+  const proceedToIdentify = useCallback(() => {
+    setGameState((prev) => ({ ...prev, step: "identify" }));
+  }, []);
 
   const submitIdentification = useCallback(
     (creatureId: string): boolean => {
@@ -152,13 +191,24 @@ export function useDiscoveryGame(): UseDiscoveryGameResult {
     return shuffle([creature, ...decoyCreatures]);
   }, [gameState.scenario]);
 
+  const activeScanSatelliteId = useMemo(() => {
+    if (gameState.step === "wide-scan-fly") return gameState.wideScanSatelliteId;
+    if (gameState.step === "detail-scan-fly") return gameState.detailScanSatelliteId;
+    return null;
+  }, [gameState.step, gameState.wideScanSatelliteId, gameState.detailScanSatelliteId]);
+
   return {
     gameState,
     startGame,
-    submitWideScan,
-    submitDetailScan,
+    confirmWideSatellite,
+    captureWideScan,
+    proceedToDetailSelect,
+    confirmDetailSatellite,
+    captureDetailScan,
+    proceedToIdentify,
     submitIdentification,
     resetGame,
     identifyChoices,
+    activeScanSatelliteId,
   };
 }

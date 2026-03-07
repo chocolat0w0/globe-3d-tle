@@ -305,6 +305,58 @@
   padding: 0 16px;
 }
 
+/* ── Fly-step: overlap indicator + capture ──── */
+
+.edu-discovery-fly-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(22, 89, 122, 0.18);
+  background: rgba(240, 248, 255, 0.85);
+  padding: 10px 12px;
+}
+
+.edu-discovery-overlap-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #b0b8be;
+  flex-shrink: 0;
+  transition: background 0.3s ease;
+}
+
+.edu-discovery-overlap-indicator.is-overlapping {
+  background: #2dd06a;
+  box-shadow: 0 0 6px rgba(45, 208, 106, 0.6);
+}
+
+.edu-discovery-fly-label {
+  color: #24536c;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.edu-discovery-capture-btn {
+  min-height: 48px;
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2dd06a, #1fa855);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: opacity 0.2s;
+}
+
+.edu-discovery-capture-btn:disabled {
+  background: linear-gradient(180deg, #b0b8be, #929ca3);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 960px) {
   .edu-discovery-satellite-grid {
     grid-template-columns: 1fr;

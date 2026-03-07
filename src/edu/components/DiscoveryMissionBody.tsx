@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { EduSatellite } from "../hooks/useEduSatellites";
-import type { DiscoveryScanResult, UseDiscoveryGameResult } from "../hooks/useDiscoveryGame";
+import type { UseDiscoveryGameResult } from "../hooks/useDiscoveryGame";
 import type { DiscoveryStep } from "../types/target-discovery";
 import "./DiscoveryMissionBody.css";
 
@@ -10,17 +10,26 @@ const SENSOR_LABEL: Record<EduSatellite["iconType"], string> = {
   weather: "気象",
 };
 
-const STEP_LABELS: { step: DiscoveryStep; label: string }[] = [
-  { step: "wide-scan", label: "1. 広くさがす" },
-  { step: "detail-scan", label: "2. くわしく見る" },
-  { step: "identify", label: "3. 答える" },
+const STEP_GROUPS: { steps: DiscoveryStep[]; label: string }[] = [
+  { steps: ["wide-scan-select", "wide-scan-fly", "wide-scan-captured"], label: "1. 広くさがす" },
+  {
+    steps: ["detail-scan-select", "detail-scan-fly", "detail-scan-captured"],
+    label: "2. くわしく見る",
+  },
+  { steps: ["identify"], label: "3. 答える" },
 ];
+
+function getStepGroupIndex(step: DiscoveryStep): number {
+  return STEP_GROUPS.findIndex((g) => g.steps.includes(step));
+}
 
 interface DiscoveryMissionBodyProps {
   satellites: EduSatellite[];
   selectedSatelliteId: string | null;
   onSelectSatellite: (satelliteId: string) => void;
   discovery: UseDiscoveryGameResult;
+  /** Whether the satellite's FP currently overlaps the search area. */
+  isOverlapping: boolean;
 }
 
 export function DiscoveryMissionBody({
@@ -28,32 +37,62 @@ export function DiscoveryMissionBody({
   selectedSatelliteId,
   onSelectSatellite,
   discovery,
+  isOverlapping,
 }: DiscoveryMissionBodyProps) {
-  const { gameState, startGame, submitWideScan, submitDetailScan, submitIdentification, resetGame, identifyChoices } =
-    discovery;
+  const {
+    gameState,
+    startGame,
+    confirmWideSatellite,
+    captureWideScan,
+    proceedToDetailSelect,
+    confirmDetailSatellite,
+    captureDetailScan,
+    proceedToIdentify,
+    submitIdentification,
+    resetGame,
+    identifyChoices,
+  } = discovery;
   const { step, scenario } = gameState;
   const [scanError, setScanError] = useState<string | null>(null);
   const [identifyError, setIdentifyError] = useState(false);
   const [selectedCreatureId, setSelectedCreatureId] = useState<string | null>(null);
 
-  const currentStepIndex = STEP_LABELS.findIndex((s) => s.step === step);
+  const currentGroupIndex = getStepGroupIndex(step);
 
-  function handleScan() {
+  // --- Handlers ---
+
+  function handleConfirmWideSatellite() {
     const satellite = satellites.find((s) => s.id === selectedSatelliteId);
     if (!satellite) return;
-
-    let result: DiscoveryScanResult;
-    if (step === "wide-scan") {
-      result = submitWideScan(satellite.id, satellite.resolution.meters);
-    } else {
-      result = submitDetailScan(satellite.id, satellite.resolution.meters);
-    }
-
+    const result = confirmWideSatellite(satellite.id, satellite.resolution.meters);
     if (result.success) {
       setScanError(null);
     } else {
-      setScanError(result.failureMessage);
+      setScanError(result.error);
     }
+  }
+
+  function handleCaptureWideScan() {
+    const satellite = satellites.find((s) => s.id === gameState.wideScanSatelliteId);
+    if (!satellite) return;
+    captureWideScan(satellite.resolution.meters);
+  }
+
+  function handleConfirmDetailSatellite() {
+    const satellite = satellites.find((s) => s.id === selectedSatelliteId);
+    if (!satellite) return;
+    const result = confirmDetailSatellite(satellite.id, satellite.resolution.meters);
+    if (result.success) {
+      setScanError(null);
+    } else {
+      setScanError(result.error);
+    }
+  }
+
+  function handleCaptureDetailScan() {
+    const satellite = satellites.find((s) => s.id === gameState.detailScanSatelliteId);
+    if (!satellite) return;
+    captureDetailScan(satellite.resolution.meters);
   }
 
   function handleIdentify() {
@@ -77,16 +116,11 @@ export function DiscoveryMissionBody({
     <div className="edu-discovery">
       {/* Step indicator */}
       <div className="edu-discovery-steps">
-        {STEP_LABELS.map(({ step: s, label }, i) => {
-          const isDone =
-            s === "wide-scan"
-              ? currentStepIndex > 0 || step === "complete"
-              : s === "detail-scan"
-                ? currentStepIndex > 1 || step === "complete"
-                : step === "complete";
-          const isActive = s === step;
+        {STEP_GROUPS.map(({ steps, label }, i) => {
+          const isDone = step === "complete" || currentGroupIndex > i;
+          const isActive = steps.includes(step);
           return (
-            <div key={s} className="edu-discovery-steps-item" style={{ display: "contents" }}>
+            <div key={label} className="edu-discovery-steps-item" style={{ display: "contents" }}>
               {i > 0 && <span className="edu-discovery-step-arrow">&rarr;</span>}
               <div
                 className={`edu-discovery-step-chip ${isActive ? "is-active" : ""} ${isDone ? "is-done" : ""}`}
@@ -108,8 +142,7 @@ export function DiscoveryMissionBody({
       {step === "intro" && (
         <>
           <p className="edu-discovery-instruction">
-            この場所のどこかに不思議な生き物がかくれているよ！
-            衛星を使って見つけよう。
+            この場所のどこかに不思議な生き物がかくれているよ！ 衛星を使って見つけよう。
           </p>
           <button type="button" className="edu-discovery-start-btn" onClick={startGame}>
             さがしはじめる！
@@ -117,12 +150,11 @@ export function DiscoveryMissionBody({
         </>
       )}
 
-      {/* === WIDE-SCAN step === */}
-      {step === "wide-scan" && (
+      {/* === WIDE-SCAN-SELECT step === */}
+      {step === "wide-scan-select" && (
         <>
           <p className="edu-discovery-instruction">
-            まずは広い範囲を見わたせる衛星を選んでスキャンしよう。
-            解像度5m以上の衛星がおすすめだよ。
+            まずは広い範囲を見わたせる衛星を選ぼう。 解像度5m以上の衛星がおすすめだよ。
           </p>
           <SatelliteGrid
             satellites={satellites}
@@ -135,17 +167,44 @@ export function DiscoveryMissionBody({
             <button
               type="button"
               className="edu-discovery-action-btn"
-              onClick={handleScan}
+              onClick={handleConfirmWideSatellite}
               disabled={!selectedSatelliteId}
             >
-              この衛星でスキャン！
+              この衛星で決定！
             </button>
           </div>
         </>
       )}
 
-      {/* === DETAIL-SCAN step === */}
-      {step === "detail-scan" && (
+      {/* === WIDE-SCAN-FLY step === */}
+      {step === "wide-scan-fly" && (
+        <>
+          <p className="edu-discovery-instruction">
+            タイムスライダーを動かして、衛星のフットプリントが黄色いエリアに重なるのを待とう！
+          </p>
+          <div className="edu-discovery-fly-status">
+            <span
+              className={`edu-discovery-overlap-indicator ${isOverlapping ? "is-overlapping" : ""}`}
+            />
+            <span className="edu-discovery-fly-label">
+              {isOverlapping ? "エリアに重なった！" : "フットプリントがエリアの外です…"}
+            </span>
+          </div>
+          <div className="edu-discovery-action-row">
+            <button
+              type="button"
+              className="edu-discovery-capture-btn"
+              onClick={handleCaptureWideScan}
+              disabled={!isOverlapping}
+            >
+              📸 キャプチャ！
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* === WIDE-SCAN-CAPTURED step === */}
+      {step === "wide-scan-captured" && (
         <>
           {gameState.wideScanImageUrl && (
             <div className="edu-discovery-image-frame">
@@ -153,6 +212,30 @@ export function DiscoveryMissionBody({
               <p className="edu-discovery-scan-message">
                 何かいるみたい...でもぼやけてよく見えない！
               </p>
+            </div>
+          )}
+          <p className="edu-discovery-instruction">
+            広い範囲をスキャンできた！ もっとくわしく見てみよう。
+          </p>
+          <div className="edu-discovery-action-row">
+            <button
+              type="button"
+              className="edu-discovery-action-btn"
+              onClick={proceedToDetailSelect}
+            >
+              次へ進む
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* === DETAIL-SCAN-SELECT step === */}
+      {step === "detail-scan-select" && (
+        <>
+          {gameState.wideScanImageUrl && (
+            <div className="edu-discovery-ref-image">
+              <img src={gameState.wideScanImageUrl} alt="広域スキャン参考" />
+              <span>広域スキャンの結果</span>
             </div>
           )}
           <p className="edu-discovery-instruction">
@@ -169,10 +252,54 @@ export function DiscoveryMissionBody({
             <button
               type="button"
               className="edu-discovery-action-btn"
-              onClick={handleScan}
+              onClick={handleConfirmDetailSatellite}
               disabled={!selectedSatelliteId}
             >
-              この衛星でくわしくスキャン！
+              この衛星で決定！
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* === DETAIL-SCAN-FLY step === */}
+      {step === "detail-scan-fly" && (
+        <>
+          <p className="edu-discovery-instruction">
+            タイムスライダーを動かして、高解像度衛星のフットプリントがエリアに重なるのを待とう！
+          </p>
+          <div className="edu-discovery-fly-status">
+            <span
+              className={`edu-discovery-overlap-indicator ${isOverlapping ? "is-overlapping" : ""}`}
+            />
+            <span className="edu-discovery-fly-label">
+              {isOverlapping ? "エリアに重なった！" : "フットプリントがエリアの外です…"}
+            </span>
+          </div>
+          <div className="edu-discovery-action-row">
+            <button
+              type="button"
+              className="edu-discovery-capture-btn"
+              onClick={handleCaptureDetailScan}
+              disabled={!isOverlapping}
+            >
+              📸 キャプチャ！
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* === DETAIL-SCAN-CAPTURED step === */}
+      {step === "detail-scan-captured" && (
+        <>
+          {gameState.detailScanImageUrl && (
+            <div className="edu-discovery-image-frame">
+              <img src={gameState.detailScanImageUrl} alt="詳細スキャン結果" />
+              <p className="edu-discovery-scan-message">見えた！ これは何の生き物だろう？</p>
+            </div>
+          )}
+          <div className="edu-discovery-action-row">
+            <button type="button" className="edu-discovery-action-btn" onClick={proceedToIdentify}>
+              生き物を答える！
             </button>
           </div>
         </>
@@ -184,9 +311,7 @@ export function DiscoveryMissionBody({
           {gameState.detailScanImageUrl && (
             <div className="edu-discovery-image-frame">
               <img src={gameState.detailScanImageUrl} alt="詳細スキャン結果" />
-              <p className="edu-discovery-scan-message">
-                見えた！ これは何の生き物だろう？
-              </p>
+              <p className="edu-discovery-scan-message">この生き物は何だろう？</p>
             </div>
           )}
           <div className="edu-discovery-creature-grid">
@@ -223,12 +348,10 @@ export function DiscoveryMissionBody({
       {step === "complete" && (
         <div className="edu-discovery-complete">
           <div className="edu-discovery-complete-emoji">{scenario.creature.emoji}</div>
-          <p className="edu-discovery-complete-title">
-            {scenario.creature.nameJa}を発見！
-          </p>
+          <p className="edu-discovery-complete-title">{scenario.creature.nameJa}を発見！</p>
           <p className="edu-discovery-complete-desc">{scenario.creature.descriptionJa}</p>
           <p className="edu-discovery-complete-lesson">
-            広い範囲を見る衛星でさがして、くわしく見る衛星で確認する。
+            広い範囲を見る衛星で場所をさがして、くわしく見る衛星で確認する。
             これが衛星観測の基本だよ！
           </p>
           <button type="button" className="edu-discovery-retry-btn" onClick={handleReset}>
@@ -240,7 +363,7 @@ export function DiscoveryMissionBody({
   );
 }
 
-/* ── Satellite selection grid (shared between wide/detail steps) ── */
+/* ── Satellite selection grid (shared between select steps) ── */
 
 function SatelliteGrid({
   satellites,

@@ -5,6 +5,8 @@ export interface DiscoveryImageOptions {
   location: DiscoveryLocation;
   creature: DiscoveryCreature;
   resolutionMeters: number;
+  /** Creature position offset from center, normalized [-0.8, 0.8]. */
+  creatureOffset?: { x: number; y: number };
   width?: number;
   height?: number;
 }
@@ -16,12 +18,14 @@ const EMOJI_SIZE = 64;
 const imageUrlCache = new Map<string, string>();
 
 function cacheKey(options: DiscoveryImageOptions): string {
+  const off = options.creatureOffset;
   return [
     options.location.id,
     options.creature.id,
     options.resolutionMeters.toFixed(3),
     options.width ?? DEFAULT_WIDTH,
     options.height ?? DEFAULT_HEIGHT,
+    off ? `${off.x.toFixed(2)},${off.y.toFixed(2)}` : "0,0",
   ].join(":");
 }
 
@@ -61,11 +65,14 @@ export function generateDiscoveryImageUrl(options: DiscoveryImageOptions): strin
   imageData.data.set(baseData);
   ctx.putImageData(imageData, 0, 0);
 
-  // 2. Draw the creature emoji at center
+  // 2. Draw the creature emoji (offset from center if specified)
+  const off = options.creatureOffset ?? { x: 0, y: 0 };
+  const emojiX = width / 2 + off.x * (width / 3);
+  const emojiY = height / 2 + off.y * (height / 3);
   ctx.font = `${EMOJI_SIZE}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(options.creature.emoji, width / 2, height / 2);
+  ctx.fillText(options.creature.emoji, emojiX, emojiY);
 
   // 3. Read full-resolution pixel data
   const fullResData = ctx.getImageData(0, 0, width, height);

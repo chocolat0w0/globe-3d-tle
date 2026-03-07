@@ -116,6 +116,7 @@ function EduApp() {
     reset: resetMissionProgress,
   } = useMissionChallenge();
   const discoveryGame = useDiscoveryGame();
+  const [discoveryOverlapping, setDiscoveryOverlapping] = useState(false);
   const selectedIdRef = useRef<string | null>(selectedSatelliteId);
   selectedIdRef.current = selectedSatelliteId;
   const suppressCustomMissionFollow =
@@ -126,6 +127,9 @@ function EduApp() {
   // Discovery mission: search area for globe + auto-evaluate on complete
   const isDiscoveryActive = mode === "mission" && activeMissionId === "target-discovery";
   const discoveryState = discoveryGame.gameState;
+
+  // Satellite whose FP should be shown on the globe during fly steps
+  const discoverySatelliteId = isDiscoveryActive ? discoveryGame.activeScanSatelliteId : null;
 
   const searchArea = useMemo<EduSearchArea | null>(() => {
     if (!isDiscoveryActive) return null;
@@ -162,9 +166,11 @@ function EduApp() {
     missionProgress.clearedMissionIds,
   ]);
 
-  // Camera fly-to when discovery game enters wide-scan
+  // Camera fly-to when discovery game enters a scan-select step (zoom to search area)
   useEffect(() => {
-    if (!isDiscoveryActive || discoveryState.step !== "wide-scan") return;
+    if (!isDiscoveryActive) return;
+    const { step } = discoveryState;
+    if (step !== "wide-scan-select" && step !== "detail-scan-select") return;
     const viewer = window.__CESIUM_VIEWER__;
     if (!viewer || viewer.isDestroyed()) return;
     const loc = discoveryState.scenario.location;
@@ -173,7 +179,12 @@ function EduApp() {
       destination: Cartesian3.fromDegrees(loc.lonDeg, loc.latDeg, altitude),
       duration: 1.5,
     });
-  }, [isDiscoveryActive, discoveryState.step, discoveryState.scenario.location]);
+  }, [isDiscoveryActive, discoveryState]);
+
+  // Reset overlap state when discovery satellite changes (step transition)
+  useEffect(() => {
+    setDiscoveryOverlapping(false);
+  }, [discoverySatelliteId]);
 
   useEffect(() => {
     if (mode === "compare") return;
@@ -275,6 +286,8 @@ function EduApp() {
           dayStartMs={windowStartMs}
           onWindowStartChange={setWindowStartMs}
           searchArea={searchArea}
+          discoverySatelliteId={discoverySatelliteId}
+          onDiscoveryOverlapChange={isDiscoveryActive ? setDiscoveryOverlapping : undefined}
         />
       )}
 
@@ -357,6 +370,7 @@ function EduApp() {
                 onResetProgress={resetMissionProgress}
                 discoveryGame={isDiscoveryActive ? discoveryGame : null}
                 discoveryState={isDiscoveryActive ? discoveryState : null}
+                isDiscoveryOverlapping={discoveryOverlapping}
               />
             </section>
           )}

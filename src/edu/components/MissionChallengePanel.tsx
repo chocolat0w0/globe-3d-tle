@@ -2,7 +2,12 @@ import type { CustomSatelliteDraft, LaunchedCustomSatellite } from "../../lib/ed
 import { evaluateMission } from "../../lib/edu/mission-evaluator";
 import type { EduSatellite } from "../hooks/useEduSatellites";
 import type { UseDiscoveryGameResult } from "../hooks/useDiscoveryGame";
-import type { MissionDefinition, MissionEvaluation, MissionId, MissionProgress } from "../types/phase4";
+import type {
+  MissionDefinition,
+  MissionEvaluation,
+  MissionId,
+  MissionProgress,
+} from "../types/phase4";
 import type { DiscoveryGameState } from "../types/target-discovery";
 import { DiscoveryMissionBody } from "./DiscoveryMissionBody";
 import { SatelliteDesignControls } from "./SatelliteDesignControls";
@@ -24,6 +29,8 @@ interface MissionChallengePanelProps {
   onResetProgress: () => void;
   discoveryGame: UseDiscoveryGameResult | null;
   discoveryState: DiscoveryGameState | null;
+  /** Whether the discovery satellite's FP currently overlaps the search area. */
+  isDiscoveryOverlapping?: boolean;
 }
 
 const SENSOR_LABEL: Record<EduSatellite["iconType"], string> = {
@@ -48,10 +55,12 @@ export function MissionChallengePanel({
   onResetProgress,
   discoveryGame,
   discoveryState,
+  isDiscoveryOverlapping,
 }: MissionChallengePanelProps) {
   const activeMission =
     missions.find((mission) => mission.id === activeMissionId) ?? missions[0] ?? null;
-  const selectedSatellite = satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null;
+  const selectedSatellite =
+    satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null;
 
   if (!activeMission) {
     return (
@@ -101,9 +110,7 @@ export function MissionChallengePanel({
                 type="button"
                 onClick={() => onSelectMission(mission.id)}
                 disabled={!unlocked}
-                className={
-                  `edu-mission-step ${isActive ? "is-active" : ""} ${cleared ? "is-cleared" : ""}`.trim()
-                }
+                className={`edu-mission-step ${isActive ? "is-active" : ""} ${cleared ? "is-cleared" : ""}`.trim()}
                 aria-current={isActive ? "step" : undefined}
               >
                 <span>{mission.shortLabel}</span>
@@ -124,6 +131,7 @@ export function MissionChallengePanel({
             selectedSatelliteId={selectedSatelliteId}
             onSelectSatellite={onSelectSatellite}
             discovery={discoveryGame}
+            isOverlapping={isDiscoveryOverlapping ?? false}
           />
         ) : activeMission.kind === "custom-design" ? (
           <>

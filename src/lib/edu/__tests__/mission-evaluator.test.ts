@@ -131,7 +131,12 @@ describe("mission-evaluator", () => {
       ...baseCtx,
       discoveryState: {
         step: "complete",
-        scenario: { creature: { id: "x", emoji: "", nameJa: "", descriptionJa: "" }, location: { id: "y", nameJa: "", lonDeg: 0, latDeg: 0, radiusKm: 100, terrainSeed: 1 }, decoyCreatures: [] },
+        scenario: {
+          creature: { id: "x", emoji: "", nameJa: "", descriptionJa: "" },
+          location: { id: "y", nameJa: "", lonDeg: 0, latDeg: 0, radiusKm: 100, terrainSeed: 1 },
+          decoyCreatures: [],
+          creatureOffset: { x: 0, y: 0 },
+        },
         wideScanSatelliteId: "sentinel2a",
         detailScanSatelliteId: "worldview3",
         identifiedCreatureId: "x",

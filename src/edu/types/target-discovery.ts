@@ -17,13 +17,24 @@ export interface DiscoveryLocation {
 }
 
 /** Steps of the discovery mission game. */
-export type DiscoveryStep = "intro" | "wide-scan" | "detail-scan" | "identify" | "complete";
+export type DiscoveryStep =
+  | "intro"
+  | "wide-scan-select"
+  | "wide-scan-fly"
+  | "wide-scan-captured"
+  | "detail-scan-select"
+  | "detail-scan-fly"
+  | "detail-scan-captured"
+  | "identify"
+  | "complete";
 
 /** Randomized scenario combining a creature, a location, and decoys. */
 export interface DiscoveryScenario {
   creature: DiscoveryCreature;
   location: DiscoveryLocation;
   decoyCreatures: DiscoveryCreature[];
+  /** Creature position offset from search area center, normalized [-0.8, 0.8]. */
+  creatureOffset: { x: number; y: number };
 }
 
 /** Full game state for a discovery mission playthrough. */
