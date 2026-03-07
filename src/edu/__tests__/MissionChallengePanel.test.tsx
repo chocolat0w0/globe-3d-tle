@@ -16,14 +16,22 @@ function buildProgress(partial: Partial<MissionProgress>): MissionProgress {
 }
 
 describe("MissionChallengePanel", () => {
-  it("アンロックされていないミッションを無効化する", () => {
+  it("全ミッションを初期状態から選択できる", () => {
     const { result } = renderHook(() => useEduSatellites());
 
     render(
       <MissionChallengePanel
         missions={PHASE4_MISSION_DEFINITIONS}
         activeMissionId="cover-japan-day"
-        progress={buildProgress({ unlockedMissionIds: ["cover-japan-day"] })}
+        progress={
+          buildProgress({
+            unlockedMissionIds: [
+              "cover-japan-day",
+              "rapid-disaster-response",
+              "night-ocean-observation",
+            ],
+          })
+        }
         satellites={result.current.satellites}
         selectedSatelliteId={result.current.selectedSatelliteId}
         customDraft={result.current.customDraft}
@@ -38,8 +46,8 @@ describe("MissionChallengePanel", () => {
     );
 
     expect(screen.getByRole("button", { name: /ミッション1/i })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /ミッション2/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /ミッション3/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /ミッション2/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /ミッション3/i })).toBeEnabled();
   });
 
   it("SAR衛星選択でミッション3判定結果を返す", () => {
