@@ -293,5 +293,88 @@ export function buildGroundCircle(
 export function estimateGroundRadiusKm(altitudeKm: number, fovDeg: number): number {
   const halfAngleRad = ((fovDeg / 2) * Math.PI) / 180;
   const radius = altitudeKm * Math.tan(halfAngleRad);
-  return clamp(radius, 40, 4500);
+  return clamp(radius, 5, 7000);
+}
+
+function normalizeLongitudeDeltaDeg(deltaDeg: number): number {
+  let normalized = deltaDeg;
+  while (normalized > 180) normalized -= 360;
+  while (normalized < -180) normalized += 360;
+  return normalized;
+}
+
+function greatCircleDistanceKm(
+  lon1Deg: number,
+  lat1Deg: number,
+  lon2Deg: number,
+  lat2Deg: number,
+): number {
+  const lat1 = (lat1Deg * Math.PI) / 180;
+  const lat2 = (lat2Deg * Math.PI) / 180;
+  const dLat = lat2 - lat1;
+  const dLon = (normalizeLongitudeDeltaDeg(lon2Deg - lon1Deg) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+function buildCoverageSamplePoints(
+  polygons: ReadonlyArray<ReadonlyArray<[number, number]>>,
+): [number, number][] {
+  const points: [number, number][] = [];
+
+  for (const polygon of polygons) {
+    const limit = polygon.length > 1 ? polygon.length - 1 : polygon.length;
+    for (let index = 0; index < limit; index += 1) {
+      const current = polygon[index];
+      const next = polygon[(index + 1) % limit];
+
+      points.push([current[0], current[1]]);
+
+      const lonDelta = normalizeLongitudeDeltaDeg(next[0] - current[0]);
+      points.push([current[0] + lonDelta / 2, (current[1] + next[1]) / 2]);
+    }
+  }
+
+  return points;
+}
+
+export function canCoverRegionWithinDay(
+  launched: LaunchedCustomSatellite,
+  regionPolygons: ReadonlyArray<ReadonlyArray<[number, number]>>,
+  stepSec = 30,
+): boolean {
+  const coveragePoints = buildCoverageSamplePoints(regionPolygons);
+  if (coveragePoints.length === 0) return false;
+
+  const orbitData = computeCustomOrbitData({
+    altitudeKm: launched.altitudeKm,
+    inclinationDeg: launched.inclinationDeg,
+    launchEpochMs: launched.launchEpochMs,
+    startMs: launched.launchEpochMs,
+    durationMs: DAY_MS,
+    stepSec,
+  });
+  const footprintRadiusKm = estimateGroundRadiusKm(launched.altitudeKm, launched.footprintFovDeg);
+
+  for (let i = 0; i < orbitData.ecef.length; i += 3) {
+    const geodetic = ecefToGeodeticApprox({
+      x: orbitData.ecef[i],
+      y: orbitData.ecef[i + 1],
+      z: orbitData.ecef[i + 2],
+    });
+
+    const fullyCovered = coveragePoints.every(([lonDeg, latDeg]) => {
+      return (
+        greatCircleDistanceKm(geodetic.lonDeg, geodetic.latDeg, lonDeg, latDeg) <= footprintRadiusKm
+      );
+    });
+
+    if (fullyCovered) {
+      return true;
+    }
+  }
+
+  return false;
 }

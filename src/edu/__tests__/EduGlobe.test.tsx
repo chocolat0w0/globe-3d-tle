@@ -31,7 +31,9 @@ vi.mock("../components/EduFootprintLayer", () => ({
 }));
 
 vi.mock("../components/EduCustomFootprintLayer", () => ({
-  EduCustomFootprintLayer: () => <div data-testid="custom-fp" />,
+  EduCustomFootprintLayer: ({ footprintFovDeg }: { footprintFovDeg: number }) => (
+    <div data-testid="custom-fp">{footprintFovDeg}</div>
+  ),
 }));
 
 vi.mock("../components/EduTimeController", () => ({
@@ -56,6 +58,7 @@ describe("EduGlobe", () => {
         satellites={satellites}
         selectedSatelliteId={satellites[1].id}
         launchedCustomSatellite={null}
+        customCameraMode="detail"
         dayStartMs={0}
         onWindowStartChange={vi.fn()}
       />,
@@ -79,6 +82,7 @@ describe("EduGlobe", () => {
         satellites={result.current.satellites.slice(0, 2)}
         selectedSatelliteId={CUSTOM_SATELLITE_ID}
         launchedCustomSatellite={result.current.launchedCustomSatellite}
+        customCameraMode="detail"
         dayStartMs={0}
         onWindowStartChange={vi.fn()}
       />,
@@ -86,5 +90,30 @@ describe("EduGlobe", () => {
 
     expect(screen.getByTestId("custom-sat")).toBeInTheDocument();
     expect(screen.getByTestId("custom-fp")).toBeInTheDocument();
+  });
+
+  it("自作衛星選択中は現在のカメラ設定に合わせてFPサイズを更新する", () => {
+    vi.spyOn(Date, "now").mockReturnValue(Date.UTC(2026, 2, 6, 9, 0, 0));
+    const { result } = renderHook(() => useEduSatellites());
+
+    act(() => {
+      result.current.launchCustomSatellite();
+    });
+
+    const launched = result.current.launchedCustomSatellite;
+    expect(launched?.footprintFovDeg).toBe(6);
+
+    render(
+      <EduGlobe
+        satellites={result.current.satellites.slice(0, 2)}
+        selectedSatelliteId={CUSTOM_SATELLITE_ID}
+        launchedCustomSatellite={launched}
+        customCameraMode="wide"
+        dayStartMs={0}
+        onWindowStartChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("custom-fp")).toHaveTextContent("18");
   });
 });
