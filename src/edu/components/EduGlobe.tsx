@@ -41,6 +41,8 @@ interface EduGlobeProps {
   discoverySatelliteId?: string | null;
   /** Callback fired when discovery FP overlaps / leaves the search area. */
   onDiscoveryOverlapChange?: (isOverlapping: boolean) => void;
+  /** When set, only this satellite's orbit/dot is visible; others are hidden. */
+  discoveryVisibleSatelliteId?: string | null;
 }
 
 function EduInitialCamera() {
@@ -81,6 +83,7 @@ export function EduGlobe({
   searchArea,
   discoverySatelliteId,
   onDiscoveryOverlapChange,
+  discoveryVisibleSatelliteId,
 }: EduGlobeProps) {
   const selectedExistingSatellite = useMemo(
     () => satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null,
@@ -124,6 +127,7 @@ export function EduGlobe({
           selected={satellite.id === selectedSatelliteId}
           dayStartMs={dayStartMs}
           stepSec={30}
+          visible={!discoveryVisibleSatelliteId || satellite.id === discoveryVisibleSatelliteId}
         />
       ))}
 

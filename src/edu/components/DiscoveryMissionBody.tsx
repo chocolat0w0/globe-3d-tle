@@ -194,6 +194,10 @@ export function DiscoveryMissionBody({
           <p className="edu-discovery-instruction">
             タイムスライダーを動かして、衛星のフットプリントが黄色いエリアに重なるのを待とう！
           </p>
+          <SelectedSatelliteBadge
+            satellites={satellites}
+            satelliteId={gameState.wideScanSatelliteId}
+          />
           <div className="edu-discovery-fly-status">
             <span
               className={`edu-discovery-overlap-indicator ${isOverlapping ? "is-overlapping" : ""}`}
@@ -282,6 +286,10 @@ export function DiscoveryMissionBody({
           <p className="edu-discovery-instruction">
             タイムスライダーを動かして、高解像度衛星のフットプリントがエリアに重なるのを待とう！
           </p>
+          <SelectedSatelliteBadge
+            satellites={satellites}
+            satelliteId={gameState.detailScanSatelliteId}
+          />
           <div className="edu-discovery-fly-status">
             <span
               className={`edu-discovery-overlap-indicator ${isOverlapping ? "is-overlapping" : ""}`}
@@ -385,6 +393,28 @@ export function DiscoveryMissionBody({
   );
 }
 
+/* ── Confirmed satellite badge (shown in fly steps) ── */
+
+function SelectedSatelliteBadge({
+  satellites,
+  satelliteId,
+}: {
+  satellites: EduSatellite[];
+  satelliteId: string | null;
+}) {
+  const satellite = satellites.find((s) => s.id === satelliteId) ?? null;
+  if (!satellite) return null;
+  return (
+    <div className="edu-discovery-selected-badge">
+      <span className="edu-discovery-sat-color" style={{ background: satellite.orbitColor }} />
+      <span className="edu-discovery-selected-name">{satellite.displayName}</span>
+      <span className="edu-discovery-selected-meta">
+        {SENSOR_LABEL[satellite.iconType]} / {satellite.resolution.meters}m
+      </span>
+    </div>
+  );
+}
+
 /* ── Satellite selection grid (shared between select steps) ── */
 
 function SatelliteGrid({
@@ -410,7 +440,13 @@ function SatelliteGrid({
             className={`edu-discovery-sat-btn ${isSelected ? "is-selected" : ""} ${isRecommended ? "is-recommended" : ""}`}
             onClick={() => onSelect(satellite.id)}
           >
-            <span className="name">{satellite.displayName}</span>
+            <span className="edu-discovery-sat-header">
+              <span
+                className="edu-discovery-sat-color"
+                style={{ background: satellite.orbitColor }}
+              />
+              <span className="name">{satellite.displayName}</span>
+            </span>
             <span className="meta">
               {SENSOR_LABEL[satellite.iconType]} / {satellite.resolution.meters}m
               {isRecommended ? " ★" : ""}

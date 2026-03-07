@@ -131,6 +131,12 @@ function EduApp() {
   // Satellite whose FP should be shown on the globe during fly steps
   const discoverySatelliteId = isDiscoveryActive ? discoveryGame.activeScanSatelliteId : null;
 
+  // In discovery mode, hide all orbits except the relevant satellite
+  // (fly steps use discoverySatelliteId; select/other steps use selectedSatelliteId)
+  const discoveryVisibleSatelliteId = isDiscoveryActive
+    ? (discoverySatelliteId ?? selectedSatelliteId)
+    : null;
+
   // Suppress camera follow while the user needs to look at the search area
   const suppressDiscoveryFlyFollow =
     isDiscoveryActive &&
@@ -317,6 +323,7 @@ function EduApp() {
           searchArea={searchArea}
           discoverySatelliteId={discoverySatelliteId}
           onDiscoveryOverlapChange={isDiscoveryActive ? setDiscoveryOverlapping : undefined}
+          discoveryVisibleSatelliteId={discoveryVisibleSatelliteId}
         />
       )}
 
