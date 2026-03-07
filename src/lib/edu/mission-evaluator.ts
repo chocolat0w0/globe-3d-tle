@@ -7,6 +7,7 @@ import type {
   MissionEvaluationContext,
   MissionEvaluationReason,
   SatelliteSelectionMissionDefinition,
+  TargetDiscoveryMissionDefinition,
 } from "../../edu/types/phase4";
 
 function evaluateCustomDesignMission(
@@ -103,6 +104,21 @@ function evaluateSatelliteSelectionMission(
   return [];
 }
 
+function evaluateTargetDiscoveryMission(
+  _mission: TargetDiscoveryMissionDefinition,
+  context: MissionEvaluationContext,
+): MissionEvaluationReason[] {
+  if (!context.discoveryState || context.discoveryState.step !== "complete") {
+    return [
+      {
+        code: "discovery-not-complete",
+        message: "ゲームをクリアしよう！",
+      },
+    ];
+  }
+  return [];
+}
+
 export function evaluateMission(
   mission: MissionDefinition,
   context: MissionEvaluationContext,
@@ -110,7 +126,9 @@ export function evaluateMission(
   const reasons =
     mission.kind === "custom-design"
       ? evaluateCustomDesignMission(mission, context)
-      : evaluateSatelliteSelectionMission(mission, context);
+      : mission.kind === "target-discovery"
+        ? evaluateTargetDiscoveryMission(mission, context)
+        : evaluateSatelliteSelectionMission(mission, context);
 
   return {
     missionId: mission.id,

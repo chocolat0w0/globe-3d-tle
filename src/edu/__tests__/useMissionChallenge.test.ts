@@ -21,7 +21,7 @@ describe("useMissionChallenge", () => {
     expect(result.current.progress.unlockedMissionIds).toEqual([
       "cover-japan-day",
       "rapid-disaster-response",
-      "night-ocean-observation",
+      "target-discovery",
     ]);
     expect(result.current.progress.clearedMissionIds).toEqual([]);
     expect(result.current.progress.allCleared).toBe(false);
@@ -31,9 +31,9 @@ describe("useMissionChallenge", () => {
     const { result } = renderHook(() => useMissionChallenge());
 
     act(() => {
-      result.current.evaluate(makeEvaluation("night-ocean-observation", true));
+      result.current.evaluate(makeEvaluation("target-discovery", true));
     });
-    expect(result.current.progress.clearedMissionIds).toEqual(["night-ocean-observation"]);
+    expect(result.current.progress.clearedMissionIds).toEqual(["target-discovery"]);
     expect(result.current.progress.allCleared).toBe(false);
 
     act(() => {
@@ -41,7 +41,7 @@ describe("useMissionChallenge", () => {
     });
     expect(result.current.progress.clearedMissionIds).toEqual([
       "cover-japan-day",
-      "night-ocean-observation",
+      "target-discovery",
     ]);
 
     act(() => {
@@ -50,7 +50,7 @@ describe("useMissionChallenge", () => {
     expect(result.current.progress.clearedMissionIds).toEqual([
       "cover-japan-day",
       "rapid-disaster-response",
-      "night-ocean-observation",
+      "target-discovery",
     ]);
     expect(result.current.progress.allCleared).toBe(true);
   });
@@ -65,7 +65,7 @@ describe("useMissionChallenge", () => {
     expect(result.current.progress.unlockedMissionIds).toEqual([
       "cover-japan-day",
       "rapid-disaster-response",
-      "night-ocean-observation",
+      "target-discovery",
     ]);
     expect(result.current.progress.clearedMissionIds).toEqual([]);
     expect(result.current.progress.evaluations["cover-japan-day"]?.passed).toBe(false);
@@ -75,10 +75,10 @@ describe("useMissionChallenge", () => {
     const { result } = renderHook(() => useMissionChallenge());
 
     act(() => {
-      result.current.setActiveMission("night-ocean-observation");
+      result.current.setActiveMission("target-discovery");
     });
 
-    expect(result.current.activeMissionId).toBe("night-ocean-observation");
+    expect(result.current.activeMissionId).toBe("target-discovery");
   });
 
   it("reset で進捗と評価を初期化する", () => {
@@ -98,7 +98,7 @@ describe("useMissionChallenge", () => {
     expect(result.current.progress.unlockedMissionIds).toEqual([
       "cover-japan-day",
       "rapid-disaster-response",
-      "night-ocean-observation",
+      "target-discovery",
     ]);
     expect(result.current.progress.evaluations).toEqual({});
   });

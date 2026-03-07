@@ -1,0 +1,68 @@
+import type { DiscoveryLocation } from "../types/target-discovery";
+
+export const DISCOVERY_LOCATIONS: DiscoveryLocation[] = [
+  {
+    id: "sahara",
+    nameJa: "サハラ砂漠（アフリカ）",
+    lonDeg: 2.5,
+    latDeg: 23.0,
+    radiusKm: 300,
+    terrainSeed: 1001,
+  },
+  {
+    id: "amazon",
+    nameJa: "アマゾン川流域（南アメリカ）",
+    lonDeg: -60.0,
+    latDeg: -3.0,
+    radiusKm: 250,
+    terrainSeed: 2002,
+  },
+  {
+    id: "great-barrier-reef",
+    nameJa: "グレートバリアリーフ（オーストラリア）",
+    lonDeg: 148.0,
+    latDeg: -18.3,
+    radiusKm: 200,
+    terrainSeed: 3003,
+  },
+  {
+    id: "antarctica",
+    nameJa: "南極大陸",
+    lonDeg: 0.0,
+    latDeg: -75.0,
+    radiusKm: 350,
+    terrainSeed: 4004,
+  },
+  {
+    id: "galapagos",
+    nameJa: "ガラパゴス諸島（エクアドル）",
+    lonDeg: -90.3,
+    latDeg: -0.5,
+    radiusKm: 180,
+    terrainSeed: 5005,
+  },
+  {
+    id: "himalaya",
+    nameJa: "ヒマラヤ山脈（ネパール）",
+    lonDeg: 86.9,
+    latDeg: 27.9,
+    radiusKm: 220,
+    terrainSeed: 6006,
+  },
+  {
+    id: "arctic-ocean",
+    nameJa: "北極海",
+    lonDeg: 0.0,
+    latDeg: 80.0,
+    radiusKm: 300,
+    terrainSeed: 7007,
+  },
+  {
+    id: "serengeti",
+    nameJa: "セレンゲティ国立公園（タンザニア）",
+    lonDeg: 34.8,
+    latDeg: -2.3,
+    radiusKm: 200,
+    terrainSeed: 8008,
+  },
+];

@@ -1,8 +1,9 @@
 import type { CameraMode, CustomSatelliteDraft, LaunchedCustomSatellite } from "../../lib/edu/custom-orbit";
+import type { DiscoveryGameState, DiscoveryMissionCriteria } from "./target-discovery";
 
-export type MissionId = "cover-japan-day" | "rapid-disaster-response" | "night-ocean-observation";
+export type MissionId = "cover-japan-day" | "rapid-disaster-response" | "target-discovery";
 
-export type MissionKind = "custom-design" | "satellite-selection";
+export type MissionKind = "custom-design" | "satellite-selection" | "target-discovery";
 
 export type SatelliteIconType = "optical" | "sar" | "weather";
 
@@ -38,13 +39,22 @@ export interface SatelliteSelectionMissionDefinition extends BaseMissionDefiniti
   criteria: MissionSatelliteSelectionCriteria;
 }
 
-export type MissionDefinition = CustomDesignMissionDefinition | SatelliteSelectionMissionDefinition;
+export interface TargetDiscoveryMissionDefinition extends BaseMissionDefinition {
+  kind: "target-discovery";
+  criteria: DiscoveryMissionCriteria;
+}
+
+export type MissionDefinition =
+  | CustomDesignMissionDefinition
+  | SatelliteSelectionMissionDefinition
+  | TargetDiscoveryMissionDefinition;
 
 export interface MissionEvaluationContext {
   selectedSatelliteId: string | null;
   selectedSatelliteIconType: SatelliteIconType | null;
   customDraft: CustomSatelliteDraft;
   launchedCustomSatellite: LaunchedCustomSatellite | null;
+  discoveryState: DiscoveryGameState | null;
 }
 
 export type MissionFailureCode =
@@ -55,7 +65,8 @@ export type MissionFailureCode =
   | "insufficient-passes"
   | "insufficient-coverage"
   | "select-existing-satellite"
-  | "satellite-type-mismatch";
+  | "satellite-type-mismatch"
+  | "discovery-not-complete";
 
 export interface MissionEvaluationReason {
   code: MissionFailureCode;

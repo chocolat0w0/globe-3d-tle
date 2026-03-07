@@ -11,14 +11,23 @@ import {
 } from "../../lib/edu/custom-orbit";
 import { WINDOW_MS } from "../../lib/time-window";
 import type { EduSatellite } from "../hooks/useEduSatellites";
+import { DiscoveryOverlapDetector } from "./DiscoveryOverlapDetector";
 import { EduCustomFootprintLayer } from "./EduCustomFootprintLayer";
 import { EduCustomSatelliteLayer } from "./EduCustomSatelliteLayer";
 import { EduFootprintLayer } from "./EduFootprintLayer";
 import { EduSatelliteLayer } from "./EduSatelliteLayer";
 import { EduTimeController } from "./EduTimeController";
+import { SearchAreaLayer } from "./SearchAreaLayer";
 
 const INITIAL_DESTINATION = Cartesian3.fromDegrees(137, 35, 15_000_000);
 const CUSTOM_ORBIT_COLOR = "#ff7a3d";
+
+export interface EduSearchArea {
+  lonDeg: number;
+  latDeg: number;
+  radiusKm: number;
+  locationName: string;
+}
 
 interface EduGlobeProps {
   satellites: EduSatellite[];
@@ -27,6 +36,13 @@ interface EduGlobeProps {
   customCameraMode: "detail" | "wide";
   dayStartMs: number;
   onWindowStartChange: (windowStartMs: number) => void;
+  searchArea?: EduSearchArea | null;
+  /** Satellite whose FP should be rendered for discovery game scanning. */
+  discoverySatelliteId?: string | null;
+  /** Callback fired when discovery FP overlaps / leaves the search area. */
+  onDiscoveryOverlapChange?: (isOverlapping: boolean) => void;
+  /** When set, only this satellite's orbit/dot is visible; others are hidden. */
+  discoveryVisibleSatelliteId?: string | null;
 }
 
 function EduInitialCamera() {
@@ -64,10 +80,21 @@ export function EduGlobe({
   customCameraMode,
   dayStartMs,
   onWindowStartChange,
+  searchArea,
+  discoverySatelliteId,
+  onDiscoveryOverlapChange,
+  discoveryVisibleSatelliteId,
 }: EduGlobeProps) {
   const selectedExistingSatellite = useMemo(
     () => satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null,
     [satellites, selectedSatelliteId],
+  );
+
+  // Find the satellite being used for discovery scanning (may differ from selectedSatelliteId)
+  const discoverySatellite = useMemo(
+    () =>
+      discoverySatelliteId ? (satellites.find((s) => s.id === discoverySatelliteId) ?? null) : null,
+    [satellites, discoverySatelliteId],
   );
 
   const customOrbitData = useMemo(() => {
@@ -100,6 +127,7 @@ export function EduGlobe({
           selected={satellite.id === selectedSatelliteId}
           dayStartMs={dayStartMs}
           stepSec={30}
+          visible={!discoveryVisibleSatelliteId || satellite.id === discoveryVisibleSatelliteId}
         />
       ))}
 
@@ -131,6 +159,43 @@ export function EduGlobe({
           color={CUSTOM_ORBIT_COLOR}
           altitudeKm={launchedCustomSatellite.altitudeKm}
           footprintFovDeg={customPreviewFootprintFovDeg}
+        />
+      )}
+
+      {searchArea && (
+        <SearchAreaLayer
+          lonDeg={searchArea.lonDeg}
+          latDeg={searchArea.latDeg}
+          radiusKm={searchArea.radiusKm}
+          locationName={searchArea.locationName}
+        />
+      )}
+
+      {/* Discovery game: show FP for the scanning satellite (separate from selected satellite FP) */}
+      {discoverySatellite && discoverySatellite.id !== selectedSatelliteId && (
+        <EduFootprintLayer
+          satelliteId={discoverySatellite.id}
+          tle1={discoverySatellite.tle.line1}
+          tle2={discoverySatellite.tle.line2}
+          color={discoverySatellite.orbitColor}
+          dayStartMs={dayStartMs}
+          offnadirRanges={discoverySatellite.offnadirRanges}
+          stepSec={30}
+        />
+      )}
+
+      {/* Discovery game: overlap detection between satellite FP and search area */}
+      {discoverySatellite && searchArea && onDiscoveryOverlapChange && (
+        <DiscoveryOverlapDetector
+          satelliteId={discoverySatellite.id}
+          tle1={discoverySatellite.tle.line1}
+          tle2={discoverySatellite.tle.line2}
+          offnadirRanges={discoverySatellite.offnadirRanges}
+          searchAreaLonDeg={searchArea.lonDeg}
+          searchAreaLatDeg={searchArea.latDeg}
+          searchAreaRadiusKm={searchArea.radiusKm}
+          dayStartMs={dayStartMs}
+          onOverlapChange={onDiscoveryOverlapChange}
         />
       )}
 

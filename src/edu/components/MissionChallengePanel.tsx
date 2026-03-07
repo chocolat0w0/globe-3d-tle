@@ -1,7 +1,15 @@
 import type { CustomSatelliteDraft, LaunchedCustomSatellite } from "../../lib/edu/custom-orbit";
 import { evaluateMission } from "../../lib/edu/mission-evaluator";
 import type { EduSatellite } from "../hooks/useEduSatellites";
-import type { MissionDefinition, MissionEvaluation, MissionId, MissionProgress } from "../types/phase4";
+import type { UseDiscoveryGameResult } from "../hooks/useDiscoveryGame";
+import type {
+  MissionDefinition,
+  MissionEvaluation,
+  MissionId,
+  MissionProgress,
+} from "../types/phase4";
+import type { DiscoveryGameState } from "../types/target-discovery";
+import { DiscoveryMissionBody } from "./DiscoveryMissionBody";
 import { SatelliteDesignControls } from "./SatelliteDesignControls";
 import "./MissionChallengePanel.css";
 
@@ -19,6 +27,12 @@ interface MissionChallengePanelProps {
   onLaunch: () => void;
   onEvaluateMission: (evaluation: MissionEvaluation) => void;
   onResetProgress: () => void;
+  discoveryGame: UseDiscoveryGameResult | null;
+  discoveryState: DiscoveryGameState | null;
+  /** Whether the discovery satellite's FP currently overlaps the search area. */
+  isDiscoveryOverlapping?: boolean;
+  /** Fly the camera to the discovery search area. */
+  onFlyToDiscoveryArea?: () => void;
 }
 
 const SENSOR_LABEL: Record<EduSatellite["iconType"], string> = {
@@ -41,10 +55,15 @@ export function MissionChallengePanel({
   onLaunch,
   onEvaluateMission,
   onResetProgress,
+  discoveryGame,
+  discoveryState,
+  isDiscoveryOverlapping,
+  onFlyToDiscoveryArea,
 }: MissionChallengePanelProps) {
   const activeMission =
     missions.find((mission) => mission.id === activeMissionId) ?? missions[0] ?? null;
-  const selectedSatellite = satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null;
+  const selectedSatellite =
+    satellites.find((satellite) => satellite.id === selectedSatelliteId) ?? null;
 
   if (!activeMission) {
     return (
@@ -62,6 +81,7 @@ export function MissionChallengePanel({
       selectedSatelliteIconType: selectedSatellite?.iconType ?? null,
       customDraft,
       launchedCustomSatellite,
+      discoveryState,
     });
     onEvaluateMission(evaluation);
   }
@@ -93,9 +113,7 @@ export function MissionChallengePanel({
                 type="button"
                 onClick={() => onSelectMission(mission.id)}
                 disabled={!unlocked}
-                className={
-                  `edu-mission-step ${isActive ? "is-active" : ""} ${cleared ? "is-cleared" : ""}`.trim()
-                }
+                className={`edu-mission-step ${isActive ? "is-active" : ""} ${cleared ? "is-cleared" : ""}`.trim()}
                 aria-current={isActive ? "step" : undefined}
               >
                 <span>{mission.shortLabel}</span>
@@ -110,41 +128,58 @@ export function MissionChallengePanel({
         <p className="edu-mission-description">{activeMission.description}</p>
         <p className="edu-mission-hint">ヒント: {activeMission.hint}</p>
 
-        {activeMission.kind === "custom-design" ? (
-          <div className="edu-mission-design-block">
-            <SatelliteDesignControls
-              draft={customDraft}
-              launched={launchedCustomSatellite}
-              onDraftChange={onDraftChange}
-              onLaunch={onLaunch}
-            />
-          </div>
-        ) : (
-          <div className="edu-mission-satellite-selector" role="list" aria-label="衛星選択">
-            {satellites.map((satellite) => (
-              <button
-                key={satellite.id}
-                type="button"
-                role="listitem"
-                className={`edu-mission-satellite-option ${selectedSatelliteId === satellite.id ? "is-selected" : ""}`.trim()}
-                onClick={() => onSelectSatellite(satellite.id)}
-              >
-                <span className="name">{satellite.displayName}</span>
-                <span className="meta">
-                  {SENSOR_LABEL[satellite.iconType]} / {satellite.resolution.meters}m
-                </span>
+        {activeMission.kind === "target-discovery" && discoveryGame ? (
+          <DiscoveryMissionBody
+            satellites={satellites}
+            selectedSatelliteId={selectedSatelliteId}
+            onSelectSatellite={onSelectSatellite}
+            discovery={discoveryGame}
+            isOverlapping={isDiscoveryOverlapping ?? false}
+            onFlyToArea={onFlyToDiscoveryArea}
+          />
+        ) : activeMission.kind === "custom-design" ? (
+          <>
+            <div className="edu-mission-design-block">
+              <SatelliteDesignControls
+                draft={customDraft}
+                launched={launchedCustomSatellite}
+                onDraftChange={onDraftChange}
+                onLaunch={onLaunch}
+              />
+            </div>
+            <div className="edu-mission-evaluate-row">
+              <button type="button" className="edu-mission-evaluate" onClick={handleEvaluate}>
+                この答えで判定する
               </button>
-            ))}
-          </div>
-        )}
+            </div>
+          </>
+        ) : activeMission.kind === "satellite-selection" ? (
+          <>
+            <div className="edu-mission-satellite-selector" role="list" aria-label="衛星選択">
+              {satellites.map((satellite) => (
+                <button
+                  key={satellite.id}
+                  type="button"
+                  role="listitem"
+                  className={`edu-mission-satellite-option ${selectedSatelliteId === satellite.id ? "is-selected" : ""}`.trim()}
+                  onClick={() => onSelectSatellite(satellite.id)}
+                >
+                  <span className="name">{satellite.displayName}</span>
+                  <span className="meta">
+                    {SENSOR_LABEL[satellite.iconType]} / {satellite.resolution.meters}m
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="edu-mission-evaluate-row">
+              <button type="button" className="edu-mission-evaluate" onClick={handleEvaluate}>
+                この答えで判定する
+              </button>
+            </div>
+          </>
+        ) : null}
 
-        <div className="edu-mission-evaluate-row">
-          <button type="button" className="edu-mission-evaluate" onClick={handleEvaluate}>
-            この答えで判定する
-          </button>
-        </div>
-
-        {currentEvaluation && (
+        {activeMission.kind !== "target-discovery" && currentEvaluation && (
           <div
             className={`edu-mission-result ${currentEvaluation.passed ? "is-success" : "is-failure"}`.trim()}
             aria-live="polite"

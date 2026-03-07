@@ -23,6 +23,8 @@ interface EduSatelliteLayerProps {
   selected: boolean;
   dayStartMs: number;
   stepSec?: number;
+  /** When false, the orbit line and satellite dot are hidden entirely. Default: true. */
+  visible?: boolean;
 }
 
 function buildCallbackPosition(data: OrbitData): CallbackPositionProperty {
@@ -62,6 +64,7 @@ export function EduSatelliteLayer({
   selected,
   dayStartMs,
   stepSec = 30,
+  visible = true,
 }: EduSatelliteLayerProps) {
   const { orbitData, error } = useOrbitData({
     satelliteId: id,
@@ -89,7 +92,7 @@ export function EduSatelliteLayer({
 
   const cesiumColor = useMemo(() => Color.fromCssColorString(color), [color]);
 
-  if (error || !orbitData || !callbackPosition) return null;
+  if (error || !orbitData || !callbackPosition || !visible) return null;
 
   return (
     <>

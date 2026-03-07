@@ -29,6 +29,7 @@ describe("mission-evaluator", () => {
         japanPassesPerDay: 1,
         footprintFovDeg: 18,
       },
+      discoveryState: null,
     });
 
     expect(result.passed).toBe(true);
@@ -53,6 +54,7 @@ describe("mission-evaluator", () => {
         japanPassesPerDay: 3,
         footprintFovDeg: 6,
       },
+      discoveryState: null,
     });
 
     expect(result.passed).toBe(false);
@@ -80,6 +82,7 @@ describe("mission-evaluator", () => {
         japanPassesPerDay: 5,
         footprintFovDeg: 6,
       },
+      discoveryState: null,
     });
 
     expect(result.passed).toBe(true);
@@ -104,6 +107,7 @@ describe("mission-evaluator", () => {
         japanPassesPerDay: 3,
         footprintFovDeg: 6,
       },
+      discoveryState: null,
     });
 
     expect(result.passed).toBe(false);
@@ -113,33 +117,40 @@ describe("mission-evaluator", () => {
     ]);
   });
 
-  it("ミッション3: 既存SAR衛星選択で成功し、それ以外は失敗", () => {
-    const mission = getMission("night-ocean-observation");
-
-    const sarResult = evaluateMission(mission, {
-      selectedSatelliteId: "sentinel1a",
-      selectedSatelliteIconType: "sar",
-      customDraft: { altitudeKm: 700, inclinationDeg: 60, cameraMode: "wide" },
-      launchedCustomSatellite: null,
-    });
-    expect(sarResult.passed).toBe(true);
-
-    const opticalResult = evaluateMission(mission, {
-      selectedSatelliteId: "sentinel2a",
-      selectedSatelliteIconType: "optical",
-      customDraft: { altitudeKm: 700, inclinationDeg: 60, cameraMode: "wide" },
-      launchedCustomSatellite: null,
-    });
-    expect(opticalResult.passed).toBe(false);
-    expect(opticalResult.reasons[0]?.code).toBe("satellite-type-mismatch");
-
-    const noSelectionResult = evaluateMission(mission, {
+  it("ミッション3: discoveryゲーム完了で成功、未完了で失敗", () => {
+    const mission = getMission("target-discovery");
+    const baseDraft = { altitudeKm: 700, inclinationDeg: 60, cameraMode: "wide" as const };
+    const baseCtx = {
       selectedSatelliteId: null,
       selectedSatelliteIconType: null,
-      customDraft: { altitudeKm: 700, inclinationDeg: 60, cameraMode: "wide" },
+      customDraft: baseDraft,
       launchedCustomSatellite: null,
+    };
+
+    const completeResult = evaluateMission(mission, {
+      ...baseCtx,
+      discoveryState: {
+        step: "complete",
+        scenario: {
+          creature: { id: "x", emoji: "", nameJa: "", descriptionJa: "" },
+          location: { id: "y", nameJa: "", lonDeg: 0, latDeg: 0, radiusKm: 100, terrainSeed: 1 },
+          decoyCreatures: [],
+          creatureOffset: { x: 0, y: 0 },
+        },
+        wideScanSatelliteId: "sentinel2a",
+        detailScanSatelliteId: "worldview3",
+        identifiedCreatureId: "x",
+        wideScanImageUrl: null,
+        detailScanImageUrl: null,
+      },
     });
-    expect(noSelectionResult.passed).toBe(false);
-    expect(noSelectionResult.reasons[0]?.code).toBe("select-existing-satellite");
+    expect(completeResult.passed).toBe(true);
+
+    const incompleteResult = evaluateMission(mission, {
+      ...baseCtx,
+      discoveryState: null,
+    });
+    expect(incompleteResult.passed).toBe(false);
+    expect(incompleteResult.reasons[0]?.code).toBe("discovery-not-complete");
   });
 });

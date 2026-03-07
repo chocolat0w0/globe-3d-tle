@@ -1,14 +1,16 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Cartesian3, JulianDate, Matrix4, type Entity as CesiumEntity } from "cesium";
 import { getWindowStartMs } from "../lib/time-window";
+import { evaluateMission } from "../lib/edu/mission-evaluator";
 import { CUSTOM_SATELLITE_ID } from "../lib/edu/custom-orbit";
 import { CustomSatelliteInfoModal } from "./components/CustomSatelliteInfoModal";
-import { EduGlobe } from "./components/EduGlobe";
+import { EduGlobe, type EduSearchArea } from "./components/EduGlobe";
 import { LaunchSimulationPanel } from "./components/LaunchSimulationPanel";
 import { MissionChallengePanel } from "./components/MissionChallengePanel";
 import { SatelliteCardCarousel } from "./components/SatelliteCardCarousel";
 import { SatelliteInfoModal } from "./components/SatelliteInfoModal";
 import { getEduSatelliteEntityId } from "./components/edu-entity-id";
+import { useDiscoveryGame } from "./hooks/useDiscoveryGame";
 import { useMissionChallenge } from "./hooks/useMissionChallenge";
 import { useEduSatellites } from "./hooks/useEduSatellites";
 import type { EduMode } from "./types/phase3";
@@ -107,17 +109,111 @@ function EduApp() {
   const {
     missions,
     activeMissionId,
+    activeMission,
     progress: missionProgress,
     setActiveMission,
     evaluate: evaluateMissionResult,
     reset: resetMissionProgress,
   } = useMissionChallenge();
+  const discoveryGame = useDiscoveryGame();
+  const [discoveryOverlapping, setDiscoveryOverlapping] = useState(false);
   const selectedIdRef = useRef<string | null>(selectedSatelliteId);
   selectedIdRef.current = selectedSatelliteId;
   const suppressCustomMissionFollow =
     mode === "mission" &&
     activeMissionId === "cover-japan-day" &&
     selectedSatelliteId === CUSTOM_SATELLITE_ID;
+
+  // Discovery mission: search area for globe + auto-evaluate on complete
+  const isDiscoveryActive = mode === "mission" && activeMissionId === "target-discovery";
+  const discoveryState = discoveryGame.gameState;
+
+  // Satellite whose FP should be shown on the globe during fly steps
+  const discoverySatelliteId = isDiscoveryActive ? discoveryGame.activeScanSatelliteId : null;
+
+  // In discovery mode, hide all orbits except the relevant satellite
+  // (fly steps use discoverySatelliteId; select/other steps use selectedSatelliteId)
+  const discoveryVisibleSatelliteId = isDiscoveryActive
+    ? (discoverySatelliteId ?? selectedSatelliteId)
+    : null;
+
+  // Suppress camera follow while the user needs to look at the search area
+  const suppressDiscoveryFlyFollow =
+    isDiscoveryActive &&
+    (discoveryState.step === "wide-scan-fly" || discoveryState.step === "detail-scan-fly");
+
+  // Callback to manually fly back to the search area (passed down to UI)
+  const flyToDiscoveryArea = useCallback(() => {
+    const viewer = window.__CESIUM_VIEWER__;
+    if (!viewer || viewer.isDestroyed()) return;
+    const loc = discoveryState.scenario.location;
+    const altitude = Math.max(loc.radiusKm * 6000, 2_000_000);
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(loc.lonDeg, loc.latDeg, altitude),
+      duration: 1.2,
+    });
+  }, [discoveryState.scenario.location]);
+
+  const searchArea = useMemo<EduSearchArea | null>(() => {
+    if (!isDiscoveryActive) return null;
+    const loc = discoveryState.scenario.location;
+    return {
+      lonDeg: loc.lonDeg,
+      latDeg: loc.latDeg,
+      radiusKm: loc.radiusKm,
+      locationName: loc.nameJa,
+    };
+  }, [isDiscoveryActive, discoveryState.scenario.location]);
+
+  // Auto-evaluate when discovery game completes
+  useEffect(() => {
+    if (!isDiscoveryActive || discoveryState.step !== "complete") return;
+    if (missionProgress.clearedMissionIds.includes("target-discovery")) return;
+
+    const evaluation = evaluateMission(activeMission, {
+      selectedSatelliteId: null,
+      selectedSatelliteIconType: null,
+      customDraft,
+      launchedCustomSatellite,
+      discoveryState,
+    });
+    evaluateMissionResult(evaluation);
+  }, [
+    isDiscoveryActive,
+    discoveryState.step,
+    discoveryState,
+    activeMission,
+    customDraft,
+    launchedCustomSatellite,
+    evaluateMissionResult,
+    missionProgress.clearedMissionIds,
+  ]);
+
+  // Camera fly-to when discovery game enters a scan-select step (zoom to search area)
+  useEffect(() => {
+    if (!isDiscoveryActive) return;
+    const { step } = discoveryState;
+    if (
+      step !== "wide-scan-select" &&
+      step !== "detail-scan-select" &&
+      step !== "wide-scan-fly" &&
+      step !== "detail-scan-fly"
+    )
+      return;
+    const viewer = window.__CESIUM_VIEWER__;
+    if (!viewer || viewer.isDestroyed()) return;
+    const loc = discoveryState.scenario.location;
+    const altitude = Math.max(loc.radiusKm * 6000, 2_000_000);
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(loc.lonDeg, loc.latDeg, altitude),
+      duration: 1.5,
+    });
+  }, [isDiscoveryActive, discoveryState]);
+
+  // Reset overlap state when discovery satellite changes (step transition)
+  useEffect(() => {
+    setDiscoveryOverlapping(false);
+  }, [discoverySatelliteId]);
 
   useEffect(() => {
     if (mode === "compare") return;
@@ -126,7 +222,7 @@ function EduApp() {
 
     viewer.trackedEntity = undefined;
     viewer.camera.lookAtTransform(Matrix4.IDENTITY);
-    if (!selectedSatelliteId || suppressCustomMissionFollow) return;
+    if (!selectedSatelliteId || suppressCustomMissionFollow || suppressDiscoveryFlyFollow) return;
 
     let cancelled = false;
     let attempt = 0;
@@ -198,7 +294,13 @@ function EduApp() {
         removeFollowListener();
       }
     };
-  }, [mode, selectedSatelliteId, selectionNonce, suppressCustomMissionFollow]);
+  }, [
+    mode,
+    selectedSatelliteId,
+    selectionNonce,
+    suppressCustomMissionFollow,
+    suppressDiscoveryFlyFollow,
+  ]);
 
   useEffect(() => {
     if (mode !== "compare" && mode !== "mission") return;
@@ -218,6 +320,10 @@ function EduApp() {
           customCameraMode={customDraft.cameraMode}
           dayStartMs={windowStartMs}
           onWindowStartChange={setWindowStartMs}
+          searchArea={searchArea}
+          discoverySatelliteId={discoverySatelliteId}
+          onDiscoveryOverlapChange={isDiscoveryActive ? setDiscoveryOverlapping : undefined}
+          discoveryVisibleSatelliteId={discoveryVisibleSatelliteId}
         />
       )}
 
@@ -298,6 +404,10 @@ function EduApp() {
                 onLaunch={launchCustomSatellite}
                 onEvaluateMission={evaluateMissionResult}
                 onResetProgress={resetMissionProgress}
+                discoveryGame={isDiscoveryActive ? discoveryGame : null}
+                discoveryState={isDiscoveryActive ? discoveryState : null}
+                isDiscoveryOverlapping={discoveryOverlapping}
+                onFlyToDiscoveryArea={isDiscoveryActive ? flyToDiscoveryArea : undefined}
               />
             </section>
           )}
