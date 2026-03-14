@@ -69,8 +69,7 @@ When performing git operations (push, pull, pr create, etc.) and GitHub CLI oper
    Create and use a dedicated config directory within the project:
    ```bash
    mkdir -p ./.claude_gh_config
-
-
+   ```
 2. **Authentication:**
    - Always use the environment variable `GH_TOKEN` for authentication.
    - Do NOT embed tokens directly in remote URLs.
@@ -146,11 +145,11 @@ interface ComputeDayRequest {
   satelliteId: string;
   tle1: string;
   tle2: string;
-  dayStartMs: number;        // UTC epoch ms（4時間窓開始）
-  durationMs: number;        // WINDOW_MS = 14400000 (4h)
-  stepSec: number;           // カメラ高度依存の動的値（例: 5秒）
+  dayStartMs: number; // UTC epoch ms（4時間窓開始）
+  durationMs: number; // WINDOW_MS = 14400000 (4h)
+  stepSec: number; // カメラ高度依存の動的値（例: 5秒）
   outputs: { orbit: boolean; footprint: boolean; swath: boolean };
-  footprintParams?: FootprintParams;  // off-nadir 角度範囲等
+  footprintParams?: FootprintParams; // off-nadir 角度範囲等
   swathParams?: SwathParams;
 }
 ```
@@ -165,16 +164,16 @@ interface ComputeDayResponse {
   dayStartMs: number;
   stepSec: number;
   orbit?: {
-    timesMs: ArrayBuffer;   // Float64Array
-    ecef: ArrayBuffer;      // Float32Array [x,y,z,...] meters
+    timesMs: ArrayBuffer; // Float64Array
+    ecef: ArrayBuffer; // Float32Array [x,y,z,...] meters
   };
   footprint?: {
-    timesMs: ArrayBuffer;   // Float64Array
-    flat: FlatRings;        // lon/lat ポリゴン配列
+    timesMs: ArrayBuffer; // Float64Array
+    flat: FlatRings; // lon/lat ポリゴン配列
     timeSizes: ArrayBuffer; // Int32Array: 各タイムステップのポリゴン数
   };
   swath?: {
-    flat: FlatRings;        // 窓単位（1件）の帯状ポリゴン
+    flat: FlatRings; // 窓単位（1件）の帯状ポリゴン
   };
   timings?: ComputeTimings; // orbitMs, footprintMs, swathMs, totalMs
 }
