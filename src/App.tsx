@@ -10,7 +10,6 @@ import { TimeController } from "./components/TimeController/TimeController";
 import { SatelliteList } from "./components/SatelliteList/SatelliteList";
 import { SatelliteDetailPanel } from "./components/SatelliteList/SatelliteDetailPanel";
 import { InfoPanel } from "./components/HUD/InfoPanel";
-import { PerfOverlay } from "./components/HUD/PerfOverlay";
 import { AoiPanel } from "./components/AOI/AoiPanel";
 import { PassPredictionPanel } from "./components/PassPrediction/PassPredictionPanel";
 import { useSatellites } from "./hooks/useSatellites";
@@ -129,7 +128,6 @@ function App() {
           />
         )}
       </div>
-      <PerfOverlay />
       <div className="satellite-panel-stack">
         <SatelliteList
           satellites={satellites}

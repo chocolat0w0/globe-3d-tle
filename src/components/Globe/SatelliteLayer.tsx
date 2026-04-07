@@ -14,7 +14,6 @@ import { useOrbitData } from "../../hooks/useOrbitData";
 import type { TLEData } from "../../types/satellite";
 import type { OrbitData } from "../../types/orbit";
 import { bisectLeft } from "../../lib/footprint/footprint-interpolator";
-import { usePerfLogger } from "../../hooks/usePerfLogger";
 
 interface Props {
   id: string;
@@ -76,7 +75,6 @@ export function SatelliteLayer({
   const { viewer } = useCesium();
   const entityRef = useRef<CesiumEntity | null>(null);
   const trackedByThisLayerRef = useRef<CesiumEntity | null>(null);
-  const perfLogger = usePerfLogger();
 
   const { orbitData, error } = useOrbitData({
     satelliteId: id,
@@ -90,10 +88,8 @@ export function SatelliteLayer({
   // CallbackPositionProperty: Float32Array を直接参照し、サンプルごとの Cartesian3 生成を回避
   const callbackPosition = useMemo(() => {
     if (!orbitData) return null;
-    return perfLogger.measure(`callback-position-build:${id}`, () =>
-      buildCallbackPosition(orbitData),
-    );
-  }, [orbitData, perfLogger, id]);
+    return buildCallbackPosition(orbitData);
+  }, [orbitData]);
 
   const orbitPositions = useMemo(() => {
     if (!orbitData) return [];

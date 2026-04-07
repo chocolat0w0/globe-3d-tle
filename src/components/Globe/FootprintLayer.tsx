@@ -14,7 +14,6 @@ import { useFootprintData } from "../../hooks/useFootprintData";
 import type { FootprintParams } from "../../lib/tle/footprint";
 import type { OffnadirRange } from "../../lib/tle/offnadir-ranges";
 import type { TLEData } from "../../types/satellite";
-import { usePerfLogger } from "../../hooks/usePerfLogger";
 import {
   buildFootprintLookup,
   getPolygonCountAtTime,
@@ -53,8 +52,6 @@ export function FootprintLayer({
   stepSec = 30,
 }: Props) {
   const { viewer } = useCesium();
-
-  const perfLogger = usePerfLogger();
 
   const resolvedFootprintParams = useMemo<FootprintParams>(() => {
     return {
@@ -134,10 +131,8 @@ export function FootprintLayer({
       lookupRef.current = null;
       return;
     }
-    perfLogger.measure(`footprint-update:${id}`, () => {
-      lookupRef.current = buildFootprintLookup(footprintData);
-    });
-  }, [footprintData, id, perfLogger]);
+    lookupRef.current = buildFootprintLookup(footprintData);
+  }, [footprintData, id]);
 
   // ─── 表示状態の更新 ──────────────────────────────────────────────────
   useEffect(() => {
