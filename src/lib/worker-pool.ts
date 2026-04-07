@@ -1,10 +1,16 @@
 /// <reference lib="dom" />
 import type { WorkerMessage, MainMessage } from "../types/worker-messages";
+import { perfLogger } from "./perf/perf-logger";
+import { perfMetricsStore } from "./perf/perf-metrics-store";
+
+const rttLabel = (satId: string, reqId: string) => `worker-rtt:${satId}:${reqId.slice(0, 8)}`;
 
 interface PendingRequest {
   msg: WorkerMessage;
   callback: (msg: MainMessage) => void;
 }
+
+// ─── 関数クロージャ ──────────────────────────────────────────────────────────
 
 /**
  * orbit-calculator Worker のシングルトンプール。
@@ -13,17 +19,43 @@ interface PendingRequest {
  * - requestId → callback のマップでレスポンスをルーティング
  * - アイドルWorkerがなければリクエストをキューに積む
  */
-export class WorkerPool {
-  private readonly workers: Worker[];
-  private readonly idle: Worker[];
-  private readonly callbacks = new Map<string, (msg: MainMessage) => void>();
-  private readonly queue: PendingRequest[] = [];
-  /** 各Workerが現在処理中のrequestId（アイドル時はundefined） */
-  private readonly activeRequestId = new Map<Worker, string>();
+const createWorkerPool = () => {
+  const workers: Worker[] = [];
+  const idle: Worker[] = [];
+  const callbacks = new Map<string, (msg: MainMessage) => void>();
+  const queue: PendingRequest[] = [];
+  const activeRequestId = new Map<Worker, string>();
+  let initialized = false;
 
-  constructor(size: number) {
-    this.workers = [];
-    this.idle = [];
+  const dispatch = (worker: Worker, msg: WorkerMessage, callback: (msg: MainMessage) => void): void => {
+    const label = rttLabel(msg.satelliteId, msg.requestId);
+    perfLogger.start(label);
+    callbacks.set(msg.requestId, callback);
+    activeRequestId.set(worker, msg.requestId);
+    worker.postMessage(msg);
+  };
+
+  const releaseWorker = (worker: Worker): void => {
+    const next = queue.shift();
+    if (next) {
+      dispatch(worker, next.msg, next.callback);
+    } else {
+      idle.push(worker);
+    }
+  };
+
+  /**
+   * 初回 post() 呼び出し時に Worker を生成する（遅延初期化）。
+   * テスト環境（Worker未定義）でもモジュールをインポートできる。
+   */
+  const init = (): void => {
+    if (initialized) return;
+    initialized = true;
+
+    const size = Math.min(
+      typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 4 : 4,
+      6,
+    );
 
     for (let i = 0; i < size; i++) {
       const worker = new Worker(new URL("../workers/orbit-calculator.worker.ts", import.meta.url), {
@@ -32,28 +64,30 @@ export class WorkerPool {
 
       worker.onmessage = (e: MessageEvent<MainMessage>) => {
         const msg = e.data;
-        const { requestId } = msg;
-        this.activeRequestId.delete(worker);
+        const { satelliteId, requestId } = msg;
+        const label = rttLabel(satelliteId, requestId);
+        const entry = perfLogger.end(label);
+        if (entry) perfMetricsStore.push(entry);
 
-        const cb = this.callbacks.get(requestId);
+        activeRequestId.delete(worker);
+
+        const cb = callbacks.get(requestId);
         if (cb) {
-          this.callbacks.delete(requestId);
+          callbacks.delete(requestId);
           cb(msg);
         }
 
-        // Workerをアイドルに戻し、キューから次のリクエストを処理
-        this.releaseWorker(worker);
+        releaseWorker(worker);
       };
 
       worker.onerror = (e) => {
         console.error("[WorkerPool] uncaught error:", e.message);
-        // 実行中のリクエストへエラーを通知してハングを防ぐ
-        const requestId = this.activeRequestId.get(worker);
-        this.activeRequestId.delete(worker);
+        const requestId = activeRequestId.get(worker);
+        activeRequestId.delete(worker);
         if (requestId) {
-          const cb = this.callbacks.get(requestId);
+          const cb = callbacks.get(requestId);
           if (cb) {
-            this.callbacks.delete(requestId);
+            callbacks.delete(requestId);
             cb({
               type: "error",
               requestId,
@@ -62,68 +96,30 @@ export class WorkerPool {
             });
           }
         }
-        this.releaseWorker(worker);
+        releaseWorker(worker);
       };
 
-      this.workers.push(worker);
-      this.idle.push(worker);
+      workers.push(worker);
+      idle.push(worker);
     }
-  }
+  };
 
-  post(msg: WorkerMessage, callback: (msg: MainMessage) => void): void {
-    const worker = this.idle.pop();
-    if (worker) {
-      this.dispatch(worker, msg, callback);
-    } else {
-      this.queue.push({ msg, callback });
-    }
-  }
-
-  private dispatch(worker: Worker, msg: WorkerMessage, callback: (msg: MainMessage) => void): void {
-    this.callbacks.set(msg.requestId, callback);
-    this.activeRequestId.set(worker, msg.requestId);
-    worker.postMessage(msg);
-  }
-
-  private releaseWorker(worker: Worker): void {
-    const next = this.queue.shift();
-    if (next) {
-      this.dispatch(worker, next.msg, next.callback);
-    } else {
-      this.idle.push(worker);
-    }
-  }
-
-  get poolSize(): number {
-    return this.workers.length;
-  }
-}
-
-const POOL_SIZE = Math.min(
-  typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 4 : 4,
-  6,
-);
-
-/**
- * アプリ全体で共有するシングルトンWorkerプール。
- *
- * モジュール読み込み時に Worker を生成せず、初回 post() 呼び出し時に生成する（遅延初期化）。
- * これによりテスト環境（Worker未定義）でもモジュールをインポートできる。
- */
-let _instance: WorkerPool | null = null;
-
-function getInstance(): WorkerPool {
-  if (!_instance) {
-    _instance = new WorkerPool(POOL_SIZE);
-  }
-  return _instance;
-}
-
-export const workerPool = {
-  post(msg: WorkerMessage, callback: (msg: MainMessage) => void): void {
-    getInstance().post(msg, callback);
-  },
-  get poolSize(): number {
-    return _instance?.poolSize ?? 0;
-  },
+  return {
+    post: (msg: WorkerMessage, callback: (msg: MainMessage) => void): void => {
+      init();
+      const worker = idle.pop();
+      if (worker) {
+        dispatch(worker, msg, callback);
+      } else {
+        queue.push({ msg, callback });
+      }
+    },
+    get poolSize(): number {
+      return workers.length;
+    },
+  };
 };
+
+// ─── 公開API（シングルトン） ─────────────────────────────────────────────────
+
+export const workerPool = createWorkerPool();
