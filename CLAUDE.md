@@ -65,21 +65,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 When performing git operations (push, pull, pr create, etc.) and GitHub CLI operations, follow these rules:
 
-1. **Local Config Directory:**
-   Create and use a dedicated config directory within the project:
-   ```bash
-   mkdir -p ./.claude_gh_config
-   ```
-2. **Authentication:**
+1. **Authentication:**
    - Always use the environment variable `GH_TOKEN` for authentication.
-   - Do NOT embed tokens directly in remote URLs.
-   - At the beginning of a session or before the first git operation, ensure the credential helper is configured by running:
-     ```bash
-     git config --global credential.helper "!gh auth setup-git"
-     ```
+   - `git config --global credential.helper` は sandbox では `~/.gitconfig` への書き込みが制限されるため**使用不可**。
 
-3. **Workflow:**
-   - Prefer using the `gh` CLI for GitHub-specific tasks (like PR creation) as it automatically picks up `GH_TOKEN`.
+2. **Push / PR作成:**
+   - `gh pr create` は sandbox の TLS 制約（macOS Security Framework へのアクセス不可）により**使用不可**。
+   - URL へのトークン埋め込みも**禁止**。
+   - **push・PR作成はユーザーのターミナルで実行してもらう**。コミットまで済ませた上で、以下を案内する：
+     ```bash
+     git push -u origin <branch>
+     ```
+     PR作成はブラウザで：
+     ```
+     https://github.com/<owner>/<repo>/compare/main...<branch>?quick_pull=1
+     ```
 
 ## プロジェクト概要
 
