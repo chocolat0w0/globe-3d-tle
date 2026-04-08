@@ -1,9 +1,5 @@
 /// <reference lib="dom" />
 import type { WorkerMessage, MainMessage } from "../types/worker-messages";
-import { perfLogger } from "./perf/perf-logger";
-import { perfMetricsStore } from "./perf/perf-metrics-store";
-
-const rttLabel = (satId: string, reqId: string) => `worker-rtt:${satId}:${reqId.slice(0, 8)}`;
 
 interface PendingRequest {
   msg: WorkerMessage;
@@ -32,8 +28,6 @@ const createWorkerPool = () => {
     msg: WorkerMessage,
     callback: (msg: MainMessage) => void,
   ): void => {
-    const label = rttLabel(msg.satelliteId, msg.requestId);
-    perfLogger.start(label);
     callbacks.set(msg.requestId, callback);
     activeRequestId.set(worker, msg.requestId);
     worker.postMessage(msg);
@@ -68,10 +62,7 @@ const createWorkerPool = () => {
 
       worker.onmessage = (e: MessageEvent<MainMessage>) => {
         const msg = e.data;
-        const { satelliteId, requestId } = msg;
-        const label = rttLabel(satelliteId, requestId);
-        const entry = perfLogger.end(label);
-        if (entry) perfMetricsStore.push(entry);
+        const { requestId } = msg;
 
         activeRequestId.delete(worker);
 
