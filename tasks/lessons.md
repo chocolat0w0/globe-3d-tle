@@ -1,5 +1,27 @@
 # Lessons Learned
 
+## sandbox環境での gh pr create / git config --global は使えない
+
+### 背景
+Claude Code のsandbox環境では `gh pr create` がTLSエラーで失敗する。
+macOS Security Frameworkへのアクセスが遮断されるため、`gh` CLIのTLS証明書検証が通らない。
+また `git config --global` も `~/.gitconfig` への書き込みが制限されるため実行できない。
+
+### エラー
+```
+Post "https://api.github.com/graphql": tls: failed to verify certificate: x509: OSStatus -26276
+error: could not lock config file /Users/.../.gitconfig: Operation not permitted
+```
+
+### ルール
+- `gh pr create` は sandbox では使えないと割り切る
+- ブランチのpushは `git push https://x-access-token:${GH_TOKEN}@github.com/<owner>/<repo>.git <branch>` で実行する
+- PRはブラウザで作成するようユーザーに依頼し、以下のURLを案内する：
+  `https://github.com/<owner>/<repo>/compare/main...<branch>?quick_pull=1`
+- `GH_CONFIG_DIR` を設定しても TLS 問題は解決しない
+
+---
+
 ## Git Worktree では husky の pre-commit フックが動作しない
 
 ### 背景
