@@ -27,7 +27,11 @@ const createWorkerPool = () => {
   const activeRequestId = new Map<Worker, string>();
   let initialized = false;
 
-  const dispatch = (worker: Worker, msg: WorkerMessage, callback: (msg: MainMessage) => void): void => {
+  const dispatch = (
+    worker: Worker,
+    msg: WorkerMessage,
+    callback: (msg: MainMessage) => void,
+  ): void => {
     const label = rttLabel(msg.satelliteId, msg.requestId);
     perfLogger.start(label);
     callbacks.set(msg.requestId, callback);
