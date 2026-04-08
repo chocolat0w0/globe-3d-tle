@@ -1,7 +1,6 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { Viewer, useCesium } from "resium";
 import { Credit, CreditDisplay, ImageryLayer, type Viewer as CesiumViewer } from "cesium";
-import { perfMetricsStore } from "../../lib/perf/perf-metrics-store";
 import { getStepSecForHeight } from "./step-sec";
 
 const STEP_SEC_DEBOUNCE_MS = 1000;
@@ -30,44 +29,6 @@ function ViewerExposer() {
   useEffect(() => {
     if (viewer) window.__CESIUM_VIEWER__ = viewer;
   }, [viewer]);
-  return null;
-}
-
-function FpsMonitor() {
-  const { viewer } = useCesium();
-  const frameCountRef = useRef(0);
-  const windowStartRef = useRef(0);
-
-  useEffect(() => {
-    if (!viewer) return;
-    if (import.meta.env.VITE_PERF_LOG !== "true") return;
-
-    windowStartRef.current = performance.now();
-    frameCountRef.current = 0;
-
-    const removeListener = viewer.scene.postRender.addEventListener(() => {
-      if (viewer.isDestroyed()) return;
-      frameCountRef.current += 1;
-      const now = performance.now();
-      const elapsedMs = now - windowStartRef.current;
-      if (elapsedMs < 1000) return;
-
-      const fps = frameCountRef.current / (elapsedMs / 1000);
-      perfMetricsStore.push({
-        label: "fps",
-        durationMs: fps,
-        timestamp: now,
-      });
-
-      windowStartRef.current = now;
-      frameCountRef.current = 0;
-    });
-
-    return () => {
-      if (!viewer.isDestroyed()) removeListener();
-    };
-  }, [viewer]);
-
   return null;
 }
 
@@ -141,7 +102,6 @@ export function GlobeRenderer({
       navigationInstructionsInitiallyVisible={false}
     >
       <ViewerExposer />
-      <FpsMonitor />
       <NightShadeController showNightShade={showNightShade} />
       {onStepSecChange && <StepSecController onStepSecChange={onStepSecChange} />}
       {children}
